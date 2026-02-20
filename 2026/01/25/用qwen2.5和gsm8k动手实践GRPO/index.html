@@ -1,0 +1,255 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>用qwen2.5和gsm8k动手实践GRPO | Yowakko Jay</title><meta name="author" content="Yowakko Jay"><meta name="copyright" content="Yowakko Jay"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="背景后训练之——强化学习，用qwen2.5-0.5b、qwen2.5-3b，在gsm8k上进行GRPO。 环境运行环境：Python 3.10.9, Pytorch 2.9.1, CUDA 12.8, trl 0.28.0, transformers 4.57.6, huggingface-hub 0.36.2, datasets 4.5.0, 8 * A800(80GB) 实践中遇到的各种问题的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="用qwen2.5和gsm8k动手实践GRPO">
+<meta property="og:url" content="https://yowakkojay.github.io/2026/01/25/%E7%94%A8qwen2.5%E5%92%8Cgsm8k%E5%8A%A8%E6%89%8B%E5%AE%9E%E8%B7%B5GRPO/index.html">
+<meta property="og:site_name" content="Yowakko Jay">
+<meta property="og:description" content="背景后训练之——强化学习，用qwen2.5-0.5b、qwen2.5-3b，在gsm8k上进行GRPO。 环境运行环境：Python 3.10.9, Pytorch 2.9.1, CUDA 12.8, trl 0.28.0, transformers 4.57.6, huggingface-hub 0.36.2, datasets 4.5.0, 8 * A800(80GB) 实践中遇到的各种问题的">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://yowakkojay.github.io/img/killua.png">
+<meta property="article:published_time" content="2026-01-24T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:19:07.533Z">
+<meta property="article:author" content="Yowakko Jay">
+<meta property="article:tag" content="GRPO">
+<meta property="article:tag" content="qwen">
+<meta property="article:tag" content="deepspeed">
+<meta property="article:tag" content="rewaard trap">
+<meta property="article:tag" content="gsm8k">
+<meta property="article:tag" content="pytorch">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://yowakkojay.github.io/img/killua.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "用qwen2.5和gsm8k动手实践GRPO",
+  "url": "https://yowakkojay.github.io/2026/01/25/%E7%94%A8qwen2.5%E5%92%8Cgsm8k%E5%8A%A8%E6%89%8B%E5%AE%9E%E8%B7%B5GRPO/",
+  "image": "https://yowakkojay.github.io/img/killua.png",
+  "datePublished": "2026-01-24T16:00:00.000Z",
+  "dateModified": "2026-02-20T13:19:07.533Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Yowakko Jay",
+      "url": "https://yowakkojay.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/killua_256.ico"><link rel="canonical" href="https://yowakkojay.github.io/2026/01/25/%E7%94%A8qwen2.5%E5%92%8Cgsm8k%E5%8A%A8%E6%89%8B%E5%AE%9E%E8%B7%B5GRPO/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '用qwen2.5和gsm8k动手实践GRPO',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Yowakko Jay</span></a><a class="nav-page-title" href="/"><span class="site-name">用qwen2.5和gsm8k动手实践GRPO</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"></div></nav><div id="post-info"><h1 class="post-title">用qwen2.5和gsm8k动手实践GRPO</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-01-24T16:00:00.000Z" title="发表于 2026-01-25 00:00:00">2026-01-25</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-02-20T13:19:07.533Z" title="更新于 2026-02-20 21:19:07">2026-02-20</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%90%8E%E8%AE%AD%E7%BB%83/">后训练</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%90%8E%E8%AE%AD%E7%BB%83/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/">强化学习</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>后训练之——强化学习，用qwen2.5-0.5b、qwen2.5-3b，在gsm8k上进行GRPO。</p>
+<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><p>运行环境：Python 3.10.9, Pytorch 2.9.1, CUDA 12.8, trl 0.28.0, transformers 4.57.6, huggingface-hub 0.36.2, datasets 4.5.0, 8 * A800(80GB)</p>
+<h2 id="实践中遇到的各种问题的记录"><a href="#实践中遇到的各种问题的记录" class="headerlink" title="实践中遇到的各种问题的记录"></a>实践中遇到的各种问题的记录</h2><ol>
+<li><p>我发现qwen2.5-0.5b的模型在gsm8k上的表现比较一般，最开始尝试使用的奖励函数：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">reward_func</span>(<span class="params">completions, ground_truth, **kwargs</span>):</span><br><span class="line">    <span class="comment"># Regular expression to capture content inside \boxed&#123;&#125;</span></span><br><span class="line">    matches = [re.search(<span class="string">r&quot;\\boxed\&#123;(.*?)\&#125;&quot;</span>, completion[<span class="number">0</span>][<span class="string">&#x27;content&#x27;</span>]) <span class="keyword">for</span> completion <span class="keyword">in</span> completions]</span><br><span class="line">    contents = [<span class="keyword">match</span>.group(<span class="number">1</span>) <span class="keyword">if</span> <span class="keyword">match</span> <span class="keyword">else</span> <span class="string">&quot;&quot;</span> <span class="keyword">for</span> <span class="keyword">match</span> <span class="keyword">in</span> matches]</span><br><span class="line">    <span class="comment"># Reward 1 if the content is the same as the ground truth, 0 otherwise</span></span><br><span class="line">    <span class="keyword">return</span> [<span class="number">1.0</span> <span class="keyword">if</span> c == gt <span class="keyword">else</span> <span class="number">0.0</span> <span class="keyword">for</span> c, gt <span class="keyword">in</span> <span class="built_in">zip</span>(contents, ground_truth)]</span><br></pre></td></tr></table></figure>
+
+<p>效果如：<a target="_blank" rel="noopener" href="https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-gsm8k/runs/mx4rygxh"><img src="https://raw.githubusercontent.com/wandb/assets/main/wandb-github-badge-28.svg" alt="Visualize in Weights & Biases" width="150" height="24"/></a> </p>
+<p><img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/0.5b-reward-2.svg" alt="reward"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/0.5b-loss-2.svg" alt="loss"></p>
+<p>这个是在单卡A800跑的，直接用的python提交到slurm上运行的。</p>
+</li>
+<li><p>后来改了一下用了4卡A800数据并行训练，大致就是配置了一下deepspeed，然后在trl的GRPOConfig配置中设置<code>deepspeed=&quot;ds_config.json&quot;</code>这个参数为相应的配置文件就行了，最后在提交slurm任务的时候用torchrun来运行。</p>
+<p>这里有个点有点坑，就是这里用了分布式训练的话不能在加载模型的时候用<code>model.to(&quot;cuda&quot;)</code>，一定得用分布式环境来分配。还有就是不要使用<code>device_map=&quot;auto&quot;</code>，这会和 GRPO 的 DDP 逻辑冲突。</p>
+<p>没有用vllm，原因是跟deepspeed有冲突。</p>
+<p><code>ds_config.json</code>为：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;bf16&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span> <span class="attr">&quot;enabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span> <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;zero_optimization&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;stage&quot;</span><span class="punctuation">:</span> <span class="number">2</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;allgather_partitions&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;allgather_bucket_size&quot;</span><span class="punctuation">:</span> <span class="number">2e8</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;overlap_comm&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;reduce_scatter&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;reduce_bucket_size&quot;</span><span class="punctuation">:</span> <span class="number">2e8</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;contiguous_gradients&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;gradient_accumulation_steps&quot;</span><span class="punctuation">:</span> <span class="string">&quot;auto&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;gradient_clipping&quot;</span><span class="punctuation">:</span> <span class="string">&quot;auto&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;train_batch_size&quot;</span><span class="punctuation">:</span> <span class="string">&quot;auto&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;train_micro_batch_size_per_gpu&quot;</span><span class="punctuation">:</span> <span class="string">&quot;auto&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>slurm提交的脚本为：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="comment">#SBATCH --job-name=GRPO_4GPU_Test</span></span><br><span class="line"><span class="comment">#SBATCH --output=./logs/%j_4gpu.out</span></span><br><span class="line"><span class="comment">#SBATCH --error=./logs/%j_4gpu.err</span></span><br><span class="line"><span class="comment">#SBATCH --partition=gpu</span></span><br><span class="line"><span class="comment">#SBATCH --nodes=1</span></span><br><span class="line"><span class="comment">#SBATCH --ntasks-per-node=1</span></span><br><span class="line"><span class="comment">#SBATCH --gres=gpu:4</span></span><br><span class="line"><span class="comment">#SBATCH --cpus-per-task=32</span></span><br><span class="line"><span class="comment">#SBATCH --mem=200GB</span></span><br><span class="line"><span class="comment">#SBATCH --time=00:00:00</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">source</span> /data1/home/ywj/miniconda3/bin/activate llm-rl</span><br><span class="line"></span><br><span class="line"><span class="built_in">export</span> WANDB_PROJECT=<span class="string">&quot;qwen2.5-grpo-4gpu&quot;</span></span><br><span class="line">MASTER_ADDR=$(scontrol show hostnames <span class="variable">$SLURM_JOB_NODELIST</span> | <span class="built_in">head</span> -n 1)</span><br><span class="line"><span class="built_in">export</span> MASTER_PORT=12346</span><br><span class="line"></span><br><span class="line">torchrun \</span><br><span class="line">    --nproc_per_node=4 \</span><br><span class="line">    --master_addr=<span class="variable">$MASTER_ADDR</span> \</span><br><span class="line">    --master_port=<span class="variable">$MASTER_PORT</span> \</span><br><span class="line">    deepspeed-GRPO_Qwen2.5-gsm8k.py</span><br></pre></td></tr></table></figure>
+
+<p>还有一个重要的点是，还修改了一下奖励函数，如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">reward_func</span>(<span class="params">completions, ground_truth, **kwargs</span>):</span><br><span class="line">    <span class="comment"># completions 是一个列表的列表，GRPO 的输入格式较特殊</span></span><br><span class="line">    <span class="comment"># completions[i][0][&#x27;content&#x27;] 获取第i个生成的文本</span></span><br><span class="line">    responses = [c[<span class="number">0</span>][<span class="string">&#x27;content&#x27;</span>] <span class="keyword">for</span> c <span class="keyword">in</span> completions]</span><br><span class="line">    </span><br><span class="line">    rewards = []</span><br><span class="line">    <span class="keyword">for</span> res, gt <span class="keyword">in</span> <span class="built_in">zip</span>(responses, ground_truth):</span><br><span class="line">        <span class="comment"># 1. 提取 \boxed&#123;&#125; 里的内容</span></span><br><span class="line">        <span class="keyword">match</span> = re.search(<span class="string">r&quot;\\boxed\&#123;(.*?)\&#125;&quot;</span>, res)</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">match</span>:</span><br><span class="line">            ans = <span class="keyword">match</span>.group(<span class="number">1</span>).strip()</span><br><span class="line">            <span class="comment"># 2. 简单的字符串匹配，或者可以更进一步只提炼数字</span></span><br><span class="line">            <span class="keyword">if</span> ans == gt:</span><br><span class="line">                rewards.append(<span class="number">1.0</span>)</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                rewards.append(<span class="number">0.1</span>) <span class="comment"># 答错了但格式对了，给个辛苦分</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            rewards.append(<span class="number">0.0</span>) <span class="comment"># 连格式都没写对，0分</span></span><br><span class="line">    <span class="keyword">return</span> rewards</span><br></pre></td></tr></table></figure>
+
+<p>用了一种分层的得分，看起来好像效果应该会不错，但是实际上效果不太好，效果如：<a target="_blank" rel="noopener" href="https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-4gpu/runs/a47u0ih9"><img src="https://raw.githubusercontent.com/wandb/assets/main/wandb-github-badge-28.svg" alt="Visualize in Weights & Biases" width="150" height="24"/></a> </p>
+<p><img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/0.5b-reward-1.svg" alt="reward"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/0.5b-loss-1.svg" alt="loss"></p>
+<p>reward会收敛到0.1，Loss变为0，陷入到了一种叫做奖励陷阱（Reward Trap）的问题中，在GRPO中由于是依赖组内的相对优势，公式可以看作是$A &#x3D; \frac{R - mean(R)}{std(R)}$，由于0.5b的模型学习能力有限，gsm8k对他来说应该是太难了，但是学习输出boxed的格式对他来说比较容易，所以组内可以就都摆烂了，感觉像是大家都学不会而且既然都有0.1了就别卷了，大家都来躺平。</p>
+</li>
+<li><p>考虑到0.5b模型跑起来比较容易，又想测试一下仅通过减小rewar函数中对于格式奖励部分的值能不能解决上面reward trap的问题，所以就简单改了一下奖励函数（感觉应该不会成功，就简单跑了一点点），如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">reward_func</span>(<span class="params">completions, ground_truth, **kwargs</span>):</span><br><span class="line">    responses = [c[<span class="number">0</span>][<span class="string">&#x27;content&#x27;</span>] <span class="keyword">for</span> c <span class="keyword">in</span> completions]</span><br><span class="line">    rewards = []</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> res, gt <span class="keyword">in</span> <span class="built_in">zip</span>(responses, ground_truth):</span><br><span class="line">        <span class="comment"># 1. 提取 \boxed&#123;&#125; 里的内容</span></span><br><span class="line">        <span class="keyword">match</span> = re.search(<span class="string">r&quot;\\boxed\&#123;(.*?)\&#125;&quot;</span>, res)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">match</span>:</span><br><span class="line">            ans = <span class="keyword">match</span>.group(<span class="number">1</span>).strip()</span><br><span class="line">            <span class="comment"># 改进：简单的字符串清理，增加匹配成功率</span></span><br><span class="line">            ans_clean = ans.replace(<span class="string">&#x27;,&#x27;</span>, <span class="string">&#x27;&#x27;</span>).replace(<span class="string">&#x27;$&#x27;</span>, <span class="string">&#x27;&#x27;</span>).strip()</span><br><span class="line">            gt_clean = gt.replace(<span class="string">&#x27;,&#x27;</span>, <span class="string">&#x27;&#x27;</span>).replace(<span class="string">&#x27;$&#x27;</span>, <span class="string">&#x27;&#x27;</span>).strip()</span><br><span class="line">            </span><br><span class="line">            <span class="keyword">if</span> ans_clean == gt_clean:</span><br><span class="line">                rewards.append(<span class="number">1.0</span>)  <span class="comment"># 满分</span></span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="comment"># 改进：辛苦分不要给固定值，可以根据“思考长度”给一点点极其微小的波动</span></span><br><span class="line">                <span class="comment"># 或者干脆给 0.01，拉开与 1.0 的差距</span></span><br><span class="line">                <span class="comment"># 甚至可以引入“软匹配”：比如包含正确数字就给 0.2</span></span><br><span class="line">                rewards.append(<span class="number">0.01</span>) </span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="comment"># 连格式都写不对，给负分或者 0</span></span><br><span class="line">            rewards.append(<span class="number">0.0</span>)</span><br><span class="line">            </span><br><span class="line">    <span class="keyword">return</span> rewards</span><br></pre></td></tr></table></figure>
+
+<p>效果如：<a target="_blank" rel="noopener" href="https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-4gpu/runs/lb05cxuf"><img src="https://raw.githubusercontent.com/wandb/assets/main/wandb-github-badge-28.svg" alt="Visualize in Weights & Biases" width="150" height="24"/></a> </p>
+<p><img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/0.5b-reward-3.svg" alt="reward"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/0.5b-loss-3.svg" alt="loss"></p>
+<p>果然跟我想的差不多，果然不出所料的也陷入到了reward trap里，这次是收敛到0.01了，或许是模型太小了所以表达能力有限？</p>
+</li>
+<li><p>为了验证上面提到的猜测，这次换成3b的模型来试试。（如果还是有问题的话，要么就是换更大的模型，要么就是确实是奖励函数不能这么设计。）</p>
+<p>效果如：<a target="_blank" rel="noopener" href="https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-4gpu/runs/2lfubxpb"><img src="https://raw.githubusercontent.com/wandb/assets/main/wandb-github-badge-28.svg" alt="Visualize in Weights & Biases" width="150" height="24"/></a> </p>
+<p><img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/3b-reward-1.svg" alt="reward"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/3b-loss-1.svg" alt="loss"></p>
+<p>果然确实是模型规模的问题，换到3b模型就没有出现reward trap的情况了，看来还是大点的模型更好用。早知如此应该先从当前设备显存能支持的模型中较小但不能最小的模型开始实验验证了（下次记住了）。</p>
+<p>在测试集上验证acc的结果为：GRPO之后的3b模型acc是86.05%，GRPO之前的3b模型acc是83.40%。</p>
+<p>看来GRPO确实是有效果的。</p>
+</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://yowakkojay.github.io">Yowakko Jay</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://yowakkojay.github.io/2026/01/25/%E7%94%A8qwen2.5%E5%92%8Cgsm8k%E5%8A%A8%E6%89%8B%E5%AE%9E%E8%B7%B5GRPO/">https://yowakkojay.github.io/2026/01/25/%E7%94%A8qwen2.5%E5%92%8Cgsm8k%E5%8A%A8%E6%89%8B%E5%AE%9E%E8%B7%B5GRPO/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://yowakkojay.github.io" target="_blank">Yowakko Jay</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/GRPO/">GRPO</a><a class="post-meta__tags" href="/tags/qwen/">qwen</a><a class="post-meta__tags" href="/tags/deepspeed/">deepspeed</a><a class="post-meta__tags" href="/tags/rewaard-trap/">rewaard trap</a><a class="post-meta__tags" href="/tags/gsm8k/">gsm8k</a><a class="post-meta__tags" href="/tags/pytorch/">pytorch</a></div><div class="post-share"><div class="social-share" data-image="/img/killua.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2025/08/16/%E5%9B%9E%E9%A1%BE%E6%A6%82%E7%8E%87%E8%AE%BA%E4%B8%8E%E6%95%B0%E7%90%86%E7%BB%9F%E8%AE%A1/" title="简单回顾概率论与数理统计"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">简单回顾概率论与数理统计</div></div><div class="info-2"><div class="info-item-1">1. 微积分1.1. 积分：牛顿-莱布尼茨公式如果函数 $F(x)$ 是连续函数 $f(x)$ 在区间 $[a, b]$ 上的一个原函数，则：$$\int _ { a } ^ { b } f ( x ) d x &#x3D; F ( b ) - F ( a )$$ 1.2. 导数与微分1.2.1. 极限极限定义：设函数 $f(x)$ 在点 $x_0$ 的某一去心邻域内有定义，如果存在常数 $A$，对于任意给定的正数 $e$（不论它多么小），总存在正数 $d$，使得当 $x$ 满足不等式 $0&lt;|x−x_0|&lt;d$ 时，对应的函数值 $f(x)$ 都满足不等式 $|f(X)-A|&lt;e$ , 那么常数 $A$ 就叫做函数 $f(x)$ 在 $x\rightarrow x_0$ 时的极限[1]，记为：$$\lim _ { x \rightarrow x _ { 0 } } f ( x ) &#x3D; A$$，等价于：$$\forall \varepsilon &gt; 0 , \exists \delta &gt; 0 , 当 0 &lt; | x - x _ { ...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/killua.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Yowakko Jay</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">4</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">7</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/yowakkojay"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/sixteeeenTang" target="_blank" title="Github"><i class="fab fa-github-alt" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:yuwanjie@mail.ustc.edu.cn" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="https://aistudio.baidu.com/personalcenter/thirdview/2845794" target="_blank" title="Baidu AI Studio"><img class="social-icon-svg" src="/img/baidu-aistudio.svg" style="color: #2D57F5; height: 1em; width: 1em; display: inline-block; vertical-align: -0.125em;"/></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%83%8C%E6%99%AF"><span class="toc-text">背景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83"><span class="toc-text">环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E8%B7%B5%E4%B8%AD%E9%81%87%E5%88%B0%E7%9A%84%E5%90%84%E7%A7%8D%E9%97%AE%E9%A2%98%E7%9A%84%E8%AE%B0%E5%BD%95"><span class="toc-text">实践中遇到的各种问题的记录</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/01/25/%E7%94%A8qwen2.5%E5%92%8Cgsm8k%E5%8A%A8%E6%89%8B%E5%AE%9E%E8%B7%B5GRPO/" title="用qwen2.5和gsm8k动手实践GRPO">用qwen2.5和gsm8k动手实践GRPO</a><time datetime="2026-01-24T16:00:00.000Z" title="发表于 2026-01-25 00:00:00">2026-01-25</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/08/16/%E5%9B%9E%E9%A1%BE%E6%A6%82%E7%8E%87%E8%AE%BA%E4%B8%8E%E6%95%B0%E7%90%86%E7%BB%9F%E8%AE%A1/" title="简单回顾概率论与数理统计">简单回顾概率论与数理统计</a><time datetime="2025-08-15T16:00:00.000Z" title="发表于 2025-08-16 00:00:00">2025-08-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/07/13/%E9%85%8D%E7%BD%AEPytorch%E7%8E%AF%E5%A2%83%EF%BC%88Win%E7%B3%BB%E7%BB%9F%EF%BC%89/" title="配置Pytorch环境（Win系统）">配置Pytorch环境（Win系统）</a><time datetime="2025-07-12T16:15:51.305Z" title="发表于 2025-07-13 00:15:51">2025-07-13</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/07/07/hello-world/" title="Hello World">Hello World</a><time datetime="2025-07-06T18:05:46.163Z" title="发表于 2025-07-07 02:05:46">2025-07-07</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;2025 - 2026 By Yowakko Jay</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.4.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  window.pjax ? loadMathjax() : window.addEventListener('load', loadMathjax)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
