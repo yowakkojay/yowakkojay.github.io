@@ -1,0 +1,440 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>归一化（BN、LN 与 RMSNorm） | Yowakko Jay</title><meta name="author" content="Yowakko Jay"><meta name="copyright" content="Yowakko Jay"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="归一化简单来说，归一化就是把数据通过某种算法，缩放到一个特定的范围（通常是 0 到 1，或者均值为 0、方差为 1）。 一、什么是归一化 (Normalization)？1. 为什么要归一化？想象一下，你正在训练一个预测房价的模型。  特征 A 是”房屋面积”，范围是 $40 \sim 500$ 平方米。 特征 B 是”房间数量”，范围是 $1 \sim 5$ 个。  如果不做归一化,数字大的特征">
+<meta property="og:type" content="article">
+<meta property="og:title" content="归一化（BN、LN 与 RMSNorm）">
+<meta property="og:url" content="https://yowakkojay.github.io/2026/02/21/%E5%BD%92%E4%B8%80%E5%8C%96/index.html">
+<meta property="og:site_name" content="Yowakko Jay">
+<meta property="og:description" content="归一化简单来说，归一化就是把数据通过某种算法，缩放到一个特定的范围（通常是 0 到 1，或者均值为 0、方差为 1）。 一、什么是归一化 (Normalization)？1. 为什么要归一化？想象一下，你正在训练一个预测房价的模型。  特征 A 是”房屋面积”，范围是 $40 \sim 500$ 平方米。 特征 B 是”房间数量”，范围是 $1 \sim 5$ 个。  如果不做归一化,数字大的特征">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://yowakkojay.github.io/img/killua.png">
+<meta property="article:published_time" content="2026-02-20T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-02-21T15:27:04.625Z">
+<meta property="article:author" content="Yowakko Jay">
+<meta property="article:tag" content="归一化">
+<meta property="article:tag" content="Normalization">
+<meta property="article:tag" content="Batch Normalization">
+<meta property="article:tag" content="BN">
+<meta property="article:tag" content="Layer Normalization">
+<meta property="article:tag" content="LN">
+<meta property="article:tag" content="RMSNorm">
+<meta property="article:tag" content="LLM">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://yowakkojay.github.io/img/killua.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "归一化（BN、LN 与 RMSNorm）",
+  "url": "https://yowakkojay.github.io/2026/02/21/%E5%BD%92%E4%B8%80%E5%8C%96/",
+  "image": "https://yowakkojay.github.io/img/killua.png",
+  "datePublished": "2026-02-20T16:00:00.000Z",
+  "dateModified": "2026-02-21T15:27:04.625Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Yowakko Jay",
+      "url": "https://yowakkojay.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/killua_256.ico"><link rel="canonical" href="https://yowakkojay.github.io/2026/02/21/%E5%BD%92%E4%B8%80%E5%8C%96/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '归一化（BN、LN 与 RMSNorm）',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/background0.jpg);"></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Yowakko Jay</span></a><a class="nav-page-title" href="/"><span class="site-name">归一化（BN、LN 与 RMSNorm）</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"></div></nav><div id="post-info"><h1 class="post-title">归一化（BN、LN 与 RMSNorm）</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-02-20T16:00:00.000Z" title="发表于 2026-02-21 00:00:00">2026-02-21</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-02-21T15:27:04.625Z" title="更新于 2026-02-21 23:27:04">2026-02-21</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="归一化"><a href="#归一化" class="headerlink" title="归一化"></a>归一化</h1><p>简单来说，归一化就是<strong>把数据通过某种算法，缩放到一个特定的范围（通常是 0 到 1，或者均值为 0、方差为 1）</strong>。</p>
+<h2 id="一、什么是归一化-Normalization-？"><a href="#一、什么是归一化-Normalization-？" class="headerlink" title="一、什么是归一化 (Normalization)？"></a>一、什么是归一化 (Normalization)？</h2><h3 id="1-为什么要归一化？"><a href="#1-为什么要归一化？" class="headerlink" title="1. 为什么要归一化？"></a>1. 为什么要归一化？</h3><p>想象一下，你正在训练一个预测房价的模型。</p>
+<ul>
+<li>特征 A 是”房屋面积”，范围是 $40 \sim 500$ 平方米。</li>
+<li>特征 B 是”房间数量”，范围是 $1 \sim 5$ 个。</li>
+</ul>
+<p>如果不做归一化,数字大的特征（面积）会对模型产生巨大的影响，导致模型忽略掉数字小的特征（房间数）。此外，数据分布如果不均匀，梯度下降的过程会非常曲折（如下图所示），导致训练很慢，甚至无法收敛。</p>
+<h4 id="（1）归一化的作用"><a href="#（1）归一化的作用" class="headerlink" title="（1）归一化的作用"></a>（1）归一化的作用</h4><ol>
+<li>加速收敛：让损失函数的等高线变得更圆（更均匀），梯度下降可以直接指向最低点。</li>
+<li>数值稳定：避免数据过大导致梯度爆炸，或过小导致梯度消失。</li>
+<li>公平性：让不同量纲的特征拥有同等的话语权。</li>
+</ol>
+<h3 id="2-最基础的公式-Z-Score-Normalization"><a href="#2-最基础的公式-Z-Score-Normalization" class="headerlink" title="2. 最基础的公式 (Z-Score Normalization)"></a>2. 最基础的公式 (Z-Score Normalization)</h3><p>这是深度学习中最常用的标准化方法：</p>
+<p>$$ \widehat{x} &#x3D; \frac{x - \mu}{\sigma} $$</p>
+<ul>
+<li>$x$：原始数据</li>
+<li>$\mu$：均值 (Mean)</li>
+<li>$\sigma$：标准差 (Standard Deviation)</li>
+</ul>
+<p>经过处理后，数据会变成均值为 0，方差为 1 的分布。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">from</span> sklearn.preprocessing <span class="keyword">import</span> StandardScaler</span><br><span class="line"></span><br><span class="line"><span class="comment"># -----------------------</span></span><br><span class="line"><span class="comment"># 1. 构造一个示例数据集</span></span><br><span class="line"><span class="comment"># -----------------------</span></span><br><span class="line"><span class="comment"># 特征1：房屋面积 (40~500)</span></span><br><span class="line"><span class="comment"># 特征2：房间数量 (1~5)</span></span><br><span class="line">data = np.array([</span><br><span class="line">    [<span class="number">50</span>, <span class="number">2</span>],</span><br><span class="line">    [<span class="number">80</span>, <span class="number">3</span>],</span><br><span class="line">    [<span class="number">120</span>, <span class="number">3</span>],</span><br><span class="line">    [<span class="number">200</span>, <span class="number">4</span>],</span><br><span class="line">    [<span class="number">300</span>, <span class="number">5</span>],</span><br><span class="line">    [<span class="number">450</span>, <span class="number">5</span>]</span><br><span class="line">])</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;📌 原始数据：&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(data)</span><br><span class="line"></span><br><span class="line"><span class="comment"># -----------------------</span></span><br><span class="line"><span class="comment"># 2. 使用自己写的公式进行标准化</span></span><br><span class="line"><span class="comment"># -----------------------</span></span><br><span class="line">mean = np.mean(data, axis=<span class="number">0</span>)</span><br><span class="line">std = np.std(data, axis=<span class="number">0</span>)</span><br><span class="line">normalized_manual = (data - mean) / std</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;\n📌 手动计算标准化后的数据 (Z-Score):&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(normalized_manual)</span><br><span class="line"></span><br><span class="line"><span class="comment"># -----------------------</span></span><br><span class="line"><span class="comment"># 3. 使用 sklearn 标准化</span></span><br><span class="line"><span class="comment"># -----------------------</span></span><br><span class="line">scaler = StandardScaler()</span><br><span class="line">normalized_sklearn = scaler.fit_transform(data)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;\n📌 sklearn 标准化后的数据（应与手写计算几乎一致）：&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(normalized_sklearn)</span><br><span class="line"></span><br><span class="line"><span class="comment"># -----------------------</span></span><br><span class="line"><span class="comment"># 4. 比较两者误差（应该非常小）</span></span><br><span class="line"><span class="comment"># -----------------------</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;\n📌 两种方法误差对比：&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(np.<span class="built_in">abs</span>(normalized_manual - normalized_sklearn))</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<details>
+<summary>点击查看运行结果</summary>
+
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">📌 原始数据：</span><br><span class="line">[[ 50   2]</span><br><span class="line"> [ 80   3]</span><br><span class="line"> [120   3]</span><br><span class="line"> [200   4]</span><br><span class="line"> [300   5]</span><br><span class="line"> [450   5]]</span><br><span class="line"></span><br><span class="line">📌 手动计算标准化后的数据 (Z-Score):</span><br><span class="line">[[-1.07972363 -1.50755672]</span><br><span class="line"> [-0.8637789  -0.60302269]</span><br><span class="line"> [-0.5758526  -0.60302269]</span><br><span class="line"> [ 0.          0.30151134]</span><br><span class="line"> [ 0.71981575  1.20604538]</span><br><span class="line"> [ 1.79953938  1.20604538]]</span><br><span class="line"></span><br><span class="line">📌 sklearn 标准化后的数据（应与手写计算几乎一致）：</span><br><span class="line">[[-1.07972363 -1.50755672]</span><br><span class="line"> [-0.8637789  -0.60302269]</span><br><span class="line"> [-0.5758526  -0.60302269]</span><br><span class="line"> [ 0.          0.30151134]</span><br><span class="line"> [ 0.71981575  1.20604538]</span><br><span class="line"> [ 1.79953938  1.20604538]]</span><br><span class="line"></span><br><span class="line">📌 两种方法误差对比：</span><br><span class="line">[[0. 0.]</span><br><span class="line"> [0. 0.]</span><br><span class="line"> [0. 0.]</span><br><span class="line"> [0. 0.]</span><br><span class="line"> [0. 0.]</span><br><span class="line"> [0. 0.]]</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+</details>
+
+<h2 id="二、深度学习中的两大归一化技术"><a href="#二、深度学习中的两大归一化技术" class="headerlink" title="二、深度学习中的两大归一化技术"></a>二、深度学习中的两大归一化技术</h2><p>在深度神经网络中，我们不仅要对输入数据做归一化，还需要对<strong>中间层的输出</strong>做归一化。因为随着网络层数的加深，每一层的参数变动会导致下一层输入的分布发生剧烈变化（这被称为 Internal Covariate Shift）。</p>
+<p>这就引出了 <strong>Batch Normalization (BN)</strong> 和 <strong>Layer Normalization (LN)</strong>。它们的核心区别在于：<strong>计算均值 $\mu$ 和方差 $\sigma$ 的维度不同。</strong></p>
+<p>为了方便理解，假设我们的输入数据是一个立方体 $[N, C, H, W]$（对于图像）或者二维矩阵 $[N, D]$（对于NLP）。</p>
+<ul>
+<li>$N$：Batch Size（这批数据有多少条，比如 32 张图）。</li>
+<li>$C&#x2F;D$：Channel&#x2F;Dimension（特征维度，比如 RGB 通道或词向量长度）。</li>
+</ul>
+<h3 id="1-批量归一化-Batch-Normalization-BN"><a href="#1-批量归一化-Batch-Normalization-BN" class="headerlink" title="1. 批量归一化 (Batch Normalization - BN)"></a>1. 批量归一化 (Batch Normalization - BN)</h3><p><strong>核心思想：</strong> “纵向”归一化。</p>
+<p>BN 关注的是<strong>整个 Batch</strong> 在<strong>同一个特征通道</strong>上的分布。它会查看这批数据中所有样本在第 1 个特征上的值，算出均值和方差，然后归一化；再看第 2 个特征，以此类推。</p>
+<ul>
+<li><strong>操作方式：</strong> 固定特征维度，在 Batch 维度 ($N$) 上进行统计。</li>
+<li><strong>比喻：</strong> 老师批改试卷。BN 就像是老师<strong>算出全班同学（Batch）在”数学”这一科（Feature）的平均分</strong>，然后看小明的数学分相对于全班是高还是低。</li>
+<li><strong>适用场景：</strong> <strong>计算机视觉 (CV)</strong>。因为图像的不同样本之间，同一通道（比如红色通道）具有相似的物理意义，且 Batch Size 通常较大。</li>
+<li><strong>缺点：</strong><ul>
+<li>极其依赖 Batch Size 的大小。如果 Batch Size 太小（比如只有 1 或 2），统计出的均值和方差就没有代表性，模型效果会很差。</li>
+<li>对于变长的序列数据（如文本），很难应用。</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-层归一化-Layer-Normalization-LN"><a href="#2-层归一化-Layer-Normalization-LN" class="headerlink" title="2. 层归一化 (Layer Normalization - LN)"></a>2. 层归一化 (Layer Normalization - LN)</h3><p><strong>核心思想：</strong> “横向”归一化。</p>
+<p>LN 关注的是<strong>单个样本</strong>内部<strong>所有特征</strong>的分布。它不关心其他样本怎么样，只关心当前这个样本自己的特征分布情况。</p>
+<ul>
+<li><strong>操作方式：</strong> 固定样本维度，在特征维度 ($C$ 或 $D$) 上进行统计。</li>
+<li><strong>比喻：</strong> 综合素质评价。LN 就像是老师<strong>不看别的同学，只看小明自己（Sample）的所有科目（Features）</strong>，算出小明自己的平均分，看他的数学分相对于他自己的平均水平是高还是低。</li>
+<li><strong>适用场景：</strong> <strong>自然语言处理 (NLP)</strong>，比如 Transformer、BERT、GPT。因为文本数据的长度是不固定的，且不同样本之间的特征（词向量）往往没有图像那样严格对应的物理意义。</li>
+<li><strong>优点：</strong><ul>
+<li>完全不依赖 Batch Size，单条数据也能归一化。</li>
+<li>非常适合处理变长序列（RNN&#x2F;LSTM&#x2F;Transformer）。</li>
+</ul>
+</li>
+</ul>
+<h3 id="3-差异"><a href="#3-差异" class="headerlink" title="3. 差异"></a>3. 差异</h3><table>
+<thead>
+<tr>
+<th><strong>特性</strong></th>
+<th><strong>批量归一化 (Batch Norm)</strong></th>
+<th><strong>层归一化 (Layer Norm)</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>计算方向</strong></td>
+<td><strong>竖着切</strong> (跨样本，同特征)</td>
+<td><strong>横着切</strong> (跨特征，同样本)</td>
+</tr>
+<tr>
+<td><strong>统计范围</strong></td>
+<td>对<strong>一列</strong>数据求均值&#x2F;方差</td>
+<td>对<strong>一行</strong>数据求均值&#x2F;方差</td>
+</tr>
+<tr>
+<td><strong>依赖 Batch Size?</strong></td>
+<td><strong>是</strong> (Batch 太小会失效)</td>
+<td><strong>否</strong> (与 Batch 大小无关)</td>
+</tr>
+<tr>
+<td><strong>主要应用领域</strong></td>
+<td><strong>CV (CNN, ResNet)</strong></td>
+<td><strong>NLP (Transformer, RNN)</strong></td>
+</tr>
+<tr>
+<td><strong>推理时的行为</strong></td>
+<td>使用训练期累计的全局均值&#x2F;方差</td>
+<td>依然实时计算当前输入的均值&#x2F;方差</td>
+</tr>
+</tbody></table>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn</span><br><span class="line"></span><br><span class="line"><span class="comment"># 假设数据：Batch Size=2, 特征维度=3</span></span><br><span class="line">x = torch.tensor([</span><br><span class="line">    [<span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>],  <span class="comment"># 样本 1</span></span><br><span class="line">    [<span class="number">4.0</span>, <span class="number">5.0</span>, <span class="number">6.0</span>]   <span class="comment"># 样本 2</span></span><br><span class="line">])</span><br><span class="line"></span><br><span class="line"><span class="comment"># --- 1. Batch Normalization ---</span></span><br><span class="line"><span class="comment"># 它是对每一列（特征）做归一化</span></span><br><span class="line"><span class="comment"># 第一列是 [1.0, 4.0]，均值 2.5，标准差 1.5</span></span><br><span class="line">bn = nn.BatchNorm1d(num_features=<span class="number">3</span>) </span><br><span class="line"><span class="comment"># 输出结果中，第一列的数据会被拉伸到均值0附近</span></span><br><span class="line"><span class="built_in">print</span>(bn(x))</span><br><span class="line"></span><br><span class="line"><span class="comment"># --- 2. Layer Normalization ---</span></span><br><span class="line"><span class="comment"># 它是对每一行（样本）做归一化</span></span><br><span class="line"><span class="comment"># 第一行是 [1.0, 2.0, 3.0]，均值 2.0，标准差 ≈ 1.2247</span></span><br><span class="line">ln = nn.LayerNorm(normalized_shape=<span class="number">3</span>)</span><br><span class="line"><span class="comment"># 输出结果中，第一行的数据会被拉伸到均值0附近</span></span><br><span class="line"><span class="built_in">print</span>(ln(x))</span><br></pre></td></tr></table></figure>
+
+<details>
+<summary>点击查看运行结果</summary>
+
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">tensor([[-1.0000, -1.0000, -1.0000],</span><br><span class="line">        [ 1.0000,  1.0000,  1.0000]], grad_fn=&lt;NativeBatchNormBackward0&gt;)</span><br><span class="line">tensor([[-1.2247,  0.0000,  1.2247],</span><br><span class="line">        [-1.2247,  0.0000,  1.2247]], grad_fn=&lt;NativeLayerNormBackward0&gt;)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+</details>
+
+<h3 id="4-四维张量中的归一化"><a href="#4-四维张量中的归一化" class="headerlink" title="4. 四维张量中的归一化"></a>4. 四维张量中的归一化</h3><p>如果把维度从2D扩展到4D，计算的方法也类似，这里以图像任务为例。</p>
+<p>在图像任务（如 CNN）中，数据通常以 4 维张量的形式存在：</p>
+<p>$$[N, C, H, W]$$</p>
+<ul>
+<li><strong>N (Batch Size)</strong>: 批次大小（比如 32 张图）</li>
+<li><strong>C (Channel)</strong>: 通道数（比如 RGB 图片就是 3，中间层可能是 64, 128…）</li>
+<li><strong>H (Height)</strong>: 图片高度</li>
+<li><strong>W (Width)</strong>: 图片宽度</li>
+</ul>
+<p>对于这个 $[N, C, H, W]$ 的”四维大方块”，<strong>批量归一化 (BN)</strong> 和 <strong>层归一化 (LN)</strong> 的切分方式会有巨大的不同。</p>
+<h4 id="（1）批量归一化-Batch-Normalization-BN-——-“通道为王”"><a href="#（1）批量归一化-Batch-Normalization-BN-——-“通道为王”" class="headerlink" title="（1）批量归一化 (Batch Normalization, BN) —— “通道为王”"></a>（1）批量归一化 (Batch Normalization, BN) —— “通道为王”</h4><p>在图像中，BN 的核心逻辑是：<strong>不同的通道（Channel）代表不同的特征（比如红色、纹理、边缘），我们要独立对待每一个通道，但在该通道内部，我们要统管全局。</strong></p>
+<ul>
+<li><p>计算逻辑：</p>
+<p>对于第 $k$ 个通道（比如 R 通道），BN 会把这一个 Batch 中所有图片 ($N$) 的 所有像素点 ($H \times W$) 全部拿出来，放在一起算均值和方差。</p>
+<p>也就是说，它聚合了 <strong>N, H, W</strong> 三个维度，只保留 <strong>C</strong> 维度。</p>
+</li>
+<li><p>直观理解：</p>
+<p>想象你有 32 张彩色照片。</p>
+<p>BN 说：”我现在要标准化红色通道。我不管你是第几张照片，也不管你是照片左上角还是右下角的像素，只要你是红色的数值，都归我管。”</p>
+<p>它会算出这 32 张图里所有红色像素的平均值，然后把大家的红色值都归一化。接下来再算绿色通道，以此类推。</p>
+</li>
+<li><p>结果形状：</p>
+<p>如果你有 $C$ 个通道，你就会得到 $C$ 个均值 ($\mu$) 和 $C$ 个方差 ($\sigma$)。</p>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn</span><br><span class="line"></span><br><span class="line"><span class="comment"># 输入：32张图，3个通道，224x224</span></span><br><span class="line"><span class="comment"># shape: [32, 3, 224, 224]</span></span><br><span class="line">x = torch.randn(<span class="number">32</span>, <span class="number">3</span>, <span class="number">224</span>, <span class="number">224</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># BN 计算时的聚合维度：(0, 2, 3) -&gt; (N, H, W)</span></span><br><span class="line">mean = x.mean(dim=(<span class="number">0</span>, <span class="number">2</span>, <span class="number">3</span>), keepdim=<span class="literal">True</span>) </span><br><span class="line"><span class="comment"># 得到的 mean shape: [1, 3, 1, 1] -&gt; 只有 C 维度保留了数据</span></span><br><span class="line"><span class="built_in">print</span>(mean.shape)</span><br><span class="line"><span class="built_in">print</span>(mean)</span><br></pre></td></tr></table></figure>
+
+<details>
+<summary>点击查看运行结果</summary>
+
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">torch.Size([1, 3, 1, 1])</span><br><span class="line">tensor([[[[-0.0007]],</span><br><span class="line"></span><br><span class="line">         [[ 0.0003]],</span><br><span class="line"></span><br><span class="line">         [[ 0.0013]]]])</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+</details>
+
+<h4 id="（2）层归一化-Layer-Normalization-LN-——-“单图自理”"><a href="#（2）层归一化-Layer-Normalization-LN-——-“单图自理”" class="headerlink" title="（2）层归一化 (Layer Normalization, LN) —— “单图自理”"></a>（2）层归一化 (Layer Normalization, LN) —— “单图自理”</h4><p>LN 在图像中比较少用（除非是 Vision Transformer），它的核心逻辑是：<strong>每一张图片都是独立的个体，不看别人。</strong></p>
+<ul>
+<li><p>计算逻辑：</p>
+<p>对于第 $i$ 张图片，LN 会把它所有的通道 ($C$) 以及所有的像素点 ($H \times W$) 全部拿出来，混在一起算一个均值和方差。</p>
+<p>也就是说，它聚合了 <strong>C, H, W</strong> 三个维度，只保留 <strong>N</strong> 维度。</p>
+</li>
+<li><p>直观理解：</p>
+<p>LN 说：”我是第 1 张照片。我不管隔壁第 2 张照片是什么样，也不管我的红色通道和绿色通道代表什么不同物理意义。我就算我自己这一整张图里所有数值的平均值。”</p>
+</li>
+<li><p>结果形状：</p>
+<p>如果你有 $N$ 张图，你就会得到 $N$ 个均值 ($\mu$) 和 $N$ 个方差 ($\sigma$)。</p>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn</span><br><span class="line"></span><br><span class="line"><span class="comment"># 输入：32张图，3个通道，224x224</span></span><br><span class="line"><span class="comment"># shape: [32, 3, 224, 224]</span></span><br><span class="line">x = torch.randn(<span class="number">32</span>, <span class="number">3</span>, <span class="number">224</span>, <span class="number">224</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># LN 计算时的聚合维度：(1, 2, 3) -&gt; (C, H, W)</span></span><br><span class="line">mean = x.mean(dim=(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>), keepdim=<span class="literal">True</span>)</span><br><span class="line"><span class="comment"># 得到的 mean shape: [32, 1, 1, 1] -&gt; 只有 N 维度保留了数据</span></span><br><span class="line"><span class="built_in">print</span>(mean.shape)</span><br><span class="line"><span class="built_in">print</span>(mean)</span><br></pre></td></tr></table></figure>
+
+<details>
+<summary>点击查看运行结果</summary>
+
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br></pre></td><td class="code"><pre><span class="line">torch.Size([32, 1, 1, 1])</span><br><span class="line">tensor([[[[-0.0035]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[-0.0017]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[ 0.0026]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[ 0.0017]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[ 0.0004]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[-0.0018]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[-0.0012]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[ 0.0003]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[ 0.0042]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[-0.0022]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[-0.0012]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[ 0.0043]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[ 0.0075]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[-0.0053]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[ 0.0005]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[-0.0011]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[ 0.0033]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[-0.0022]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[ 0.0028]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[ 0.0007]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[-0.0018]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[-0.0025]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[ 0.0045]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[ 0.0044]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[-0.0016]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[-0.0011]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[-0.0014]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[ 0.0011]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[-0.0002]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[-0.0003]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[ 0.0045]]],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        [[[ 0.0001]]]])</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+</details>
+
+<h3 id="5-进阶：其他归一化方法-IN-和-GN"><a href="#5-进阶：其他归一化方法-IN-和-GN" class="headerlink" title="5. 进阶：其他归一化方法 (IN 和 GN)"></a>5. 进阶：其他归一化方法 (IN 和 GN)</h3><p>在图像领域，当 BN 不好用（比如 Batch Size 很小）时，我们通常不会直接用 LN，而是用 <strong>Instance Norm (IN)</strong> 或 <strong>Group Norm (GN)</strong>。这俩更容易和 LN 搞混。</p>
+<h4 id="（1）Instance-Normalization-IN-——-“单图单通道”"><a href="#（1）Instance-Normalization-IN-——-“单图单通道”" class="headerlink" title="（1）Instance Normalization (IN) —— “单图单通道”"></a>（1）Instance Normalization (IN) —— “单图单通道”</h4><ul>
+<li><strong>逻辑</strong>：既不看别的图片（像 LN），也不混淆不同通道（像 BN）。</li>
+<li><strong>操作</strong>：它算出的是<strong>某一张图片</strong>中，<strong>某一个通道</strong>的均值。</li>
+<li><strong>应用</strong>：<strong>风格迁移 (Style Transfer)</strong>。因为风格通常只和单张图的特定纹理（通道）有关，不需要跟别的图片对比，也不需要跟别的颜色通道对比。</li>
+</ul>
+<h4 id="（2）Group-Normalization-GN-——-“通道分组”"><a href="#（2）Group-Normalization-GN-——-“通道分组”" class="headerlink" title="（2）Group Normalization (GN) —— “通道分组”"></a>（2）Group Normalization (GN) —— “通道分组”</h4><ul>
+<li><strong>逻辑</strong>：这是 LN 和 IN 的折中方案。它不把所有通道 $C$ 混在一起（LN 太粗暴），也不把通道完全独立（IN 太细碎）。它把通道分成几组（Group），在组内做归一化。</li>
+<li><strong>应用</strong>：<strong>目标检测</strong>（Batch Size 通常很小，BN 失效时，GN 是最佳替代品）。</li>
+</ul>
+<h2 id="三、RMSNorm"><a href="#三、RMSNorm" class="headerlink" title="三、RMSNorm"></a>三、RMSNorm</h2><p>你会在 <strong>Qwen3</strong>、<strong>Llama 3</strong>、<strong>Gemma</strong> 以及几乎所有现代最强 LLM（大语言模型）的架构图中看到 <strong>RMSNorm</strong>（Root Mean Square Normalization）。</p>
+<p>可以这么说：<strong>在 LLM 时代，Layer Norm (LN) 已经是”前朝元老”了，而 RMSNorm 则是现在的”当红明星”。</strong></p>
+<p>RMSNorm 本质上是 Layer Norm 的<strong>简化版</strong>和<strong>加速版</strong>。</p>
+<h3 id="1-为什么有了-Layer-Norm-还要造一个-RMSNorm？"><a href="#1-为什么有了-Layer-Norm-还要造一个-RMSNorm？" class="headerlink" title="1. 为什么有了 Layer Norm 还要造一个 RMSNorm？"></a>1. 为什么有了 Layer Norm 还要造一个 RMSNorm？</h3><p>为了回答这个问题，我们需要回看 Layer Norm (LN) 的公式。</p>
+<h4 id="（1）传统的-Layer-Norm-回顾"><a href="#（1）传统的-Layer-Norm-回顾" class="headerlink" title="（1）传统的 Layer Norm 回顾"></a>（1）传统的 Layer Norm 回顾</h4><p>LN 的计算分为两步：</p>
+<ol>
+<li><strong>去均值 (Center)：</strong> $x - \mu$ （让数据中心对齐到 0）</li>
+<li><strong>除方差 (Scale)：</strong> 除以 $\sigma$ （让数据缩放到统一幅度）</li>
+</ol>
+<p>公式如下：</p>
+<p>$$\hat{x} &#x3D; \frac{x - \mu}{\sigma} \cdot \gamma + \beta$$</p>
+<p>这里有两个操作：<strong>平移（减 $\mu$）</strong> 和 <strong>缩放（除 $\sigma$）</strong>。</p>
+<h4 id="（2）RMSNorm-的发现"><a href="#（2）RMSNorm-的发现" class="headerlink" title="（2）RMSNorm 的发现"></a>（2）RMSNorm 的发现</h4><p>RMSNorm 的作者（Geoffrey Hinton 的学生）在研究中发现了一个惊人的现象：</p>
+<p>Layer Norm 起作用，主要是靠”缩放（Scaling）”，而”平移（Centering）”其实没啥大用！</p>
+<p>也就是说，把数据拉到均值为 0 这个操作，对于深层 Transformer 的训练稳定性贡献很小，但计算均值 $\mu$ 却要花时间。</p>
+<h4 id="（3）RMSNorm-的核心逻辑"><a href="#（3）RMSNorm-的核心逻辑" class="headerlink" title="（3）RMSNorm 的核心逻辑"></a>（3）RMSNorm 的核心逻辑</h4><p>既然”平移”没用，那就砍掉它！</p>
+<p>RMSNorm 不去计算均值 $\mu$，也不做 $x - \mu$ 的操作。它强制认为数据的均值就是 0（或者说它不在乎均值是多少），它只做一件事：根据数据的”幅值”进行缩放。</p>
+<h3 id="2-RMSNorm-的公式与-Layer-Norm-对比"><a href="#2-RMSNorm-的公式与-Layer-Norm-对比" class="headerlink" title="2. RMSNorm 的公式与 Layer Norm 对比"></a>2. RMSNorm 的公式与 Layer Norm 对比</h3><p>为了直观，我们假设输入向量 $x &#x3D; [x_1, x_2, …, x_n]$。</p>
+<h4 id="（1）计算统计量-The-Statistic"><a href="#（1）计算统计量-The-Statistic" class="headerlink" title="（1）计算统计量 (The Statistic)"></a>（1）计算统计量 (The Statistic)</h4><ul>
+<li><p>Layer Norm (算标准差):</p>
+<p>$$\sigma &#x3D; \sqrt{\frac{1}{n} \sum (x_i - \mu)^2}$$</p>
+<p>(注意：这里必须先算均值 $\mu$，再算每个数和均值的差，计算量大)</p>
+</li>
+<li><p>RMSNorm (算均方根 RMS):</p>
+<p>$$RMS(x) &#x3D; \sqrt{\frac{1}{n} \sum x_i^2}$$</p>
+<p>(注意：直接算平方和的平均再开方，不需要算均值 $\mu$，速度快)</p>
+</li>
+</ul>
+<h4 id="（2）归一化操作"><a href="#（2）归一化操作" class="headerlink" title="（2）归一化操作"></a>（2）归一化操作</h4><ul>
+<li><p>Layer Norm:</p>
+<p>$$\hat{x} &#x3D; \frac{x - \mu}{\sigma}$$</p>
+</li>
+<li><p>RMSNorm:</p>
+<p>$$\hat{x} &#x3D; \frac{x}{RMS(x)}$$</p>
+</li>
+</ul>
+<h4 id="（3）仿射变换-Affine-Transformation"><a href="#（3）仿射变换-Affine-Transformation" class="headerlink" title="（3）仿射变换 (Affine Transformation)"></a>（3）仿射变换 (Affine Transformation)</h4><ul>
+<li><strong>Layer Norm:</strong> 有两个可学习参数：缩放因子 $\gamma$ 和 偏置 $\beta$。</li>
+<li><strong>RMSNorm:</strong> <strong>只有一个</strong>可学习参数：缩放因子 $\gamma$（通常写作 $g$）。它把 $\beta$ 也砍掉了，因为既然不做平移，就不需要偏置。</li>
+</ul>
+<h3 id="3-为什么-LLM-如-Qwen3-偏爱-RMSNorm？"><a href="#3-为什么-LLM-如-Qwen3-偏爱-RMSNorm？" class="headerlink" title="3. 为什么 LLM (如 Qwen3) 偏爱 RMSNorm？"></a>3. 为什么 LLM (如 Qwen3) 偏爱 RMSNorm？</h3><p>这就涉及到 LLM 训练的痛点了：<strong>规模太大，速度太重要。</strong></p>
+<h4 id="（1）计算速度更快-Speed"><a href="#（1）计算速度更快-Speed" class="headerlink" title="（1）计算速度更快 (Speed)"></a>（1）计算速度更快 (Speed)</h4><p>RMSNorm 少算了一个均值 $\mu$，少做了一次减法。虽然在单层看微不足道，但在一个几十层深、数千亿参数、训练语料以 Token 为万亿单位计算的模型中，这些节省下来的浮点运算（FLOPS）加起来就是<strong>巨大的训练时间和电费节省</strong>。</p>
+<ul>
+<li>实验表明，RMSNorm 可以比 LN 提速约 <strong>10% ~ 40%</strong>（取决于具体实现）。</li>
+</ul>
+<h4 id="（2）效果不降反升-Performance"><a href="#（2）效果不降反升-Performance" class="headerlink" title="（2）效果不降反升 (Performance)"></a>（2）效果不降反升 (Performance)</h4><p>令人惊讶的是，去掉了”去均值”操作，模型的收敛效果并没有变差，在很多任务上甚至微弱优于 LN。这证明了 Transformer 确实具有内在的鲁棒性，不需要强行把分布中心拉回 0。</p>
+<h4 id="（3）数值稳定性-Stability"><a href="#（3）数值稳定性-Stability" class="headerlink" title="（3）数值稳定性 (Stability)"></a>（3）数值稳定性 (Stability)</h4><p>RMSNorm 的公式更简单，分母更不容易出现极端情况，对于使用 fp16（半精度）或 bf16 进行训练的大模型来说，数值上更稳定，不容易炸梯度。</p>
+<h3 id="4-代码实现对比"><a href="#4-代码实现对比" class="headerlink" title="4. 代码实现对比"></a>4. 代码实现对比</h3><p>看代码最能体现它的”简洁”：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">RMSNorm</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, dim, eps=<span class="number">1e-6</span></span>):</span><br><span class="line">        <span class="built_in">super</span>().__init__()</span><br><span class="line">        <span class="variable language_">self</span>.eps = eps</span><br><span class="line">        <span class="comment"># 只有一个可学习参数：weight (即 gamma)</span></span><br><span class="line">        <span class="variable language_">self</span>.weight = nn.Parameter(torch.ones(dim))</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x</span>):</span><br><span class="line">        <span class="comment"># 1. 计算均方根 (RMS)</span></span><br><span class="line">        <span class="comment"># x.pow(2) -&gt; 平方</span></span><br><span class="line">        <span class="comment"># .mean(-1) -&gt; 求均值</span></span><br><span class="line">        <span class="comment"># + eps -&gt; 防止分母为0</span></span><br><span class="line">        <span class="comment"># .rsqrt() -&gt; 开根号并取倒数 (1/sqrt(...))</span></span><br><span class="line">        rms = torch.rsqrt(x.<span class="built_in">pow</span>(<span class="number">2</span>).mean(-<span class="number">1</span>, keepdim=<span class="literal">True</span>) + <span class="variable language_">self</span>.eps)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 2. 归一化并应用可学习参数</span></span><br><span class="line">        <span class="keyword">return</span> x * rms * <span class="variable language_">self</span>.weight</span><br><span class="line"></span><br><span class="line"><span class="comment"># 对比 Layer Norm</span></span><br><span class="line"><span class="comment"># ln = nn.LayerNorm(dim) </span></span><br><span class="line"><span class="comment"># ln 内部会有减去均值的操作，并且有 weight 和 bias 两个参数</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 构造输入数据</span></span><br><span class="line">batch_size, seq_len, dim = <span class="number">2</span>, <span class="number">5</span>, <span class="number">4</span></span><br><span class="line">x = torch.randn(batch_size, seq_len, dim)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 1. 使用 RMSNorm</span></span><br><span class="line">rms_norm = RMSNorm(dim)</span><br><span class="line">out_rms = rms_norm(x)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;Input shape: <span class="subst">&#123;x.shape&#125;</span>&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;RMSNorm output shape: <span class="subst">&#123;out_rms.shape&#125;</span>&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;\nRMSNorm output (first token of first batch):&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(out_rms[<span class="number">0</span>, <span class="number">0</span>])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 验证 RMS 归一化特性：</span></span><br><span class="line"><span class="comment"># RMSNorm 不保证均值为 0，但保证均方根 (RMS) 接近 1 (在 gamma=1 时)</span></span><br><span class="line"><span class="comment"># 这里手动计算一下输出的 RMS</span></span><br><span class="line">rms_val = torch.sqrt(torch.mean(out_rms[<span class="number">0</span>, <span class="number">0</span>]**<span class="number">2</span>))</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;\nManual calculation of output RMS (should be approx 1.0): <span class="subst">&#123;rms_val.item():<span class="number">.4</span>f&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 对比 LayerNorm</span></span><br><span class="line">layer_norm = nn.LayerNorm(dim, elementwise_affine=<span class="literal">False</span>) <span class="comment"># 关闭仿射变换以便对比基础统计特性</span></span><br><span class="line">out_ln = layer_norm(x)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;\nLayerNorm output (first token of first batch):&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(out_ln[<span class="number">0</span>, <span class="number">0</span>])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 验证 LayerNorm 特性：均值为 0，方差为 1 (进而标准差为1)</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;LayerNorm mean (should be approx 0): <span class="subst">&#123;out_ln[<span class="number">0</span>, <span class="number">0</span>].mean().item():<span class="number">.4</span>f&#125;</span>&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;LayerNorm std  (should be approx 1): <span class="subst">&#123;out_ln[<span class="number">0</span>, <span class="number">0</span>].std(unbiased=<span class="literal">False</span>).item():<span class="number">.4</span>f&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<details>
+<summary>点击查看运行结果</summary>
+
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Input shape: torch.Size([2, 5, 4])</span><br><span class="line">RMSNorm output shape: torch.Size([2, 5, 4])</span><br><span class="line"></span><br><span class="line">RMSNorm output (first token of first batch):</span><br><span class="line">tensor([0.3121, 0.8634, 0.5433, 1.6917], grad_fn=&lt;SelectBackward0&gt;)</span><br><span class="line"></span><br><span class="line">Manual calculation of output RMS (should be approx 1.0): 1.0000</span><br><span class="line"></span><br><span class="line">LayerNorm output (first token of first batch):</span><br><span class="line">tensor([-1.0344,  0.0206, -0.5920,  1.6059])</span><br><span class="line">LayerNorm mean (should be approx 0): -0.0000</span><br><span class="line">LayerNorm std  (should be approx 1): 1.0000</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+</details>
+
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://yowakkojay.github.io">Yowakko Jay</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://yowakkojay.github.io/2026/02/21/%E5%BD%92%E4%B8%80%E5%8C%96/">https://yowakkojay.github.io/2026/02/21/%E5%BD%92%E4%B8%80%E5%8C%96/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://yowakkojay.github.io" target="_blank">Yowakko Jay</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%BD%92%E4%B8%80%E5%8C%96/">归一化</a><a class="post-meta__tags" href="/tags/Normalization/">Normalization</a><a class="post-meta__tags" href="/tags/Batch-Normalization/">Batch Normalization</a><a class="post-meta__tags" href="/tags/BN/">BN</a><a class="post-meta__tags" href="/tags/Layer-Normalization/">Layer Normalization</a><a class="post-meta__tags" href="/tags/LN/">LN</a><a class="post-meta__tags" href="/tags/RMSNorm/">RMSNorm</a><a class="post-meta__tags" href="/tags/LLM/">LLM</a></div><div class="post-share"><div class="social-share" data-image="/img/killua.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/01/25/%E7%94%A8qwen2.5%E5%92%8Cgsm8k%E5%8A%A8%E6%89%8B%E5%AE%9E%E8%B7%B5GRPO/" title="用qwen2.5和gsm8k动手实践GRPO"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">用qwen2.5和gsm8k动手实践GRPO</div></div><div class="info-2"><div class="info-item-1">背景后训练之——强化学习，用qwen2.5-0.5b、qwen2.5-3b，在gsm8k上进行GRPO。 环境运行环境：Python 3.10.9, Pytorch 2.9.1, CUDA 12.8, trl 0.28.0, transformers 4.57.6, huggingface-hub 0.36.2, datasets 4.5.0, 8 * A800(80GB) 实践中遇到的各种问题的记录 我发现qwen2.5-0.5b的模型在gsm8k上的表现比较一般，最开始尝试使用的奖励函数： 123456def reward_func(completions, ground_truth, **kwargs):    # Regular expression to capture content inside \boxed&#123;&#125;    matches = [re.search(r&quot;\\boxed\&#123;(.*?)\&#125;&quot;, completion[0][&#x27;content&#x27;]) for completion in...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/killua.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Yowakko Jay</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">15</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/yowakkojay"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/sixteeeenTang" target="_blank" title="Github"><i class="fab fa-github-alt" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:yuwanjie@mail.ustc.edu.cn" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="https://aistudio.baidu.com/personalcenter/thirdview/2845794" target="_blank" title="Baidu AI Studio"><img class="social-icon-svg" src="/img/baidu-aistudio.svg" style="color: #2D57F5; height: 1em; width: 1em; display: inline-block; vertical-align: -0.125em;"/></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%BD%92%E4%B8%80%E5%8C%96"><span class="toc-text">归一化</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF%E5%BD%92%E4%B8%80%E5%8C%96-Normalization-%EF%BC%9F"><span class="toc-text">一、什么是归一化 (Normalization)？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%BD%92%E4%B8%80%E5%8C%96%EF%BC%9F"><span class="toc-text">1. 为什么要归一化？</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E5%BD%92%E4%B8%80%E5%8C%96%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="toc-text">（1）归一化的作用</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E6%9C%80%E5%9F%BA%E7%A1%80%E7%9A%84%E5%85%AC%E5%BC%8F-Z-Score-Normalization"><span class="toc-text">2. 最基础的公式 (Z-Score Normalization)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E4%B8%AD%E7%9A%84%E4%B8%A4%E5%A4%A7%E5%BD%92%E4%B8%80%E5%8C%96%E6%8A%80%E6%9C%AF"><span class="toc-text">二、深度学习中的两大归一化技术</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%89%B9%E9%87%8F%E5%BD%92%E4%B8%80%E5%8C%96-Batch-Normalization-BN"><span class="toc-text">1. 批量归一化 (Batch Normalization - BN)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%B1%82%E5%BD%92%E4%B8%80%E5%8C%96-Layer-Normalization-LN"><span class="toc-text">2. 层归一化 (Layer Normalization - LN)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%B7%AE%E5%BC%82"><span class="toc-text">3. 差异</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%9B%9B%E7%BB%B4%E5%BC%A0%E9%87%8F%E4%B8%AD%E7%9A%84%E5%BD%92%E4%B8%80%E5%8C%96"><span class="toc-text">4. 四维张量中的归一化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E6%89%B9%E9%87%8F%E5%BD%92%E4%B8%80%E5%8C%96-Batch-Normalization-BN-%E2%80%94%E2%80%94-%E2%80%9C%E9%80%9A%E9%81%93%E4%B8%BA%E7%8E%8B%E2%80%9D"><span class="toc-text">（1）批量归一化 (Batch Normalization, BN) —— “通道为王”</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E5%B1%82%E5%BD%92%E4%B8%80%E5%8C%96-Layer-Normalization-LN-%E2%80%94%E2%80%94-%E2%80%9C%E5%8D%95%E5%9B%BE%E8%87%AA%E7%90%86%E2%80%9D"><span class="toc-text">（2）层归一化 (Layer Normalization, LN) —— “单图自理”</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E8%BF%9B%E9%98%B6%EF%BC%9A%E5%85%B6%E4%BB%96%E5%BD%92%E4%B8%80%E5%8C%96%E6%96%B9%E6%B3%95-IN-%E5%92%8C-GN"><span class="toc-text">5. 进阶：其他归一化方法 (IN 和 GN)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%881%EF%BC%89Instance-Normalization-IN-%E2%80%94%E2%80%94-%E2%80%9C%E5%8D%95%E5%9B%BE%E5%8D%95%E9%80%9A%E9%81%93%E2%80%9D"><span class="toc-text">（1）Instance Normalization (IN) —— “单图单通道”</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%882%EF%BC%89Group-Normalization-GN-%E2%80%94%E2%80%94-%E2%80%9C%E9%80%9A%E9%81%93%E5%88%86%E7%BB%84%E2%80%9D"><span class="toc-text">（2）Group Normalization (GN) —— “通道分组”</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81RMSNorm"><span class="toc-text">三、RMSNorm</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E4%B8%BA%E4%BB%80%E4%B9%88%E6%9C%89%E4%BA%86-Layer-Norm-%E8%BF%98%E8%A6%81%E9%80%A0%E4%B8%80%E4%B8%AA-RMSNorm%EF%BC%9F"><span class="toc-text">1. 为什么有了 Layer Norm 还要造一个 RMSNorm？</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E4%BC%A0%E7%BB%9F%E7%9A%84-Layer-Norm-%E5%9B%9E%E9%A1%BE"><span class="toc-text">（1）传统的 Layer Norm 回顾</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%882%EF%BC%89RMSNorm-%E7%9A%84%E5%8F%91%E7%8E%B0"><span class="toc-text">（2）RMSNorm 的发现</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%883%EF%BC%89RMSNorm-%E7%9A%84%E6%A0%B8%E5%BF%83%E9%80%BB%E8%BE%91"><span class="toc-text">（3）RMSNorm 的核心逻辑</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-RMSNorm-%E7%9A%84%E5%85%AC%E5%BC%8F%E4%B8%8E-Layer-Norm-%E5%AF%B9%E6%AF%94"><span class="toc-text">2. RMSNorm 的公式与 Layer Norm 对比</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E8%AE%A1%E7%AE%97%E7%BB%9F%E8%AE%A1%E9%87%8F-The-Statistic"><span class="toc-text">（1）计算统计量 (The Statistic)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E5%BD%92%E4%B8%80%E5%8C%96%E6%93%8D%E4%BD%9C"><span class="toc-text">（2）归一化操作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%883%EF%BC%89%E4%BB%BF%E5%B0%84%E5%8F%98%E6%8D%A2-Affine-Transformation"><span class="toc-text">（3）仿射变换 (Affine Transformation)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E4%B8%BA%E4%BB%80%E4%B9%88-LLM-%E5%A6%82-Qwen3-%E5%81%8F%E7%88%B1-RMSNorm%EF%BC%9F"><span class="toc-text">3. 为什么 LLM (如 Qwen3) 偏爱 RMSNorm？</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E8%AE%A1%E7%AE%97%E9%80%9F%E5%BA%A6%E6%9B%B4%E5%BF%AB-Speed"><span class="toc-text">（1）计算速度更快 (Speed)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E6%95%88%E6%9E%9C%E4%B8%8D%E9%99%8D%E5%8F%8D%E5%8D%87-Performance"><span class="toc-text">（2）效果不降反升 (Performance)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%883%EF%BC%89%E6%95%B0%E5%80%BC%E7%A8%B3%E5%AE%9A%E6%80%A7-Stability"><span class="toc-text">（3）数值稳定性 (Stability)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0%E5%AF%B9%E6%AF%94"><span class="toc-text">4. 代码实现对比</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/21/%E5%BD%92%E4%B8%80%E5%8C%96/" title="归一化（BN、LN 与 RMSNorm）">归一化（BN、LN 与 RMSNorm）</a><time datetime="2026-02-20T16:00:00.000Z" title="发表于 2026-02-21 00:00:00">2026-02-21</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/01/25/%E7%94%A8qwen2.5%E5%92%8Cgsm8k%E5%8A%A8%E6%89%8B%E5%AE%9E%E8%B7%B5GRPO/" title="用qwen2.5和gsm8k动手实践GRPO">用qwen2.5和gsm8k动手实践GRPO</a><time datetime="2026-01-24T16:00:00.000Z" title="发表于 2026-01-25 00:00:00">2026-01-25</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/08/16/%E5%9B%9E%E9%A1%BE%E6%A6%82%E7%8E%87%E8%AE%BA%E4%B8%8E%E6%95%B0%E7%90%86%E7%BB%9F%E8%AE%A1/" title="简单回顾概率论与数理统计">简单回顾概率论与数理统计</a><time datetime="2025-08-15T16:00:00.000Z" title="发表于 2025-08-16 00:00:00">2025-08-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/07/13/%E9%85%8D%E7%BD%AEPytorch%E7%8E%AF%E5%A2%83%EF%BC%88Win%E7%B3%BB%E7%BB%9F%EF%BC%89/" title="配置Pytorch环境（Win系统）">配置Pytorch环境（Win系统）</a><time datetime="2025-07-12T16:15:51.305Z" title="发表于 2025-07-13 00:15:51">2025-07-13</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/07/07/hello-world/" title="Hello World">Hello World</a><time datetime="2025-07-06T18:05:46.163Z" title="发表于 2025-07-07 02:05:46">2025-07-07</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;2025 - 2026 By Yowakko Jay</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.4.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  window.pjax ? loadMathjax() : window.addEventListener('load', loadMathjax)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
