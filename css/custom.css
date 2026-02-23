@@ -3,3 +3,12 @@ body {
     background-position: center;
     background-attachment: fixed;
 }
+
+/* SVG social icon hover rotation animation */
+.social-icon img.social-icon-svg {
+    transition: all .3s;
+}
+
+.social-icon img.social-icon-svg:hover {
+    transform: rotate(360deg);
+}
