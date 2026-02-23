@@ -12,8 +12,3 @@ body {
 .social-icon img.social-icon-svg:hover {
     transform: rotate(360deg);
 }
-
-/* Hide MathJax assistive MathML to fix text selection offset */
-mjx-assistive-mml {
-    display: none !important;
-}
