@@ -1,0 +1,414 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>自动化AI工作流实践与探索：Golutra + OpenClaw + Feishu | Yowakko Jay</title><meta name="author" content="Yowakko Jay"><meta name="copyright" content="Yowakko Jay"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言 在AI辅助开发领域，如何让多个智能体高效协作一直是一个核心挑战。最近我探索了一套基于 Golutra + OpenClaw + Feishu 的自动化AI工作流系统，并进行了为期一周的实战测试。本文将分享这套系统的设计理念、测试成果以及未来的改进方向。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自动化AI工作流实践与探索：Golutra + OpenClaw + Feishu">
+<meta property="og:url" content="https://yowakkojay.github.io/2026/04/24/%E8%87%AA%E5%8A%A8%E5%8C%96AI%E5%B7%A5%E4%BD%9C%E6%B5%81%E5%AE%9E%E8%B7%B5%E4%B8%8E%E6%8E%A2%E7%B4%A2/index.html">
+<meta property="og:site_name" content="Yowakko Jay">
+<meta property="og:description" content="前言 在AI辅助开发领域，如何让多个智能体高效协作一直是一个核心挑战。最近我探索了一套基于 Golutra + OpenClaw + Feishu 的自动化AI工作流系统，并进行了为期一周的实战测试。本文将分享这套系统的设计理念、测试成果以及未来的改进方向。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://yowakkojay.github.io/img/killua.png">
+<meta property="article:published_time" content="2026-04-23T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-07T17:32:24.591Z">
+<meta property="article:author" content="Yowakko Jay">
+<meta property="article:tag" content="AI工作流">
+<meta property="article:tag" content="Golutra">
+<meta property="article:tag" content="OpenClaw">
+<meta property="article:tag" content="飞书">
+<meta property="article:tag" content="MCP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://yowakkojay.github.io/img/killua.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "自动化AI工作流实践与探索：Golutra + OpenClaw + Feishu",
+  "url": "https://yowakkojay.github.io/2026/04/24/%E8%87%AA%E5%8A%A8%E5%8C%96AI%E5%B7%A5%E4%BD%9C%E6%B5%81%E5%AE%9E%E8%B7%B5%E4%B8%8E%E6%8E%A2%E7%B4%A2/",
+  "image": "https://yowakkojay.github.io/img/killua.png",
+  "datePublished": "2026-04-23T16:00:00.000Z",
+  "dateModified": "2026-05-07T17:32:24.591Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Yowakko Jay",
+      "url": "https://yowakkojay.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/killua_256.ico"><link rel="canonical" href="https://yowakkojay.github.io/2026/04/24/%E8%87%AA%E5%8A%A8%E5%8C%96AI%E5%B7%A5%E4%BD%9C%E6%B5%81%E5%AE%9E%E8%B7%B5%E4%B8%8E%E6%8E%A2%E7%B4%A2/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '自动化AI工作流实践与探索：Golutra + OpenClaw + Feishu',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Yowakko Jay</span></a><a class="nav-page-title" href="/"><span class="site-name">自动化AI工作流实践与探索：Golutra + OpenClaw + Feishu</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"></div></nav><div id="post-info"><h1 class="post-title">自动化AI工作流实践与探索：Golutra + OpenClaw + Feishu</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-23T16:00:00.000Z" title="发表于 2026-04-24 00:00:00">2026-04-24</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-05-07T17:32:24.591Z" title="更新于 2026-05-08 01:32:24">2026-05-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/AI%E5%B7%A5%E5%85%B7/">AI工具</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p><img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/ChatGPT%20Image%202026%E5%B9%B44%E6%9C%8824%E6%97%A5%2000_15_05.png" alt="封面图"></p>
+<h2 id="前言">前言</h2>
+<p>在AI辅助开发领域，如何让多个智能体高效协作一直是一个核心挑战。最近我探索了一套基于 <strong>Golutra + OpenClaw + Feishu</strong> 的自动化AI工作流系统，并进行了为期一周的实战测试。本文将分享这套系统的设计理念、测试成果以及未来的改进方向。</p>
+<span id="more"></span>
+<h2 id="一、系统搭建与设计理念">一、系统搭建与设计理念</h2>
+<h3 id="1-1-设计动机">1.1 设计动机</h3>
+<p>在实际开发中，我们常常面临两个核心痛点：</p>
+<ul>
+<li><strong>协作复杂性高</strong>：不同Agent来自异构平台，API接口规范不一，通信协作需大量人工干预，难以形成端到端的高效闭环</li>
+<li><strong>人工调度成本高昂</strong>：开发者需在多工具间频繁切换，手动分配任务、传递上下文，效率低下且易出错</li>
+</ul>
+<h3 id="1-2-我的目标">1.2 我的目标</h3>
+<blockquote>
+<p>构建自动化AI工作流，打造「Golutra + OpenClaw + Feishu」统一协作平台，实现智能体间的无缝协同</p>
+</blockquote>
+<h3 id="1-3-系统架构：三位一体的智能协作模式">1.3 系统架构：三位一体的智能协作模式</h3>
+<p><img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/golutra%2Bopenclaw%2Bfeishu.png" alt="系统架构图"></p>
+<p>整个系统由三个核心组件构成：</p>
+<h4 id="Golutra-核心执行引擎">Golutra - 核心执行引擎</h4>
+<p>模拟微型开发团队，包含三种Agent：</p>
+<ul>
+<li><strong>监工(Supervisor)</strong>：负责任务分解</li>
+<li><strong>助理(Assistant)</strong>：负责环境准备</li>
+<li><strong>成员(Member)</strong>：负责代码编写</li>
+</ul>
+<p>通过这种分层设计，实现全流程自动化执行。</p>
+<h4 id="OpenClaw-沟通桥梁-用户秘书">OpenClaw - 沟通桥梁/用户秘书</h4>
+<p>作为中间件，OpenClaw承担以下职责：</p>
+<ul>
+<li>接收飞书自然语言指令</li>
+<li>进行意图识别与格式化处理</li>
+<li>精准传递任务给核心引擎</li>
+</ul>
+<h4 id="Feishu-用户交互界面">Feishu - 用户交互界面</h4>
+<p>用户与系统交互的主入口，通过熟悉的聊天界面实现对AI工作流的低门槛操控。</p>
+<h3 id="1-4-工作流程">1.4 工作流程</h3>
+<p>系统的工作流程如下：</p>
+<div style="text-align: center;">
+<div style="display: inline-flex; gap: 40px; align-items: center;">
+<img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/openclaw%E6%8E%A5%E5%85%A5feishu%E6%9C%BA%E5%99%A8%E4%BA%BA.jpg" style="height: 600px; width: auto; display: block; margin-right: 40px;" />
+<div style="display: flex; flex-direction: column; line-height: 0; font-size: 0;">
+  <div style="height: 270px; overflow: hidden; position: relative;">
+    <img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/%E5%9F%9F%E5%90%8Dwebhook.jpg" style="height: 900px; width: auto; display: block;" />
+    <svg style="position: absolute; bottom: -1px; left: 0; width: 100%; height: 20px; display: block;" viewBox="0 0 200 20" preserveAspectRatio="none">
+      <path d="M0,5 L16.67,15 L33.33,5 L50,15 L66.67,5 L83.33,15 L100,5 L116.67,15 L133.33,5 L150,15 L166.67,5 L183.33,15 L200,5 L200,20 L0,20 Z" fill="white"/>
+      <polyline points="0,5 16.67,15 33.33,5 50,15 66.67,5 83.33,15 100,5 116.67,15 133.33,5 150,15 166.67,5 183.33,15 200,5" fill="none" stroke="black" stroke-width="2"/>
+    </svg>
+  </div>
+  <div style="height: 270px; overflow: hidden; position: relative;">
+    <img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/%E5%9F%9F%E5%90%8Dwebhook.jpg" style="height: 900px; width: auto; display: block; margin-top: -630px;" />
+    <svg style="position: absolute; top: -1px; left: 0; width: 100%; height: 20px; display: block;" viewBox="0 0 200 20" preserveAspectRatio="none">
+      <path d="M0,5 L16.67,15 L33.33,5 L50,15 L66.67,5 L83.33,15 L100,5 L116.67,15 L133.33,5 L150,15 L166.67,5 L183.33,15 L200,5 L200,0 L0,0 Z" fill="white"/>
+      <polyline points="0,5 16.67,15 33.33,5 50,15 66.67,5 83.33,15 100,5 116.67,15 133.33,5 150,15 166.67,5 183.33,15 200,5" fill="none" stroke="black" stroke-width="2"/>
+    </svg>
+  </div>
+</div>
+</div>
+</div>
+<p><strong>任务执行实时日志</strong>（OpenClaw Web UI + Cloudflare Tunnel 反向代理）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">1. 用户发起指令 (飞书)</span><br><span class="line">   ↓ 输入自然语言指令，如&quot;为UnifiedQuantum项目添加量子傅里叶变换函数并提交PR&quot;</span><br><span class="line"></span><br><span class="line">2. OpenClaw 解析与转发</span><br><span class="line">   ↓ 精准识别用户核心意图，将自然语言指令封装为标准化的任务请求格式</span><br><span class="line"></span><br><span class="line">3. Golutra 任务分解与调度</span><br><span class="line">   ↓ 监工Agent将复杂主任务拆解为：克隆代码、分析结构、生成代码等原子子任务</span><br><span class="line"></span><br><span class="line">4. 跨CLI 通信执行 (golutra-mcp)</span><br><span class="line">   ↓ 作为通信中枢，在成员Agent与Claude Code等工具之间高效传递上下文与代码</span><br><span class="line"></span><br><span class="line">5. 结果汇总与反馈</span><br><span class="line">   ↓ 监工Agent汇总所有子任务结果，通过OpenClaw向用户发送任务完成通知</span><br></pre></td></tr></table></figure>
+<h2 id="二、项目测试与成果展示">二、项目测试与成果展示</h2>
+<h3 id="2-1-实战测试成果">2.1 实战测试成果</h3>
+<p>经过一周的持续测试，系统在以下两个真实开源项目中验证了其有效性：</p>
+<h4 id="提交高质量-Pull-Request">提交高质量 Pull Request</h4>
+<p><img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/%E6%8F%90%E4%BA%A4pr.png" alt="提交PR截图"></p>
+<p>针对 <strong>UnifiedQuantum</strong> 核心项目，工作流成功完成了：</p>
+<ul>
+<li>生成功能完整的模块代码</li>
+<li>提交结构清晰、包含单元测试的PR</li>
+<li>完全满足开源社区的协作规范与代码质量要求</li>
+</ul>
+<h4 id="有效提交-Issue-分析报告">有效提交 Issue 分析报告</h4>
+<p><img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/%E6%8F%90%E4%BA%A4issue.png" alt="提交Issue截图"></p>
+<p>针对 <strong>quantum-computing-skill</strong> 项目，工作流自动：</p>
+<ul>
+<li>检测到潜在的性能瓶颈问题</li>
+<li>独立完成了成因分析</li>
+<li>提交了包含复现步骤、日志信息与优化建议的详细Issue报告</li>
+</ul>
+<h3 id="2-2-用户体验优化">2.2 用户体验优化</h3>
+<h4 id="实时状态反馈">实时状态反馈</h4>
+<p>在任务执行过程中，用户可通过飞书实时收到进度更新，例如：</p>
+<ul>
+<li>“已完成代码生成”</li>
+<li>“正在运行测试”</li>
+<li>“PR已提交”</li>
+</ul>
+<h4 id="完整任务报告">完整任务报告</h4>
+<p>工作流执行结束后自动生成详细的任务完成报告，包含：</p>
+<ul>
+<li>任务分解逻辑</li>
+<li>自动化执行的具体步骤序列</li>
+<li>最终的产出结果</li>
+</ul>
+<p>实现工作的可视化与可追溯。</p>
+<h3 id="2-3-详细任务总览">2.3 详细任务总览</h3>
+<p>系统为每个任务生成完整的执行记录：</p>
+<p><strong>quantum-computing-skill 任务总览</strong></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/quantum-computing-skill%E9%A1%B9%E7%9B%AE%E4%BB%BB%E5%8A%A1%E5%AE%8C%E6%88%90%E6%80%BB%E8%A7%88.png" alt="quantum-computing-skill任务总览"></p>
+<ul>
+<li>详细列出了任务的分解逻辑、具体执行步骤和最终交付结果</li>
+<li>完整记录了每一步的操作轨迹与关键数据表现</li>
+<li>实现了任务的可视化复盘</li>
+</ul>
+<p><strong>UnifiedQuantum 任务总览</strong></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/UnifiedQuantum%E9%A1%B9%E7%9B%AE%E4%BB%BB%E5%8A%A1%E5%AE%8C%E6%88%90%E6%80%BB%E8%A7%88.png" alt="UnifiedQuantum任务总览"></p>
+<ul>
+<li>全面展示了项目的整体执行情况</li>
+<li>重点涵盖核心Bug的修复细节与GitHub代码贡献记录</li>
+<li>直观体现了团队的协作效率与代码交付质量</li>
+</ul>
+<h2 id="三、资源消耗分析">三、资源消耗分析</h2>
+<h3 id="3-1-测试环境配置">3.1 测试环境配置</h3>
+<table>
+<thead>
+<tr>
+<th>配置项</th>
+<th>参数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心模型</td>
+<td>MiniMax-m2.7-high speed</td>
+</tr>
+<tr>
+<td>测试周期</td>
+<td>连续5个工作日 (Mon-Fri)</td>
+</tr>
+<tr>
+<td>模拟任务负载</td>
+<td>大约5个中等复杂度开发任务</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-2-实测资源消耗表现">3.2 实测资源消耗表现</h3>
+<p>经过五天的持续测试：</p>
+<blockquote>
+<p><strong>7-8%</strong> 周限额消耗占比（3019/45000）</p>
+</blockquote>
+<p><strong>结论</strong>：max套餐一个人基本上只要不是24h持续高负载开发，基本用不完。</p>
+<h2 id="四、问题总结与后续计划">四、问题总结与后续计划</h2>
+<h3 id="4-1-当前存在的核心问题">4.1 当前存在的核心问题</h3>
+<p>尽管系统已经能够完成基本的自动化工作流，但仍存在以下问题：</p>
+<ol>
+<li>
+<p><strong>重复工作导致效率浪费</strong></p>
+<ul>
+<li>处理相似任务时，频繁重复执行环境准备等基础步骤</li>
+<li>缺乏复用机制，严重拖慢整体流程</li>
+</ul>
+</li>
+<li>
+<p><strong>调度策略缺乏灵活性</strong></p>
+<ul>
+<li>目前基于固定的线性顺序执行任务</li>
+<li>未能根据实时状态和任务复杂度实现动态的智能调度与路径规划</li>
+</ul>
+</li>
+<li>
+<p><strong>缺失自动化评估反馈</strong></p>
+<ul>
+<li>对生成的代码质量、任务完成度及逻辑合理性</li>
+<li>缺乏一套完善的自动化评估标准和闭环反馈机制</li>
+</ul>
+</li>
+<li>
+<p><strong>Agent 记忆腐蚀</strong></p>
+<ul>
+<li>在多轮交互和长任务中，Agent的上下文逐渐退化</li>
+<li>早期关键信息被遗忘或弱化</li>
+</ul>
+</li>
+</ol>
+<h3 id="4-2-未来改进方向">4.2 未来改进方向</h3>
+<p>针对上述问题，我计划从以下几个方向进行优化：</p>
+<table>
+<thead>
+<tr>
+<th>改进方向</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Harness Engineering</strong></td>
+<td>引入验证与约束机制，提高结果可靠性</td>
+</tr>
+<tr>
+<td><strong>Self-Reflection</strong></td>
+<td>深度集成代码静态分析工具，建立基于测试覆盖率与结果的多维质量评估模型，实现产出物自动打分</td>
+</tr>
+<tr>
+<td><strong>Memory Engineering</strong></td>
+<td>解决长期上下文退化问题，支持跨Agent共享记忆</td>
+</tr>
+<tr>
+<td><strong>Planning &amp; Scheduling</strong></td>
+<td>优化任务拆分与调度策略，减少重复执行</td>
+</tr>
+</tbody>
+</table>
+<h2 id="结语">结语</h2>
+<p>这套「Golutra + OpenClaw + Feishu」自动化AI工作流系统，虽然还有很大的优化空间，但已经在实际项目中证明了其可行性。随着后续对调度策略、评估反馈和记忆管理等方面的持续优化，相信能够进一步提升开发效率，释放更多生产力。</p>
+<p>如果你对这套系统感兴趣，欢迎与我交流讨论！</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://yowakkojay.github.io">Yowakko Jay</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://yowakkojay.github.io/2026/04/24/%E8%87%AA%E5%8A%A8%E5%8C%96AI%E5%B7%A5%E4%BD%9C%E6%B5%81%E5%AE%9E%E8%B7%B5%E4%B8%8E%E6%8E%A2%E7%B4%A2/">https://yowakkojay.github.io/2026/04/24/%E8%87%AA%E5%8A%A8%E5%8C%96AI%E5%B7%A5%E4%BD%9C%E6%B5%81%E5%AE%9E%E8%B7%B5%E4%B8%8E%E6%8E%A2%E7%B4%A2/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://yowakkojay.github.io" target="_blank">Yowakko Jay</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI%E5%B7%A5%E4%BD%9C%E6%B5%81/">AI工作流</a><a class="post-meta__tags" href="/tags/Golutra/">Golutra</a><a class="post-meta__tags" href="/tags/OpenClaw/">OpenClaw</a><a class="post-meta__tags" href="/tags/%E9%A3%9E%E4%B9%A6/">飞书</a><a class="post-meta__tags" href="/tags/MCP/">MCP</a></div><div class="post-share"><div class="social-share" data-image="/img/killua.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/02/21/%E5%BD%92%E4%B8%80%E5%8C%96/" title="归一化（BN、LN 与 RMSNorm）"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">归一化（BN、LN 与 RMSNorm）</div></div><div class="info-2"><div class="info-item-1">归一化 简单来说，归一化就是把数据通过某种算法，缩放到一个特定的范围（通常是 0 到 1，或者均值为 0、方差为 1）。 一、什么是归一化 (Normalization)？ 1. 为什么要归一化？ 想象一下，你正在训练一个预测房价的模型。  特征 A 是&quot;房屋面积&quot;，范围是                    #mjx-b0e8b0f{         display:contents;         mjx-assistive-mml {           user-select: text !important;           clip: auto !important;           color: rgba(0,0,0,0);         }          mjx-container[jax="SVG"] {   direction: ltr; }  mjx-container[jax="SVG"] > svg {   overflow: visible;   min-height: 1px;   min-width: 1px;...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/killua.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Yowakko Jay</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">20</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/yowakkojay"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/yowakkojay" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:yuwanjie@mail.ustc.edu.cn" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="https://aistudio.baidu.com/personalcenter/thirdview/2845794" target="_blank" title="Baidu AI Studio"><img class="social-icon-svg" src="/img/baidu-aistudio.svg" style="color: #2D57F5; height: 1em; width: 1em; display: inline-block; vertical-align: -0.125em;"/></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎来到我的技术博客！这里主要分享AI/深度学习相关的内容。如果对代码感兴趣，可以去我的Github主页看看，另外我还维护了一个小号 <a href="https://github.com/sixteeeenTang" target="_blank" rel="noopener">@sixteeeenTang</a>，主要放一些日常练手的项目。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E7%B3%BB%E7%BB%9F%E6%90%AD%E5%BB%BA%E4%B8%8E%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5"><span class="toc-text">一、系统搭建与设计理念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E8%AE%BE%E8%AE%A1%E5%8A%A8%E6%9C%BA"><span class="toc-text">1.1 设计动机</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E6%88%91%E7%9A%84%E7%9B%AE%E6%A0%87"><span class="toc-text">1.2 我的目标</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%EF%BC%9A%E4%B8%89%E4%BD%8D%E4%B8%80%E4%BD%93%E7%9A%84%E6%99%BA%E8%83%BD%E5%8D%8F%E4%BD%9C%E6%A8%A1%E5%BC%8F"><span class="toc-text">1.3 系统架构：三位一体的智能协作模式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Golutra-%E6%A0%B8%E5%BF%83%E6%89%A7%E8%A1%8C%E5%BC%95%E6%93%8E"><span class="toc-text">Golutra - 核心执行引擎</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#OpenClaw-%E6%B2%9F%E9%80%9A%E6%A1%A5%E6%A2%81-%E7%94%A8%E6%88%B7%E7%A7%98%E4%B9%A6"><span class="toc-text">OpenClaw - 沟通桥梁&#x2F;用户秘书</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Feishu-%E7%94%A8%E6%88%B7%E4%BA%A4%E4%BA%92%E7%95%8C%E9%9D%A2"><span class="toc-text">Feishu - 用户交互界面</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="toc-text">1.4 工作流程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E9%A1%B9%E7%9B%AE%E6%B5%8B%E8%AF%95%E4%B8%8E%E6%88%90%E6%9E%9C%E5%B1%95%E7%A4%BA"><span class="toc-text">二、项目测试与成果展示</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%AE%9E%E6%88%98%E6%B5%8B%E8%AF%95%E6%88%90%E6%9E%9C"><span class="toc-text">2.1 实战测试成果</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%8F%90%E4%BA%A4%E9%AB%98%E8%B4%A8%E9%87%8F-Pull-Request"><span class="toc-text">提交高质量 Pull Request</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%9C%89%E6%95%88%E6%8F%90%E4%BA%A4-Issue-%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A"><span class="toc-text">有效提交 Issue 分析报告</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E7%94%A8%E6%88%B7%E4%BD%93%E9%AA%8C%E4%BC%98%E5%8C%96"><span class="toc-text">2.2 用户体验优化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%9E%E6%97%B6%E7%8A%B6%E6%80%81%E5%8F%8D%E9%A6%88"><span class="toc-text">实时状态反馈</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%8C%E6%95%B4%E4%BB%BB%E5%8A%A1%E6%8A%A5%E5%91%8A"><span class="toc-text">完整任务报告</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E8%AF%A6%E7%BB%86%E4%BB%BB%E5%8A%A1%E6%80%BB%E8%A7%88"><span class="toc-text">2.3 详细任务总览</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%B5%84%E6%BA%90%E6%B6%88%E8%80%97%E5%88%86%E6%9E%90"><span class="toc-text">三、资源消耗分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E6%B5%8B%E8%AF%95%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE"><span class="toc-text">3.1 测试环境配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E5%AE%9E%E6%B5%8B%E8%B5%84%E6%BA%90%E6%B6%88%E8%80%97%E8%A1%A8%E7%8E%B0"><span class="toc-text">3.2 实测资源消耗表现</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E9%97%AE%E9%A2%98%E6%80%BB%E7%BB%93%E4%B8%8E%E5%90%8E%E7%BB%AD%E8%AE%A1%E5%88%92"><span class="toc-text">四、问题总结与后续计划</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%BD%93%E5%89%8D%E5%AD%98%E5%9C%A8%E7%9A%84%E6%A0%B8%E5%BF%83%E9%97%AE%E9%A2%98"><span class="toc-text">4.1 当前存在的核心问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E6%9C%AA%E6%9D%A5%E6%94%B9%E8%BF%9B%E6%96%B9%E5%90%91"><span class="toc-text">4.2 未来改进方向</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%93%E8%AF%AD"><span class="toc-text">结语</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/24/%E8%87%AA%E5%8A%A8%E5%8C%96AI%E5%B7%A5%E4%BD%9C%E6%B5%81%E5%AE%9E%E8%B7%B5%E4%B8%8E%E6%8E%A2%E7%B4%A2/" title="自动化AI工作流实践与探索：Golutra + OpenClaw + Feishu">自动化AI工作流实践与探索：Golutra + OpenClaw + Feishu</a><time datetime="2026-04-23T16:00:00.000Z" title="发表于 2026-04-24 00:00:00">2026-04-24</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/21/%E5%BD%92%E4%B8%80%E5%8C%96/" title="归一化（BN、LN 与 RMSNorm）">归一化（BN、LN 与 RMSNorm）</a><time datetime="2026-02-20T16:00:00.000Z" title="发表于 2026-02-21 00:00:00">2026-02-21</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/01/25/%E7%94%A8qwen2.5%E5%92%8Cgsm8k%E5%8A%A8%E6%89%8B%E5%AE%9E%E8%B7%B5GRPO/" title="用qwen2.5和gsm8k动手实践GRPO">用qwen2.5和gsm8k动手实践GRPO</a><time datetime="2026-01-24T16:00:00.000Z" title="发表于 2026-01-25 00:00:00">2026-01-25</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/08/16/%E5%9B%9E%E9%A1%BE%E6%A6%82%E7%8E%87%E8%AE%BA%E4%B8%8E%E6%95%B0%E7%90%86%E7%BB%9F%E8%AE%A1/" title="简单回顾概率论与数理统计">简单回顾概率论与数理统计</a><time datetime="2025-08-15T16:00:00.000Z" title="发表于 2025-08-16 00:00:00">2025-08-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/07/13/%E9%85%8D%E7%BD%AEPytorch%E7%8E%AF%E5%A2%83%EF%BC%88Win%E7%B3%BB%E7%BB%9F%EF%BC%89/" title="配置Pytorch环境（Win系统）">配置Pytorch环境（Win系统）</a><time datetime="2025-07-12T16:15:51.305Z" title="发表于 2025-07-13 00:15:51">2025-07-13</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;2025 - 2026 By Yowakko Jay</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.4.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  window.pjax ? loadMathjax() : window.addEventListener('load', loadMathjax)
+})()</script></div><script>document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('mjx-container').forEach(function(c){var s=c.querySelector('svg'),a=c.querySelector('mjx-assistive-mml');if(!s||!a)return;var cr=c.getBoundingClientRect(),sr=s.getBoundingClientRect();a.style.top=(sr.top-cr.top)+'px';a.style.height=sr.height+'px';a.style.overflow='hidden';});});</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
