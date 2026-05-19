@@ -12,3 +12,17 @@ body {
 .social-icon img.social-icon-svg:hover {
     transform: rotate(360deg);
 }
+
+mjx-container:not([display]) {
+    display: inline !important;
+}
+
+mjx-container mjx-assistive-mml {
+    width: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    border: 0 !important;
+}
