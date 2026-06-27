@@ -1,0 +1,115 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import Header from '../components/Header.astro';
+
+type Props = CollectionEntry<'blog'>['data'];
+
+const { title, description, pubDate, updatedDate, categories, tags } = Astro.props;
+// categories 在 schema 里允许 string | string[]，统一成数组
+const categoryList = Array.isArray(categories) ? categories : categories ? [categories] : [];
+---
+
+<html lang="zh-CN">
+	<head>
+			<BaseHead title={title} description={description ?? title} />
+			<style>
+				main {
+					width: calc(100% - 2em);
+					max-width: 100%;
+					margin: 0;
+				}
+				.prose {
+					width: 720px;
+					max-width: calc(100% - 2em);
+					margin: auto;
+					padding: 1em;
+					color: rgb(var(--gray-dark));
+				}
+				.title {
+					margin-bottom: 1em;
+					padding: 1em 0;
+					text-align: center;
+					line-height: 1;
+				}
+				.title h1 {
+					margin: 0 0 0.5em 0;
+				}
+				.date {
+					margin-bottom: 0.5em;
+					color: rgb(var(--gray));
+				}
+				.last-updated-on {
+					font-style: italic;
+				}
+				.meta {
+					margin-top: 0.75em;
+					display: flex;
+					flex-direction: column;
+					gap: 0.4em;
+					align-items: center;
+				}
+				.meta p {
+					margin: 0;
+					line-height: 1.6;
+				}
+				.pill {
+					display: inline-block;
+					padding: 0.1em 0.6em;
+					margin: 0 0.2em;
+					font-size: 0.75em;
+					color: rgb(var(--gray));
+					background-color: rgb(var(--gray-light));
+					border-radius: 999px;
+				}
+			</style>
+		</head>
+
+	<body>
+		<Header />
+		<main>
+			<article>
+				<div class="prose">
+					<div class="title">
+						<div class="date">
+							<FormattedDate date={pubDate} />
+							{
+								updatedDate && (
+									<div class="last-updated-on">
+										Last updated on <FormattedDate date={updatedDate} />
+									</div>
+								)
+							}
+						</div>
+						<h1>{title}</h1>
+						{
+							(categoryList.length > 0 || tags.length > 0) && (
+								<div class="meta">
+									{categoryList.length > 0 && (
+										<p class="categories">
+											{categoryList.map((c) => (
+												<span class="pill">{c}</span>
+											))}
+										</p>
+									)}
+									{tags.length > 0 && (
+										<p class="tags">
+											{tags.map((t) => (
+												<span class="pill">#{t}</span>
+											))}
+										</p>
+									)}
+								</div>
+							)
+						}
+						<hr />
+					</div>
+					<slot />
+				</div>
+			</article>
+		</main>
+		<Footer />
+	</body>
+</html>
