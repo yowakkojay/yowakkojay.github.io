@@ -1,13 +1,9 @@
 # build output
 dist/
-# generated types
-.astro/
+.output/
 
 # dependencies
 node_modules/
-
-# 本地 npm 缓存（npm cache 重定向用）
-.npmcache/
 
 # logs
 npm-debug.log*
@@ -23,5 +19,10 @@ pnpm-debug.log*
 # macOS-specific files
 .DS_Store
 
-# jetbrains setting folder
-.idea/
+# misc
+*.pem
+.cache
+.astro
+
+# 本地 npm 缓存（npm cache 重定向用）
+.npmcache/

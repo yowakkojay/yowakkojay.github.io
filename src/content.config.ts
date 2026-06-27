@@ -1,29 +1,59 @@
-import { defineCollection } from 'astro:content';
-import { glob } from 'astro/loaders';
-import { z } from 'astro/zod';
+import { defineCollection } from "astro:content";
+import { glob } from "astro/loaders";
+import { z } from "astro/zod";
 
-const blog = defineCollection({
-	// Load Markdown and MDX files in the `src/content/blog/` directory.
-	loader: glob({ base: './src/content/blog', pattern: '**/*.{md,mdx}' }),
-	// Type-check frontmatter using a schema.
-	// 迁移自 Hexo 的 frontmatter：title / date / categories / tags。
+function removeDupsAndLowerCase(array: string[]) {
+	return [...new Set(array.map((str) => str.toLowerCase()))];
+}
+
+const titleSchema = z.string().max(60);
+
+const baseSchema = z.object({
+	title: titleSchema,
+});
+
+const post = defineCollection({
+	loader: glob({ base: "./src/content/post", pattern: "**/*.{md,mdx}" }),
 	schema: ({ image }) =>
-		z.object({
-			title: z.string(),
-			// Hexo 用 date（YYYY-MM-DD），这里统一转 Date 对象
-			pubDate: z.coerce.date(),
-			updatedDate: z.coerce.date().optional(),
-			description: z.string().optional(),
-			// 文章分类（Hexo categories），单值或列表
-			categories: z.union([z.string(), z.array(z.string())]).optional(),
-			// 文章标签（Hexo tags）
-			tags: z.array(z.string()).default([]),
-			// 是否启用数学公式（用于在三篇含 LaTeX 的文章上按需加载）
-			math: z.boolean().default(false),
-			// 旧式 URL：如 "2026/02/21/归一化"，由 getStaticPaths 直接用作路由 slug
-			slug: z.string(),
-			heroImage: z.optional(image()),
+		baseSchema.extend({
+			description: z.string(),
+			coverImage: z
+				.object({
+					alt: z.string(),
+					src: image(),
+				})
+				.optional(),
+			draft: z.boolean().default(false),
+			ogImage: z.string().optional(),
+			tags: z.array(z.string()).default([]).transform(removeDupsAndLowerCase),
+			publishDate: z
+				.string()
+				.or(z.date())
+				.transform((val) => new Date(val)),
+			updatedDate: z
+				.string()
+				.optional()
+				.transform((str) => (str ? new Date(str) : undefined)),
+			pinned: z.boolean().default(false),
 		}),
 });
 
-export const collections = { blog };
+const note = defineCollection({
+	loader: glob({ base: "./src/content/note", pattern: "**/*.{md,mdx}" }),
+	schema: baseSchema.extend({
+		description: z.string().optional(),
+		publishDate: z.iso
+			.datetime({ offset: true }) // Ensures ISO 8601 format with offsets allowed (e.g. "2024-01-01T00:00:00Z" and "2024-01-01T00:00:00+02:00")
+			.transform((val) => new Date(val)),
+	}),
+});
+
+const tag = defineCollection({
+	loader: glob({ base: "./src/content/tag", pattern: "**/*.{md,mdx}" }),
+	schema: z.object({
+		title: titleSchema.optional(),
+		description: z.string().optional(),
+	}),
+});
+
+export const collections = { post, note, tag };

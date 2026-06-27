@@ -1,61 +1,30 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import Header from '../components/Header.astro';
-import { ANNOUNCEMENT, AUTHOR, SITE_DESCRIPTION, SITE_TITLE, SOCIAL_LINKS } from '../consts';
+import SocialList from "@/components/SocialList.astro";
+import PageLayout from "@/layouts/Base.astro";
+
+const meta = {
+	description: "关于 Yowakko Jay",
+	title: "关于",
+};
 ---
 
-<!doctype html>
-<html lang="zh-CN">
-	<head>
-		<BaseHead title={`关于 · ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
-		<style>
-			main {
-				width: 720px;
-				max-width: calc(100% - 2em);
-				margin: auto;
-				padding: 3em 1em;
-			}
-			h1 {
-				margin-bottom: 1em;
-			}
-			p {
-				margin-bottom: 1em;
-			}
-			ul {
-				padding-left: 1.5em;
-			}
-			.links {
-				margin-top: 2em;
-				padding-top: 1.5em;
-				border-top: 1px solid rgb(var(--gray-light));
-			}
-			.links li {
-				margin-bottom: 0.5em;
-			}
-		</style>
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>关于</h1>
-			<p>{ANNOUNCEMENT}</p>
-			<p>
-				我是<strong>{AUTHOR}</strong>（郁二杰），深耕 AI / 深度学习方向，关注大模型后训练、GRPO、归一化、多智能体工作流等话题。这里是我记录学习与实践的地方。
-			</p>
-			<p>崇尚独立探索，注重基础，知其然也知其所以然。</p>
-
-			<div class="links">
-				<p><strong>联系方式</strong></p>
-				<ul>
-					<li>GitHub：<a href={SOCIAL_LINKS.github} target="_blank" rel="noopener">@yowakkojay</a></li>
-					<li>邮箱：<a href={SOCIAL_LINKS.email}>yuwanjie@mail.ustc.edu.cn</a></li>
-					<li>
-						百度 AI Studio：<a href={SOCIAL_LINKS.aistudio} target="_blank" rel="noopener">个人主页</a>
-					</li>
-				</ul>
-			</div>
-		</main>
-		<Footer />
-	</body>
-</html>
+<PageLayout meta={meta}>
+	<h1 class="title mb-12">关于</h1>
+	<div class="prose prose-sm prose-cactus max-w-none">
+		<p>
+			我是 <strong>Yowakko Jay</strong>（郁二杰），深耕 AI / 深度学习方向，关注大模型后训练、GRPO、归一化、多智能体工作流等话题。这里是我记录学习与实践的地方。
+		</p>
+		<p>崇尚独立探索，注重基础，知其然也知其所以然。</p>
+		<h2>联系方式</h2>
+		<ul class="list-inside list-disc" role="list">
+			<li>GitHub：<a class="cactus-link inline-block" href="https://github.com/yowakkojay" rel="noreferrer" target="_blank">@yowakkojay</a></li>
+			<li>邮箱：<a class="cactus-link inline-block" href="mailto:yuwanjie@mail.ustc.edu.cn">yuwanjie@mail.ustc.edu.cn</a></li>
+			<li>
+				百度 AI Studio：<a class="cactus-link inline-block" href="https://aistudio.baidu.com/personalcenter/thirdview/2845794" rel="noreferrer" target="_blank">个人主页</a>
+			</li>
+		</ul>
+	</div>
+	<div class="mt-8">
+		<SocialList />
+	</div>
+</PageLayout>
