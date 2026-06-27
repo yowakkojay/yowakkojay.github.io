@@ -1,0 +1,77 @@
+---
+// Giscus 评论组件：基于 GitHub Discussions，读者用 GitHub 账号评论。
+// 主题跟随站点明暗（通过监听 theme-change 事件动态切换 Giscus iframe）。
+// 配置 ID 从仓库 GraphQL API 获取，详见 https://giscus.app
+---
+
+<section class="mt-16">
+	<h2 class="title text-accent mb-6 text-xl">评论</h2>
+	<div class="giscus"></div>
+</section>
+
+<script is:inline define:vars={{}}>
+	// 这些值在构建时硬编码（来自仓库配置），无需运行时变量
+</script>
+
+<script>
+	const giscusConfig = {
+		repo: "yowakkojay/yowakkojay.github.io",
+		repoId: "R_kgDOPHc27g",
+		category: "General",
+		categoryId: "DIC_kwDOPHc27s4DAAvI",
+		mapping: "pathname",
+		strict: "0",
+		reactionsEnabled: "1",
+		emitMetadata: "0",
+		inputPosition: "top",
+		lang: "zh-CN",
+		// 主题根据当前站点 data-theme 决定，初始加载时确定
+	};
+
+	function currentGiscusTheme() {
+		return document.documentElement.getAttribute("data-theme") === "dark"
+			? "dark_dimmed"
+			: "light";
+	}
+
+	function loadGiscus() {
+		const container = document.querySelector(".giscus");
+		if (!container || container.querySelector("iframe.giscus-frame")) return;
+
+		const script = document.createElement("script");
+		script.src = "https://giscus.app/client.js";
+		script.async = true;
+		script.crossOrigin = "anonymous";
+		for (const [key, value] of Object.entries(giscusConfig)) {
+			script.setAttribute(`data-${key}`, value);
+		}
+		script.setAttribute("data-theme", currentGiscusTheme());
+		container.appendChild(script);
+	}
+
+	// 初始加载（组件挂载即显示评论区，符合"默认显示"的选择）
+	loadGiscus();
+
+	// 监听站点主题切换，动态通知 Giscus iframe 切换明暗主题
+	function syncGiscusTheme() {
+		const iframe = document.querySelector<HTMLIFrameElement>("iframe.giscus-frame");
+		if (!iframe) return;
+		iframe.contentWindow?.postMessage(
+			{
+				giscus: {
+					setConfig: {
+						theme: currentGiscusTheme(),
+					},
+				},
+			},
+			"https://giscus.app",
+		);
+	}
+
+	// theme-change 事件由 ThemeToggle.astro 在用户切换主题时 dispatch
+	document.addEventListener("theme-change", syncGiscusTheme);
+	// bfcache 恢复时也同步一次
+	window.addEventListener("pageshow", (e) => {
+		if (e.persisted) syncGiscusTheme();
+	});
+</script>
