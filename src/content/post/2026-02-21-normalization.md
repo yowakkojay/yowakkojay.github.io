@@ -31,7 +31,9 @@ tags:
 ### 2. 最基础的公式 (Z-Score Normalization)
 这是深度学习中最常用的标准化方法：
 
-$$ \widehat{x} = \frac{x - \mu}{\sigma} $$
+$$
+\widehat{x} = \frac{x - \mu}{\sigma}
+$$
 
 - $x$：原始数据
 - $\mu$：均值 (Mean)
@@ -231,7 +233,9 @@ tensor([[-1.2247,  0.0000,  1.2247],
 在图像任务（如 CNN）中，数据通常以 4 维张量的形式存在：
 
 
-$$[N, C, H, W]$$
+$$
+[N, C, H, W]
+$$
 
 - **N (Batch Size)**: 批次大小（比如 32 张图）
 - **C (Channel)**: 通道数（比如 RGB 图片就是 3，中间层可能是 64, 128...）
@@ -489,7 +493,9 @@ LN 的计算分为两步：
 
 
 
-$$\hat{x} = \frac{x - \mu}{\sigma} \cdot \gamma + \beta$$
+$$
+\hat{x} = \frac{x - \mu}{\sigma} \cdot \gamma + \beta
+$$
 
 这里有两个操作：**平移（减 $\mu$）** 和 **缩放（除 $\sigma$）**。
 

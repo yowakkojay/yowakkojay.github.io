@@ -141,29 +141,17 @@
 }
 
 /* ==========================================================================
-   MathJax 容器修复（迁移自原 Hexo 博客 custom.css）
-   保证行内公式内联显示、隐藏辅助 MathML、块级公式居中并防溢出
+   KaTeX 数学公式排版
    ========================================================================== */
-mjx-container:not([display]) {
-	display: inline !important;
-}
-mjx-container mjx-assistive-mml {
-	width: 0 !important;
-	height: 0 !important;
-	padding: 0 !important;
-	margin: 0 !important;
-	overflow: hidden !important;
-	clip: rect(0, 0, 0, 0) !important;
-	border: 0 !important;
-}
-mjx-container[display] {
+/* 块级公式（$$...$$）居中、可横向滚动防溢出 */
+.katex-display {
 	overflow-x: auto;
 	overflow-y: hidden;
 	padding: 0.5em 0;
-	text-align: center;
+	margin: 1em 0;
 }
-/* MathJax 输出的颜色跟随正文/主题 */
-mjx-container[display] svg,
-mjx-container:not([display]) svg {
+/* KaTeX 颜色跟随正文/主题（暗色模式下也清晰） */
+.katex {
 	color: var(--color-global-text);
 }
+

@@ -276,7 +276,9 @@ $$
 
 组内优势（Group-wise Advantage）定义为：
 
-$$\hat{A}_i=\frac{R_i-\mu_G}{\sigma_G+\delta}$$
+$$
+\hat{A}_i=\frac{R_i-\mu_G}{\sigma_G+\delta}
+$$
 
 其中，
 

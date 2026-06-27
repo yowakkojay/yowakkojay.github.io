@@ -10,7 +10,7 @@ import robotsTxt from "astro-robots-txt";
 import webmanifest from "astro-webmanifest";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeExternalLinks from "rehype-external-links";
-import rehypeMathjax from "rehype-mathjax";
+import rehypeKatex from "rehype-katex";
 import rehypeUnwrapImages from "rehype-unwrap-images";
 import remarkDirective from "remark-directive"; /* Handle ::: directives as nodes */
 import remarkMath from "remark-math";
@@ -67,23 +67,9 @@ export default defineConfig({
 	],
 	markdown: {
 		rehypePlugins: [
-			// 数学公式：remark-math 解析 $...$ / $$...$$，rehype-mathjax 渲染为 MathJax。
+			// 数学公式：remark-math 解析 $...$ / $$...$$，rehype-katex 渲染为 KaTeX。
 			// 必须放在其他 rehype 之前，避免它们误处理 math 节点。
-			[
-				rehypeMathjax,
-				{
-					tex: {
-						inlineMath: [
-							["$", "$"],
-							["\\(", "\\)"],
-						],
-						displayMath: [
-							["$$", "$$"],
-							["\\[", "\\]"],
-						],
-					},
-				},
-			],
+			[rehypeKatex, { strict: false, throwOnError: false }],
 			rehypeHeadingIds,
 			[rehypeAutolinkHeadings, { behavior: "wrap", properties: { className: ["not-prose"] } }],
 			[
