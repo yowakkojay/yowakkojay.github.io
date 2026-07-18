@@ -36,11 +36,11 @@ def reward_func(completions, ground_truth, **kwargs):
 
 效果如：
 
-[<img src="https://raw.githubusercontent.com/wandb/assets/main/wandb-github-badge-28.svg" alt="Visualize in Weights & Biases" width="150" height="24"/>](https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-gsm8k/runs/mx4rygxh) 
+[<img src="/images/wandb-badge.svg" alt="Visualize in Weights & Biases" width="150" height="24"/>](https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-gsm8k/runs/mx4rygxh) 
 
-![reward](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/0.5b-reward-2.svg)
+![reward](/images/2026-01-25-grpo-qwen-gsm8k/0.5b-reward-2.webp)
 
-![loss](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/0.5b-loss-2.svg)
+![loss](/images/2026-01-25-grpo-qwen-gsm8k/0.5b-loss-2.webp)
 
 这个是在单卡A800跑的，直接用的python提交到slurm上运行的。
 
@@ -127,11 +127,11 @@ def reward_func(completions, ground_truth, **kwargs):
 
 用了一种分层的得分，看起来好像效果应该会不错，但是实际上效果不太好，效果如：
 
-[<img src="https://raw.githubusercontent.com/wandb/assets/main/wandb-github-badge-28.svg" alt="Visualize in Weights & Biases" width="150" height="24"/>](https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-4gpu/runs/a47u0ih9) 
+[<img src="/images/wandb-badge.svg" alt="Visualize in Weights & Biases" width="150" height="24"/>](https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-4gpu/runs/a47u0ih9) 
 
-![reward](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/0.5b-reward-1.svg)
+![reward](/images/2026-01-25-grpo-qwen-gsm8k/0.5b-reward-1.webp)
 
-![loss](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/0.5b-loss-1.svg)
+![loss](/images/2026-01-25-grpo-qwen-gsm8k/0.5b-loss-1.webp)
 
 reward会收敛到0.1，Loss变为0，陷入到了一种叫做奖励陷阱（Reward Trap）的问题中。在GRPO中由于是依赖组内的相对优势，公式可以看作是$A = \frac{R - mean(R)}{std(R)}$。由于0.5b的模型学习能力有限，gsm8k对他来说应该是太难了，但是学习输出boxed的格式对他来说比较容易，所以组内可以就都摆烂了，感觉像是大家都学不会而且既然都有0.1了就别卷了，大家都来躺平。
 
@@ -167,11 +167,11 @@ def reward_func(completions, ground_truth, **kwargs):
 
 效果如：
 
-[<img src="https://raw.githubusercontent.com/wandb/assets/main/wandb-github-badge-28.svg" alt="Visualize in Weights & Biases" width="150" height="24"/>](https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-4gpu/runs/lb05cxuf) 
+[<img src="/images/wandb-badge.svg" alt="Visualize in Weights & Biases" width="150" height="24"/>](https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-4gpu/runs/lb05cxuf) 
 
-![reward](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/0.5b-reward-3.svg)
+![reward](/images/2026-01-25-grpo-qwen-gsm8k/0.5b-reward-3.webp)
 
-![loss](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/0.5b-loss-3.svg)
+![loss](/images/2026-01-25-grpo-qwen-gsm8k/0.5b-loss-3.webp)
 
 果然跟我想的差不多，果然不出所料的也陷入到了reward trap里，这次是收敛到0.01了，或许是模型太小了所以表达能力有限？
 
@@ -181,11 +181,11 @@ def reward_func(completions, ground_truth, **kwargs):
 
 效果如：
 
-[<img src="https://raw.githubusercontent.com/wandb/assets/main/wandb-github-badge-28.svg" alt="Visualize in Weights & Biases" width="150" height="24"/>](https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-4gpu/runs/2lfubxpb) 
+[<img src="/images/wandb-badge.svg" alt="Visualize in Weights & Biases" width="150" height="24"/>](https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-4gpu/runs/2lfubxpb) 
 
-![reward](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/3b-reward-1.svg)
+![reward](/images/2026-01-25-grpo-qwen-gsm8k/3b-reward-1.webp)
 
-![loss](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/3b-loss-1.svg)
+![loss](/images/2026-01-25-grpo-qwen-gsm8k/3b-loss-1.webp)
 
 果然确实是模型规模的问题，换到3b模型就没有出现reward trap的情况了，看来还是大点的模型更好用。早知如此应该先从当前设备显存能支持的模型中较小但不能最小的模型开始实验验证了（下次记住了）。
 
@@ -238,11 +238,11 @@ config = GRPOConfig(
 
 效果如下：
 
-[<img src="https://raw.githubusercontent.com/wandb/assets/main/wandb-github-badge-28.svg" alt="Visualize in Weights & Biases" width="150" height="24"/>](https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-2gpu-7b/runs/kmgxeqc5)
+[<img src="/images/wandb-badge.svg" alt="Visualize in Weights & Biases" width="150" height="24"/>](https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-2gpu-7b/runs/kmgxeqc5)
 
-![reward](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/7b-reward-1.svg)
+![reward](/images/2026-01-25-grpo-qwen-gsm8k/7b-reward-1.webp)
 
-![loss](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/7b-loss-1.svg)
+![loss](/images/2026-01-25-grpo-qwen-gsm8k/7b-loss-1.webp)
 
 ### 6) 7B：loss 归零的异常现象
 
@@ -256,11 +256,11 @@ config = GRPOConfig(
 
 在分析了一下训练时wandb缓存的日志，发现了不少问题。
 
-![](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/7b-clipped-ratio.svg)
+![](/images/2026-01-25-grpo-qwen-gsm8k/7b-clipped-ratio.webp)
 
-![](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/7b-completions-mean_length.svg)
+![](/images/2026-01-25-grpo-qwen-gsm8k/7b-completions-mean_length.webp)
 
-![](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/7b-mean_terminated_length.svg)
+![](/images/2026-01-25-grpo-qwen-gsm8k/7b-mean_terminated_length.webp)
 
 先来回看一下GRPO的公式吧：
 
@@ -428,17 +428,17 @@ def reward_func(completions, ground_truth, **kwargs):
 
 来看看改动了reward函数之后的效果吧：
 
-[<img src="https://raw.githubusercontent.com/wandb/assets/main/wandb-github-badge-28.svg" alt="Visualize in Weights & Biases" width="150" height="24"/>](https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-2gpu-7b/runs/my853ipb)
+[<img src="/images/wandb-badge.svg" alt="Visualize in Weights & Biases" width="150" height="24"/>](https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-2gpu-7b/runs/my853ipb)
 
-![reward](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/7b-reward-2.svg)
+![reward](/images/2026-01-25-grpo-qwen-gsm8k/7b-reward-2.webp)
 
-![loss](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/7b-loss-2.svg)
+![loss](/images/2026-01-25-grpo-qwen-gsm8k/7b-loss-2.webp)
 
-![](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/7b-clipped_ratio.svg)
+![](/images/2026-01-25-grpo-qwen-gsm8k/7b-clipped_ratio.webp)
 
-![](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/7b-mean_length.svg)
+![](/images/2026-01-25-grpo-qwen-gsm8k/7b-mean_length.webp)
 
-![](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/7b-mean_terminated_length-2.svg)
+![](/images/2026-01-25-grpo-qwen-gsm8k/7b-mean_terminated_length-2.webp)
 
 ```log
 正在验证模型: Initial_Model-7B (Batch Size: 32)...
@@ -458,13 +458,13 @@ def reward_func(completions, ground_truth, **kwargs):
 
 这次就把max_completion_length改成1024，然后用4张卡跑一下。结果如下：
 
-[<img src="https://raw.githubusercontent.com/wandb/assets/main/wandb-github-badge-28.svg" alt="Visualize in Weights & Biases" width="150" height="24"/>](https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-4gpu-7b-l1024/runs/bgagwijt)
+[<img src="/images/wandb-badge.svg" alt="Visualize in Weights & Biases" width="150" height="24"/>](https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-4gpu-7b-l1024/runs/bgagwijt)
 
-![](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/7b-reward-3.svg)
+![](/images/2026-01-25-grpo-qwen-gsm8k/7b-reward-3.webp)
 
-![](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/7b-loss-3.svg)
+![](/images/2026-01-25-grpo-qwen-gsm8k/7b-loss-3.webp)
 
-![](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/7b-clipped-ratio-3.svg)
+![](/images/2026-01-25-grpo-qwen-gsm8k/7b-clipped_ratio-3.webp)
 
 ```log
 ==============================
@@ -588,13 +588,13 @@ config = GRPOConfig(
 
 修改之后又跑了一次，结果如：
 
-[<img src="https://raw.githubusercontent.com/wandb/assets/main/wandb-github-badge-28.svg" alt="Visualize in Weights & Biases" width="150" height="24"/>](https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-4gpu-7b-l1024/runs/pgw5xlpu)
+[<img src="/images/wandb-badge.svg" alt="Visualize in Weights & Biases" width="150" height="24"/>](https://wandb.ai/yowakkojay-ustc/qwen2.5-grpo-4gpu-7b-l1024/runs/pgw5xlpu)
 
-![](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/7b-reward-4.svg)
+![](/images/2026-01-25-grpo-qwen-gsm8k/7b-reward-4.webp)
 
-![](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/7b-loss-4.svg)
+![](/images/2026-01-25-grpo-qwen-gsm8k/7b-loss-4.webp)
 
-![](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/7b-penalty-4.svg)
+![](/images/2026-01-25-grpo-qwen-gsm8k/7b-penalty-4.webp)
 
 ```log
 Base_7B: Accuracy=90.98%, AvgCorrectness=1.8196, AvgFormat=0.4511, AvgRepeatPenalty=-0.0346, AvgTotal=2.2361

@@ -10,7 +10,7 @@ tags:
   - mcp
 ---
 
-![封面图](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/ChatGPT%20Image%202026%E5%B9%B44%E6%9C%8824%E6%97%A5%2000_15_05.png)
+![封面图](/images/2026-04-24-ai-workflow/ChatGPT%20Image%202026%E5%B9%B44%E6%9C%8824%E6%97%A5%2000_15_05.webp)
 
 ## 前言
 
@@ -31,7 +31,7 @@ tags:
 
 ### 1.3 系统架构：三位一体的智能协作模式
 
-![系统架构图](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/golutra%2Bopenclaw%2Bfeishu.png)
+![系统架构图](/images/2026-04-24-ai-workflow/golutra%2Bopenclaw%2Bfeishu.webp)
 
 整个系统由三个核心组件构成：
 
@@ -61,17 +61,17 @@ tags:
 
 <div style="text-align: center;">
 <div style="display: inline-flex; gap: 40px; align-items: center;">
-<img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/openclaw%E6%8E%A5%E5%85%A5feishu%E6%9C%BA%E5%99%A8%E4%BA%BA.jpg" style="height: 600px; width: auto; display: block; margin-right: 40px;" />
+<img src="/images/2026-04-24-ai-workflow/openclaw%E6%8E%A5%E5%85%A5feishu%E6%9C%BA%E5%99%A8%E4%BA%BA.webp" style="height: 600px; width: auto; display: block; margin-right: 40px;" />
 <div style="display: flex; flex-direction: column; line-height: 0; font-size: 0;">
   <div style="height: 270px; overflow: hidden; position: relative;">
-    <img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/%E5%9F%9F%E5%90%8Dwebhook.jpg" style="height: 900px; width: auto; display: block;" />
+    <img src="/images/2026-04-24-ai-workflow/%E5%9F%9F%E5%90%8Dwebhook.webp" style="height: 900px; width: auto; display: block;" />
     <svg style="position: absolute; bottom: -1px; left: 0; width: 100%; height: 20px; display: block;" viewBox="0 0 200 20" preserveAspectRatio="none">
       <path d="M0,5 L16.67,15 L33.33,5 L50,15 L66.67,5 L83.33,15 L100,5 L116.67,15 L133.33,5 L150,15 L166.67,5 L183.33,15 L200,5 L200,20 L0,20 Z" fill="white"/>
       <polyline points="0,5 16.67,15 33.33,5 50,15 66.67,5 83.33,15 100,5 116.67,15 133.33,5 150,15 166.67,5 183.33,15 200,5" fill="none" stroke="black" stroke-width="2"/>
     </svg>
   </div>
   <div style="height: 270px; overflow: hidden; position: relative;">
-    <img src="https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/%E5%9F%9F%E5%90%8Dwebhook.jpg" style="height: 900px; width: auto; display: block; margin-top: -630px;" />
+    <img src="/images/2026-04-24-ai-workflow/%E5%9F%9F%E5%90%8Dwebhook.webp" style="height: 900px; width: auto; display: block; margin-top: -630px;" />
     <svg style="position: absolute; top: -1px; left: 0; width: 100%; height: 20px; display: block;" viewBox="0 0 200 20" preserveAspectRatio="none">
       <path d="M0,5 L16.67,15 L33.33,5 L50,15 L66.67,5 L83.33,15 L100,5 L116.67,15 L133.33,5 L150,15 L166.67,5 L183.33,15 L200,5 L200,0 L0,0 Z" fill="white"/>
       <polyline points="0,5 16.67,15 33.33,5 50,15 66.67,5 83.33,15 100,5 116.67,15 133.33,5 150,15 166.67,5 183.33,15 200,5" fill="none" stroke="black" stroke-width="2"/>
@@ -108,7 +108,7 @@ tags:
 
 #### 提交高质量 Pull Request
 
-![提交PR截图](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/%E6%8F%90%E4%BA%A4pr.png)
+![提交PR截图](/images/2026-04-24-ai-workflow/%E6%8F%90%E4%BA%A4pr.webp)
 
 针对 **UnifiedQuantum** 核心项目，工作流成功完成了：
 - 生成功能完整的模块代码
@@ -117,7 +117,7 @@ tags:
 
 #### 有效提交 Issue 分析报告
 
-![提交Issue截图](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/%E6%8F%90%E4%BA%A4issue.png)
+![提交Issue截图](/images/2026-04-24-ai-workflow/%E6%8F%90%E4%BA%A4issue.webp)
 
 针对 **quantum-computing-skill** 项目，工作流自动：
 - 检测到潜在的性能瓶颈问题
@@ -148,7 +148,7 @@ tags:
 
 **quantum-computing-skill 任务总览**
 
-![quantum-computing-skill任务总览](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/quantum-computing-skill%E9%A1%B9%E7%9B%AE%E4%BB%BB%E5%8A%A1%E5%AE%8C%E6%88%90%E6%80%BB%E8%A7%88.png)
+![quantum-computing-skill任务总览](/images/2026-04-24-ai-workflow/quantum-computing-skill%E9%A1%B9%E7%9B%AE%E4%BB%BB%E5%8A%A1%E5%AE%8C%E6%88%90%E6%80%BB%E8%A7%88.webp)
 
 - 详细列出了任务的分解逻辑、具体执行步骤和最终交付结果
 - 完整记录了每一步的操作轨迹与关键数据表现
@@ -156,7 +156,7 @@ tags:
 
 **UnifiedQuantum 任务总览**
 
-![UnifiedQuantum任务总览](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/UnifiedQuantum%E9%A1%B9%E7%9B%AE%E4%BB%BB%E5%8A%A1%E5%AE%8C%E6%88%90%E6%80%BB%E8%A7%88.png)
+![UnifiedQuantum任务总览](/images/2026-04-24-ai-workflow/UnifiedQuantum%E9%A1%B9%E7%9B%AE%E4%BB%BB%E5%8A%A1%E5%AE%8C%E6%88%90%E6%80%BB%E8%A7%88.webp)
 - 全面展示了项目的整体执行情况
 - 重点涵盖核心Bug的修复细节与GitHub代码贡献记录
 - 直观体现了团队的协作效率与代码交付质量

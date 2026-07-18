@@ -33,11 +33,11 @@ VSCode也可以用Pycharm代替。
 
 当你在`cmd`中输入`conda info`时，得到报错输出时，你需要重点检查是否已经将conda添加到**系统环境变量**中。如下图：
 
-![conda path](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/conda-path.png)
+![conda path](/images/2025-07-13-pytorch-windows/conda-path.webp)
 
 当你在`cmd`中输入`conda info`时，得到非报错输出时，就可以了，例如：
 
-![conda info](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/conda-info.png)
+![conda info](/images/2025-07-13-pytorch-windows/conda-info.webp)
 
 个人建议1，如果你的C盘存储空间有限，我建议把默认cache和envs文件夹放到C盘之外的地方。
 
@@ -58,7 +58,7 @@ VSCode也可以用Pycharm代替。
 
 在你已经确保了前面事项中提到的几点内容的情况下，你还需要确保要有N卡的驱动程序，如果你的笔记本电脑是带N卡的游戏本，那么大概率在笔记本出厂时已经为你安装好[GeForce驱动程序](https://www.nvidia.cn/geforce/drivers/)了。接下来，你可以在`cmd`中输入`nvidia-smi`来查看包括显卡型号、驱动版本、运行进程、显存占用、功耗等在内的信息。如下图：
 
-![nvidia-smi](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/nvidia-smi.png)
+![nvidia-smi](/images/2025-07-13-pytorch-windows/nvidia-smi.webp)
 
 图中各字段信息解读：（重点可只看我图中红圈里的关键字段，如果找不到表头和数据的对应关系，可以根据下面表格中数据结合图中数据定位表头字段）
 
@@ -108,25 +108,25 @@ VSCode也可以用Pycharm代替。
 
 可以下载的CUDA Toolkit版本应该小于等于前文中显卡信息字段中的<span style="color:red; font-weight:bold">CUDA Version</span>，官网链接：[CUDA Toolkit 12.9 Update 1 Downloads](https://developer.nvidia.com/cuda-downloads?target_os=Windows&target_arch=x86_64&target_version=11&target_type=exe_local)（这里给的链接是CUDA 12.9，需要根据自己机器的情况来选择版本）
 
-![CUDA](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/CUDA-1.png)
+![CUDA](/images/2025-07-13-pytorch-windows/CUDA-1.webp)
 
 下载好后双击安装，这里的路径随意，只是一个临时的文件夹，待安装完成CUDA Toolkit后，该路径下的文件夹会自行删掉的。顺带提一下，安装的CUDA并不是这个路径，安装CUDA的路径是系统默认的装在C盘中的，应该是改不了的。
 
-![CUDA 2](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/CUDA-2.png)
+![CUDA 2](/images/2025-07-13-pytorch-windows/CUDA-2.webp)
 
 安装CUDA的过程很简单，一直点同意并继续或下一步就可以了。唯一一个要选择的地方选精简安装即可。（下图为笔者安装CUDA 12.1时的截图，CUDA 12.9与之类似）
 
-![CUDA-4](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/CUDA-4.png)
+![CUDA-4](/images/2025-07-13-pytorch-windows/CUDA-4.webp)
 
 在安装好CUDA后，可以在`cmd`中输入`nvcc -V`进行验证，如下图：
 
-![CUDA 5](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/CUDA-5.png)
+![CUDA 5](/images/2025-07-13-pytorch-windows/CUDA-5.webp)
 
 ### 3.2. cuDNN
 
 在安装好CUDA后，还需要安装cuDNN，注意cuDNN版本必须和CUDA匹配。官网链接：[cuDNN 9.10.2 Downloads](https://developer.nvidia.com/cudnn-downloads?target_os=Windows&target_arch=x86_64&target_version=Agnostic&cuda_version=12)
 
-![cuDNN 1](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/cuDNN-1.png)
+![cuDNN 1](/images/2025-07-13-pytorch-windows/cuDNN-1.webp)
 
 下载好之后会得到一个`.zip`格式的压缩包，解压后会有三个文件夹（分别是`bin`、`include`、`lib`这三个文件夹）和一个LICENSE文件，然后需要把这三个文件夹复制粘贴到如下路径：`C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.9`（如果你下载的CUDA不是12.9版本，请根据自己的版本号调整路径，这应该很简单吧？）
 
@@ -153,7 +153,7 @@ conda activate lucidcrucible
 
 基于前文中的配置以及GPU可用的情况，我们则可以直接使用下面的命令，但是在开始前请十分注意，当你在运行该命令时，**务必确保你当前处于你希望安装pytorch的虚拟环境中**，如下图中红圈所示，否则你会在你系统默认的python环境中安装pytorch，这可能会导致一系列麻烦的问题，这也是我们使用conda管理python的原因之一。
 
-![pytorch](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/pytorch-1.png)
+![pytorch](/images/2025-07-13-pytorch-windows/pytorch-1.webp)
 
 在你确定好当前环境正确后，就可以通过命令下载安装了：（截至本文写时，由于pytorch支持的最新计算平台还只是CUDA12.8，所以这里下载的是cu128，只要你本地安装的CUDA版本高于pytorch要求的CUDA版本即可，本文中安装的CUDA12.9很明显高于CUDA12.8。多嘴一句，这里的12.9并非`nvidia-smi`显卡信息字段中的<a href="#2-NVIDIA显卡驱动" style="color:red; font-weight:bold">CUDA Version</a>，而是<a href="#31-CUDA Toolkit" style="color: red">CUDA Toolkit</a>处的12.9）
 
@@ -169,11 +169,11 @@ pip3 install torch torchvision torchaudio --index-url https://download.pytorch.o
 
 下载过程需要一定时间，请耐心一些。
 
-![pytorch 2](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/pytorch-2.png)
+![pytorch 2](/images/2025-07-13-pytorch-windows/pytorch-2.webp)
 
 当下载完成后，说明我们马上就要大功告成了！
 
-![pytorch 3](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/pytorch-3.png)
+![pytorch 3](/images/2025-07-13-pytorch-windows/pytorch-3.webp)
 
 最后，需要在你的虚拟环境中检查一下torch的安装情况、torch的版本以、CUDA（GPU加速）是否可用以及当前pytorch正在使用的GPU设备号。
 
@@ -187,7 +187,7 @@ torch.cuda.is_available()
 torch.cuda.current_device()
 ```
 
-![pytorch 4](https://cdn.jsdelivr.net/gh/yowakkojay/blogImages@main/imgs/pytorch-4.png)
+![pytorch 4](/images/2025-07-13-pytorch-windows/pytorch-4.webp)
 
 检查完成后，可以输入`exit()`退出python。
 
