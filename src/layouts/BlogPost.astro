@@ -42,6 +42,33 @@ const readingTime: string = remarkPluginFrontmatter.readingTime;
 			</div>
 		</div>
 	</article>
+	<!-- 图片灯箱：点击正文图片放大查看，点击图片外 / X / ESC 关闭 -->
+	<div
+		aria-modal="true"
+		class="fixed inset-0 z-100 flex cursor-zoom-out items-center justify-center bg-black/80 p-4"
+		id="lightbox"
+		role="dialog"
+	>
+		<button
+			aria-label="关闭大图"
+			class="absolute end-4 top-4 cursor-pointer rounded-full bg-white/10 p-2 text-white hover:bg-white/25"
+			id="lightbox-close"
+			type="button"
+		>
+			<svg
+				aria-hidden="true"
+				class="h-6 w-6"
+				fill="none"
+				stroke="currentColor"
+				stroke-linecap="round"
+				stroke-width="2"
+				viewBox="0 0 24 24"
+			>
+				<path d="M6 6l12 12M18 6L6 18" />
+			</svg>
+		</button>
+		<img alt="" class="max-h-[90vh] max-w-full cursor-default object-contain" id="lightbox-img" src="" />
+	</div>
 	<button
 		class="hover:border-link fixed end-4 bottom-8 z-90 flex h-10 w-10 translate-y-28 cursor-pointer items-center justify-center rounded-full border-2 border-transparent bg-zinc-200 text-3xl opacity-0 transition-all transition-discrete duration-300 data-[show=true]:translate-y-0 data-[show=true]:opacity-100 sm:end-8 sm:h-12 sm:w-12 dark:bg-zinc-700"
 		data-show="false"
@@ -62,6 +89,27 @@ const readingTime: string = remarkPluginFrontmatter.readingTime;
 		</svg>
 	</button>
 </BaseLayout>
+
+<style>
+	#lightbox {
+		opacity: 0;
+		visibility: hidden;
+		transition:
+			opacity 0.2s ease,
+			visibility 0.2s;
+	}
+	#lightbox.open {
+		opacity: 1;
+		visibility: visible;
+	}
+	#lightbox img {
+		transform: scale(0.96);
+		transition: transform 0.2s ease;
+	}
+	#lightbox.open img {
+		transform: scale(1);
+	}
+</style>
 
 <script>
 	const scrollBtn = document.getElementById("to-top-btn") as HTMLButtonElement;
@@ -90,4 +138,30 @@ const readingTime: string = remarkPluginFrontmatter.readingTime;
 	}
 	document.addEventListener("scroll", updateProgress, { passive: true });
 	updateProgress();
+
+	// 图片灯箱：点击正文图片放大，点击图片外 / X / ESC 关闭
+	const lightbox = document.getElementById("lightbox") as HTMLDivElement;
+	const lightboxImg = document.getElementById("lightbox-img") as HTMLImageElement;
+
+	function closeLightbox() {
+		lightbox.classList.remove("open");
+		document.body.style.overflow = "";
+	}
+	document.querySelectorAll<HTMLImageElement>(".prose img").forEach((img) => {
+		if (img.closest("a")) return; // 跳过链接里的图（如 wandb 徽章），保留跳转行为
+		img.style.cursor = "zoom-in";
+		img.addEventListener("click", () => {
+			lightboxImg.src = img.currentSrc || img.src;
+			lightboxImg.alt = img.alt;
+			lightbox.classList.add("open");
+			document.body.style.overflow = "hidden";
+		});
+	});
+	// X 按钮也在遮罩内，点击图片之外的任何位置都会触发关闭
+	lightbox.addEventListener("click", (e) => {
+		if (e.target !== lightboxImg) closeLightbox();
+	});
+	document.addEventListener("keydown", (e) => {
+		if (e.key === "Escape" && lightbox.classList.contains("open")) closeLightbox();
+	});
 </script>
