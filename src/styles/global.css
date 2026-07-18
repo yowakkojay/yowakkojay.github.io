@@ -31,7 +31,7 @@
 @property --color-link {
 	syntax: "<color>";
 	inherits: true;
-	initial-value: oklch(55.44% 0.0431 185.69);
+	initial-value: oklch(52.5% 0.115 200);
 }
 @property --color-accent {
 	syntax: "<color>";
@@ -54,10 +54,19 @@
 	--color-global-bg: oklch(98.48% 0 0);
 	--color-global-text: oklch(26.99% 0.0096 235.05);
 	--color-muted: oklch(44.6% 0.03 256.802);
-	--color-link: oklch(55.44% 0.0431 185.69);
+	--color-link: oklch(52.5% 0.115 200);
 	--color-accent: oklch(55.27% 0.195 19.06);
 	--color-accent-2: oklch(18.15% 0 0);
 	--color-quote: oklch(55.27% 0.195 19.06);
+
+	/* 中文友好的字体栈：正文用系统无衬线（含各平台中文字体），等宽保留给代码/日期等元信息 */
+	--font-sans:
+		ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+		"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC",
+		sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+	--font-mono:
+		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+		"PingFang SC", "Microsoft YaHei", monospace;
 }
 
 @layer base {
