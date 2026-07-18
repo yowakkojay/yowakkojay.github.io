@@ -43,8 +43,8 @@ const latestNotes = allNotes
 				<h2 class="title mb-6 text-xl">置顶文章</h2>
 				<ul class="space-y-4" role="list">
 					{pinnedPosts.map((p) => (
-						<li class="grid gap-1 sm:grid-cols-[auto_1fr]">
-							<PostPreview post={p} />
+						<li class="grid gap-1 sm:grid-cols-[auto_1fr] sm:[&_q]:col-start-2">
+							<PostPreview post={p} withDesc />
 						</li>
 					))}
 				</ul>
@@ -56,8 +56,8 @@ const latestNotes = allNotes
 		<ul class="space-y-4" role="list">
 			{
 				latestPosts.map((p) => (
-					<li class="grid gap-1 sm:grid-cols-[auto_1fr]">
-						<PostPreview post={p} />
+					<li class="grid gap-1 sm:grid-cols-[auto_1fr] sm:[&_q]:col-start-2">
+						<PostPreview post={p} withDesc />
 					</li>
 				))
 			}

@@ -5,7 +5,7 @@ import { menuLinks } from "@/site.config";
 import { siteConfig } from "../../site.config";
 ---
 
-<header class="group relative mb-28 flex items-center sm:ps-18" id="main-header">
+<header class="group relative mb-16 flex items-center sm:mb-28 sm:ps-18" id="main-header">
 	<div class="flex sm:flex-col">
 		<a
 			aria-current={Astro.url.pathname === "/" ? "page" : false}
@@ -30,7 +30,7 @@ import { siteConfig } from "../../site.config";
 				menuLinks.map((link) => (
 					<a
 						aria-current={Astro.url.pathname === link.path ? "page" : false}
-						class="text-accent px-2 py-3 font-semibold sm:px-4 sm:py-0 sm:underline-offset-2 sm:hover:underline"
+						class="text-accent px-2 py-3 font-semibold aria-[current=page]:underline aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-4 sm:px-4 sm:py-0 sm:underline-offset-2 sm:hover:underline"
 						href={link.path}
 					>
 						{link.title}

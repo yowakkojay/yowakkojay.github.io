@@ -12,7 +12,7 @@ const { headings } = Astro.props;
 const toc = generateToc(headings);
 ---
 
-<details open class="lg:sticky lg:top-12 lg:order-2 lg:-me-32 lg:basis-64">
+<details open class="lg:sticky lg:top-12 lg:order-2 lg:-me-32 lg:basis-64" id="post-toc">
 	<summary class="title hover:marker:text-accent cursor-pointer text-lg">目录</summary>
 	<nav class="ms-4 lg:w-full">
 		<ol class="mt-4">
@@ -20,3 +20,11 @@ const toc = generateToc(headings);
 		</ol>
 	</nav>
 </details>
+
+<script>
+	// 移动端默认折叠目录，避免长目录把正文顶出首屏；桌面端保持展开
+	const tocEl = document.getElementById("post-toc");
+	if (tocEl && window.matchMedia("(width < 64rem)").matches) {
+		tocEl.removeAttribute("open");
+	}
+</script>
