@@ -58,8 +58,9 @@
 		container.appendChild(script);
 	}
 
-	// 初始加载（组件挂载即显示评论区，符合"默认显示"的选择）
-	loadGiscus();
+	// astro:page-load 在首次加载和 ClientRouter 每次页面切换后都会触发；
+	// loadGiscus 内部有 iframe 存在性检查，重复触发不会重复注入
+	document.addEventListener("astro:page-load", loadGiscus);
 
 	// 监听站点主题切换，动态通知 Giscus iframe 切换明暗主题
 	function syncGiscusTheme() {

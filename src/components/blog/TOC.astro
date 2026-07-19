@@ -22,9 +22,13 @@ const toc = generateToc(headings);
 </details>
 
 <script>
-	// 移动端默认折叠目录，避免长目录把正文顶出首屏；桌面端保持展开
-	const tocEl = document.getElementById("post-toc");
-	if (tocEl && window.matchMedia("(width < 64rem)").matches) {
-		tocEl.removeAttribute("open");
-	}
+	// astro:page-load 在首次加载和 ClientRouter 每次页面切换后都会触发，
+	// 保证客户端导航进入文章页时也能正确折叠
+	document.addEventListener("astro:page-load", () => {
+		// 移动端默认折叠目录，避免长目录把正文顶出首屏；桌面端保持展开
+		const tocEl = document.getElementById("post-toc");
+		if (tocEl && window.matchMedia("(width < 64rem)").matches) {
+			tocEl.removeAttribute("open");
+		}
+	});
 </script>

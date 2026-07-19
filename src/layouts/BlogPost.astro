@@ -112,56 +112,75 @@ const readingTime: string = remarkPluginFrontmatter.readingTime;
 </style>
 
 <script>
-	const scrollBtn = document.getElementById("to-top-btn") as HTMLButtonElement;
-	const targetHeader = document.getElementById("blog-hero") as HTMLDivElement;
-	const progressBar = document.getElementById("reading-progress") as HTMLDivElement;
+	// ClientRouter 下模块脚本只执行一次，因此初始化逻辑改为响应 astro:page-load，
+	// 每次进入文章页重新绑定；并在重新绑定前清理上一页的 document 级监听器，避免累积。
+	let headerObserver: IntersectionObserver | null = null;
+	let onScroll: (() => void) | null = null;
+	let onKeydown: ((e: KeyboardEvent) => void) | null = null;
 
-	function callback(entries: IntersectionObserverEntry[]) {
-		entries.forEach((entry) => {
-			// only show the scroll to top button when the heading is out of view
-			scrollBtn.dataset.show = (!entry.isIntersecting).toString();
+	document.addEventListener("astro:page-load", () => {
+		// 清理上一篇文章页注册的 document 级监听器与观察器
+		headerObserver?.disconnect();
+		if (onScroll) document.removeEventListener("scroll", onScroll);
+		if (onKeydown) document.removeEventListener("keydown", onKeydown);
+		headerObserver = null;
+		onScroll = null;
+		onKeydown = null;
+
+		const scrollBtn = document.getElementById("to-top-btn") as HTMLButtonElement;
+		const targetHeader = document.getElementById("blog-hero") as HTMLDivElement;
+		const progressBar = document.getElementById("reading-progress") as HTMLDivElement;
+		const lightbox = document.getElementById("lightbox") as HTMLDivElement;
+		const lightboxImg = document.getElementById("lightbox-img") as HTMLImageElement;
+		// 非文章页没有这些元素，直接跳过
+		if (!scrollBtn || !targetHeader || !progressBar || !lightbox || !lightboxImg) return;
+
+		function callback(entries: IntersectionObserverEntry[]) {
+			entries.forEach((entry) => {
+				// only show the scroll to top button when the heading is out of view
+				scrollBtn.dataset.show = (!entry.isIntersecting).toString();
+			});
+		}
+
+		scrollBtn.addEventListener("click", () => {
+			document.documentElement.scrollTo({ behavior: "smooth", top: 0 });
 		});
-	}
 
-	scrollBtn.addEventListener("click", () => {
-		document.documentElement.scrollTo({ behavior: "smooth", top: 0 });
-	});
+		headerObserver = new IntersectionObserver(callback);
+		headerObserver.observe(targetHeader);
 
-	const observer = new IntersectionObserver(callback);
-	observer.observe(targetHeader);
+		// 顶部阅读进度条
+		function updateProgress() {
+			const root = document.documentElement;
+			const max = root.scrollHeight - root.clientHeight;
+			progressBar.style.width = `${max > 0 ? (root.scrollTop / max) * 100 : 0}%`;
+		}
+		onScroll = updateProgress;
+		document.addEventListener("scroll", onScroll, { passive: true });
+		updateProgress();
 
-	// 顶部阅读进度条
-	function updateProgress() {
-		const root = document.documentElement;
-		const max = root.scrollHeight - root.clientHeight;
-		progressBar.style.width = `${max > 0 ? (root.scrollTop / max) * 100 : 0}%`;
-	}
-	document.addEventListener("scroll", updateProgress, { passive: true });
-	updateProgress();
-
-	// 图片灯箱：点击正文图片放大，点击图片外 / X / ESC 关闭
-	const lightbox = document.getElementById("lightbox") as HTMLDivElement;
-	const lightboxImg = document.getElementById("lightbox-img") as HTMLImageElement;
-
-	function closeLightbox() {
-		lightbox.classList.remove("open");
-		document.body.style.overflow = "";
-	}
-	document.querySelectorAll<HTMLImageElement>(".prose img").forEach((img) => {
-		if (img.closest("a")) return; // 跳过链接里的图（如 wandb 徽章），保留跳转行为
-		img.style.cursor = "zoom-in";
-		img.addEventListener("click", () => {
-			lightboxImg.src = img.currentSrc || img.src;
-			lightboxImg.alt = img.alt;
-			lightbox.classList.add("open");
-			document.body.style.overflow = "hidden";
+		// 图片灯箱：点击正文图片放大，点击图片外 / X / ESC 关闭
+		function closeLightbox() {
+			lightbox.classList.remove("open");
+			document.body.style.overflow = "";
+		}
+		document.querySelectorAll<HTMLImageElement>(".prose img").forEach((img) => {
+			if (img.closest("a")) return; // 跳过链接里的图（如 wandb 徽章），保留跳转行为
+			img.style.cursor = "zoom-in";
+			img.addEventListener("click", () => {
+				lightboxImg.src = img.currentSrc || img.src;
+				lightboxImg.alt = img.alt;
+				lightbox.classList.add("open");
+				document.body.style.overflow = "hidden";
+			});
 		});
-	});
-	// X 按钮也在遮罩内，点击图片之外的任何位置都会触发关闭
-	lightbox.addEventListener("click", (e) => {
-		if (e.target !== lightboxImg) closeLightbox();
-	});
-	document.addEventListener("keydown", (e) => {
-		if (e.key === "Escape" && lightbox.classList.contains("open")) closeLightbox();
+		// X 按钮也在遮罩内，点击图片之外的任何位置都会触发关闭
+		lightbox.addEventListener("click", (e) => {
+			if (e.target !== lightboxImg) closeLightbox();
+		});
+		onKeydown = (e) => {
+			if (e.key === "Escape" && lightbox.classList.contains("open")) closeLightbox();
+		};
+		document.addEventListener("keydown", onKeydown);
 	});
 </script>

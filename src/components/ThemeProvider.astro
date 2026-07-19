@@ -31,6 +31,9 @@
 	// initial setup
 	setTheme(getUserPref());
 
+	// ClientRouter 页面切换会重置 <html> 属性（含 data-theme），切换后重新应用主题
+	document.addEventListener("astro:after-swap", () => setTheme(getUserPref()));
+
 	// listen for pageshow event, browser restored page from bfcache
 	window.addEventListener("pageshow", (e) => {
 		if (e.persisted) {
