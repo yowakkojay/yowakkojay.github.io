@@ -83,7 +83,7 @@ tags:
 
 **任务执行实时日志**（OpenClaw Web UI + Cloudflare Tunnel 反向代理）
 
-```
+```text
 1. 用户发起指令 (飞书)
    ↓ 输入自然语言指令，如"为UnifiedQuantum项目添加量子傅里叶变换函数并提交PR"
 
