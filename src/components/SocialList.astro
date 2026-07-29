@@ -12,6 +12,8 @@ const socialLinks: {
 	link: string;
 	/** astro-icon 图标名，如 "mdi:github"；为 paddlepaddle 时使用内联 SVG */
 	name: "mdi:github" | "mdi:email-outline" | "paddlepaddle";
+	/** 品牌配色类名（见下方 <style>）；不设置则跟随正文色 */
+	colorClass?: "social-paddle" | "social-email";
 }[] = [
 	{
 		friendlyName: "GitHub",
@@ -22,12 +24,14 @@ const socialLinks: {
 		friendlyName: "邮箱",
 		link: "mailto:yuwanjie@mail.ustc.edu.cn",
 		name: "mdi:email-outline",
+		colorClass: "social-email",
 	},
 	{
 		friendlyName: "百度 AI Studio（飞桨）",
 		link: "https://aistudio.baidu.com/personalcenter/thirdview/2845794",
 		// 飞桨官方 logo（PaddlePaddle），来自 Simple Icons（CC0 许可），内联以适配明暗主题
 		name: "paddlepaddle",
+		colorClass: "social-paddle",
 	},
 ];
 ---
@@ -36,10 +40,13 @@ const socialLinks: {
 	<p>在这里找到我</p>
 	<ul class="flex flex-1 items-center gap-x-2 sm:flex-initial">
 		{
-			socialLinks.map(({ friendlyName, isWebmention, link, name }) => (
+			socialLinks.map(({ friendlyName, isWebmention, link, name, colorClass }) => (
 				<li class="flex">
 					<a
-						class="hover:text-link inline-block"
+						class:list={[
+							"inline-block",
+							colorClass ? `${colorClass} transition-opacity hover:opacity-70` : "hover:text-link",
+						]}
 						href={link}
 						rel={`noreferrer ${isWebmention ? "me authn" : ""}`}
 						target="_blank"
@@ -65,3 +72,19 @@ const socialLinks: {
 		}
 	</ul>
 </div>
+
+<style>
+	/* 品牌配色：飞桨官方蓝（Simple Icons 数据 #0062B0）、邮箱橘色；暗色主题下适当提亮保证对比度 */
+	.social-paddle {
+		color: #0062b0;
+	}
+	.social-email {
+		color: #f97316;
+	}
+	:global(html[data-theme="dark"]) .social-paddle {
+		color: #4da3e8;
+	}
+	:global(html[data-theme="dark"]) .social-email {
+		color: #fb923c;
+	}
+</style>
