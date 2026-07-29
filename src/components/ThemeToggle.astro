@@ -67,7 +67,7 @@
 				button.setAttribute("aria-checked", String(rootInDarkMode()));
 
 			// button event
-			button.addEventListener("click", () => {
+			button.addEventListener("click", (e) => {
 				const nextTheme = rootInDarkMode() ? "light" : "dark";
 
 				// dispatch event -> ThemeProvider.astro
@@ -79,16 +79,49 @@
 
 				// 减少动态效果偏好：直接切换，不做任何动画
 				const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+				const root = document.documentElement;
 
 				if (reduceMotion) {
 					applyTheme();
 				} else if (document.startViewTransition) {
-					// 优先使用 View Transitions API：浏览器对切换前后两个状态截图，
-					// 在合成器（GPU）上做交叉淡化，帧率远高于逐帧重算整页的 CSS 变量过渡。
-					document.startViewTransition(applyTheme);
+					// View Transitions：浏览器对切换前后两个状态截图，在合成器（GPU）上动画，
+					// 帧率远高于逐帧重算整页的 CSS 变量过渡。
+					// 不用默认的整页交叉淡化（新旧主题颜色互为反色，淡化会产生
+					// "先变黑/白再变目标色"的双重曝光伪影），改为旧态垫底、新态从点击处圆形扩散揭示。
+					root.classList.add("theme-reveal");
+					const vt = document.startViewTransition(applyTheme);
+
+					vt.ready
+						.then(() => {
+							// 键盘触发时 clientX/Y 为 0，回退到按钮中心
+							const rect = button.getBoundingClientRect();
+							const x = e.clientX || rect.left + rect.width / 2;
+							const y = e.clientY || rect.top + rect.height / 2;
+							const radius = Math.hypot(
+								Math.max(x, window.innerWidth - x),
+								Math.max(y, window.innerHeight - y),
+							);
+							root.animate(
+								{
+									clipPath: [
+										`circle(0px at ${x}px ${y}px)`,
+										`circle(${radius}px at ${x}px ${y}px)`,
+									],
+								},
+								{
+									duration: 450,
+									easing: "ease-out",
+									pseudoElement: "::view-transition-new(root)",
+								},
+							);
+						})
+						.catch(() => {});
+
+					vt.finished
+						.catch(() => {})
+						.finally(() => root.classList.remove("theme-reveal"));
 				} else {
 					// 回退方案：临时启用颜色过渡（仅手动切换时有动画），避免页面加载时闪烁
-					const root = document.documentElement;
 					root.classList.add("theme-transition");
 					window.setTimeout(() => root.classList.remove("theme-transition"), 350);
 					applyTheme();
