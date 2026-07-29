@@ -3,6 +3,7 @@ import { type CollectionEntry, getCollection } from "astro:content";
 import PostPreview from "@/components/blog/PostPreview.astro";
 import Note from "@/components/note/Note.astro";
 import SocialList from "@/components/SocialList.astro";
+import HeroCanvas from "@/components/HeroCanvas.astro";
 import { getAllPosts } from "@/data/post";
 import PageLayout from "@/layouts/Base.astro";
 import { collectionDateSort } from "@/utils/date";
@@ -30,12 +31,15 @@ const latestNotes = allNotes
 ---
 
 <PageLayout meta={{ title: "首页" }}>
-	<section>
-		<h1 class="title mb-12">Yowakko Jay</h1>
-		<p class="mb-4">
-			郁二杰的博客。深耕 AI / 深度学习方向，关注大模型后训练、GRPO、归一化、多智能体工作流等话题。崇尚独立探索，注重基础，知其然也知其所以然。
-		</p>
-		<SocialList />
+	<section class="relative min-h-[340px] sm:min-h-[420px]">
+		<HeroCanvas />
+		<div class="relative">
+			<h1 class="title mb-12">Yowakko Jay</h1>
+			<p class="mb-4">
+				郁二杰的博客。深耕 AI / 深度学习方向，关注大模型后训练、GRPO、归一化、多智能体工作流等话题。崇尚独立探索，注重基础，知其然也知其所以然。
+			</p>
+			<SocialList />
+		</div>
 	</section>
 	{
 		pinnedPosts.length > 0 && (

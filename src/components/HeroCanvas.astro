@@ -1,0 +1,283 @@
+<div class="hero-canvas-wrap" aria-hidden="true">
+	<canvas id="hero-canvas"></canvas>
+	<div class="hero-canvas-fade"></div>
+</div>
+
+<style>
+	.hero-canvas-wrap {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+		/* 装饰性背景，不拦截文字选择与链接点击 */
+		pointer-events: none;
+	}
+
+	.hero-canvas-wrap canvas {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	/* 底部渐隐，融入页面背景 */
+	.hero-canvas-fade {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(to bottom, transparent 45%, var(--color-global-bg) 96%);
+	}
+</style>
+
+<script>
+	// 首页 Hero 动态网格背景。灵感来自 Georgia Tech《Interactive Linear Algebra》封面
+	// （点阵随连续变化的二维线性变换形变、圆被拉成椭圆），这里用纯 Canvas 2D 轻量实现，零依赖。
+
+	interface Mat {
+		a: number;
+		b: number;
+		c: number;
+		d: number;
+	}
+
+	let cleanup: () => void = () => {};
+
+	function randomMatrix(): Mat {
+		const theta = ((Math.random() * 2 - 1) * Math.PI) / 3;
+		const sx = 0.75 + Math.random() * 0.6;
+		const sy = 0.75 + Math.random() * 0.6;
+		const shear = (Math.random() * 2 - 1) * 0.35;
+		const cos = Math.cos(theta);
+		const sin = Math.sin(theta);
+		// R(θ) · [sx shear; 0 sy]
+		return {
+			a: cos * sx,
+			b: cos * shear - sin * sy,
+			c: sin * sx,
+			d: sin * shear + cos * sy,
+		};
+	}
+
+	const lerp = (x: number, y: number, t: number) => x + (y - x) * t;
+	const smoothstep = (t: number) => t * t * (3 - 2 * t);
+
+	function init() {
+		cleanup();
+		const canvas = document.getElementById("hero-canvas") as HTMLCanvasElement | null;
+		if (!canvas) return; // 不在首页
+		const ctx = canvas.getContext("2d");
+		if (!ctx) return;
+
+		const COLS = 16;
+		const ROWS = 9;
+		const MORPH_MS = 4200;
+
+		let width = 0;
+		let height = 0;
+		let dpr = 1;
+		let raf = 0;
+		let running = false;
+		let inView = true;
+		let themeKey = "";
+		let colorGrid = "#888";
+		let colorAccent = "#c2402e";
+
+		let matFrom = randomMatrix();
+		let matTo = randomMatrix();
+		let morphStart = performance.now();
+
+		const mouse = { x: Number.NaN, y: Number.NaN };
+
+		const readColors = () => {
+			themeKey = document.documentElement.getAttribute("data-theme") ?? "";
+			const styles = getComputedStyle(document.documentElement);
+			colorGrid = styles.getPropertyValue("--color-global-text").trim() || colorGrid;
+			colorAccent = styles.getPropertyValue("--color-accent").trim() || colorAccent;
+		};
+		readColors();
+
+		const resize = () => {
+			const rect = canvas.getBoundingClientRect();
+			dpr = Math.min(window.devicePixelRatio || 1, 2);
+			width = rect.width;
+			height = rect.height;
+			canvas.width = Math.max(1, Math.round(width * dpr));
+			canvas.height = Math.max(1, Math.round(height * dpr));
+		};
+		resize();
+
+		const warp = (px: number, py: number, m: Mat, t: number): [number, number] => {
+			let x = m.a * px + m.b * py;
+			let y = m.c * px + m.d * py;
+			// 轻微波动，让网格"活"起来
+			x += 0.06 * Math.sin(2.2 * py + t * 0.7);
+			y += 0.06 * Math.cos(2.2 * px + t * 0.55);
+			// 鼠标扰动（归一化坐标系内的排斥泡）
+			if (Number.isFinite(mouse.x)) {
+				const dx = x - mouse.x;
+				const dy = y - mouse.y;
+				const dist = Math.hypot(dx, dy);
+				const R = 0.55;
+				if (dist < R && dist > 1e-4) {
+					const f = ((R - dist) / R) ** 2 * 0.35;
+					x += (dx / dist) * f;
+					y += (dy / dist) * f;
+				}
+			}
+			return [x, y];
+		};
+
+		const draw = (now: number) => {
+			// 矩阵关键帧插值：每 MORPH_MS 毫秒平滑过渡到一个新的随机变换
+			const mt = (now - morphStart) / MORPH_MS;
+			if (mt >= 1) {
+				matFrom = matTo;
+				matTo = randomMatrix();
+				morphStart = now;
+			}
+			const s = smoothstep(Math.min(mt, 1));
+			const m: Mat = {
+				a: lerp(matFrom.a, matTo.a, s),
+				b: lerp(matFrom.b, matTo.b, s),
+				c: lerp(matFrom.c, matTo.c, s),
+				d: lerp(matFrom.d, matTo.d, s),
+			};
+
+			const t = now / 1000;
+			const cx = width / 2;
+			const cy = height / 2;
+			const scale = Math.min(width, height) * 0.52;
+
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			ctx.clearRect(0, 0, width, height);
+
+			// 网格点（屏幕坐标）
+			const pts: [number, number][][] = [];
+			for (let r = 0; r < ROWS; r++) {
+				const row: [number, number][] = [];
+				for (let c = 0; c < COLS; c++) {
+					const px = (c / (COLS - 1)) * 2.4 - 1.2;
+					const py = (r / (ROWS - 1)) * 2.4 - 1.2;
+					const [x, y] = warp(px, py, m, t);
+					row.push([cx + x * scale, cy + y * scale]);
+				}
+				pts.push(row);
+			}
+
+			// 网格线
+			ctx.strokeStyle = colorGrid;
+			ctx.globalAlpha = 0.1;
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			for (let r = 0; r < ROWS; r++) {
+				for (let c = 0; c < COLS; c++) {
+					const [x, y] = pts[r]![c]!;
+					if (c === 0) ctx.moveTo(x, y);
+					else ctx.lineTo(x, y);
+				}
+			}
+			for (let c = 0; c < COLS; c++) {
+				for (let r = 0; r < ROWS; r++) {
+					const [x, y] = pts[r]![c]!;
+					if (r === 0) ctx.moveTo(x, y);
+					else ctx.lineTo(x, y);
+				}
+			}
+			ctx.stroke();
+
+			// 单位圆经线性变换后的椭圆（不含波动）：线性代数的标志性意象
+			ctx.strokeStyle = colorAccent;
+			ctx.globalAlpha = 0.4;
+			ctx.lineWidth = 1.5;
+			ctx.beginPath();
+			for (let i = 0; i <= 72; i++) {
+				const ang = (i / 72) * Math.PI * 2;
+				const ex = m.a * Math.cos(ang) + m.b * Math.sin(ang);
+				const ey = m.c * Math.cos(ang) + m.d * Math.sin(ang);
+				if (i === 0) ctx.moveTo(cx + ex * scale, cy + ey * scale);
+				else ctx.lineTo(cx + ex * scale, cy + ey * scale);
+			}
+			ctx.stroke();
+
+			// 网格交点
+			ctx.fillStyle = colorAccent;
+			ctx.globalAlpha = 0.55;
+			for (let r = 0; r < ROWS; r++) {
+				for (let c = 0; c < COLS; c++) {
+					const [x, y] = pts[r]![c]!;
+					ctx.beginPath();
+					ctx.arc(x, y, 1.4, 0, Math.PI * 2);
+					ctx.fill();
+				}
+			}
+			ctx.globalAlpha = 1;
+		};
+
+		const frame = (now: number) => {
+			if (!running) return;
+			raf = requestAnimationFrame(frame);
+			// 主题切换后重新取色（无需重启动画）
+			if ((document.documentElement.getAttribute("data-theme") ?? "") !== themeKey) readColors();
+			draw(now);
+		};
+
+		const start = () => {
+			if (!running && inView && !document.hidden) {
+				running = true;
+				raf = requestAnimationFrame(frame);
+			}
+		};
+		const stop = () => {
+			running = false;
+			cancelAnimationFrame(raf);
+		};
+
+		const onMouseMove = (e: MouseEvent) => {
+			const rect = canvas.getBoundingClientRect();
+			const scale = Math.min(rect.width, rect.height) * 0.52;
+			mouse.x = (e.clientX - (rect.left + rect.width / 2)) / scale;
+			mouse.y = (e.clientY - (rect.top + rect.height / 2)) / scale;
+		};
+		const onMouseLeave = () => {
+			mouse.x = Number.NaN;
+			mouse.y = Number.NaN;
+		};
+		const onVisibility = () => (document.hidden ? stop() : start());
+		const onThemeChange = () => {
+			readColors();
+			if (!running) draw(performance.now()); // 静态模式（减少动态效果）下也同步换色
+		};
+
+		const io = new IntersectionObserver((entries) => {
+			inView = entries[0]?.isIntersecting ?? true;
+			if (inView) start();
+			else stop();
+		});
+		io.observe(canvas);
+
+		const ro = new ResizeObserver(resize);
+		ro.observe(canvas);
+
+		window.addEventListener("mousemove", onMouseMove, { passive: true });
+		document.documentElement.addEventListener("mouseleave", onMouseLeave);
+		document.addEventListener("visibilitychange", onVisibility);
+		document.addEventListener("theme-change", onThemeChange);
+
+		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+			draw(1200); // 静态一帧，不开启动画循环
+		} else {
+			start();
+		}
+
+		cleanup = () => {
+			stop();
+			io.disconnect();
+			ro.disconnect();
+			window.removeEventListener("mousemove", onMouseMove);
+			document.documentElement.removeEventListener("mouseleave", onMouseLeave);
+			document.removeEventListener("visibilitychange", onVisibility);
+			document.removeEventListener("theme-change", onThemeChange);
+		};
+	}
+
+	// ClientRouter 下模块脚本只执行一次，初始化逻辑挂到页面生命周期事件上
+	document.addEventListener("astro:page-load", init);
+	document.addEventListener("astro:before-swap", () => cleanup());
+</script>
