@@ -179,47 +179,13 @@
 /* ==========================================================================
    Expressive Code 代码块窗口圆点
    ========================================================================== */
-/* EC 默认只给终端语言（bash/cmd 等）的代码块加窗口头部，其余语言渲染成
-   无头部的纯盒子，看起来像普通文本块。统一让所有无标题代码块都带窗口头部，
-   圆点使用 macOS 红/黄/绿三色（替换默认的单色灰 mask）。 */
-html .expressive-code .frame:not(.has-title):not(.is-terminal) {
-	--button-spacing: calc(1.9rem + var(--ec-brdWd) + 2 * var(--ec-uiPadBlk));
-}
-html .expressive-code .frame:not(.has-title):not(.is-terminal) .header {
-	display: flex;
-	align-items: center;
-	padding-block: var(--ec-uiPadBlk);
-	padding-block-end: calc(var(--ec-uiPadBlk) + var(--ec-brdWd));
-	position: relative;
-	background: var(--ec-frm-trmTtbBg);
-	border: var(--ec-brdWd) solid var(--ec-brdCol);
-	border-bottom: none;
-}
-html .expressive-code .frame:not(.has-title) .header::before {
-	content: "";
-	position: absolute;
-	pointer-events: none;
-	left: var(--ec-uiPadInl);
-	width: 2.1rem;
-	height: 0.56rem;
+/* 默认三个圆点是单色灰（单色 mask），改为 macOS 风格红/黄/绿三色 */
+html .expressive-code .frame.is-terminal .header::before {
 	background-color: transparent;
 	opacity: 1;
 	-webkit-mask-image: none;
 	mask-image: none;
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 16'%3E%3Ccircle cx='8' cy='8' r='8' fill='%23FF5F57'/%3E%3Ccircle cx='30' cy='8' r='8' fill='%23FEBC2E'/%3E%3Ccircle cx='52' cy='8' r='8' fill='%2328C840'/%3E%3C/svg%3E");
 	background-repeat: no-repeat;
-}
-html .expressive-code .frame:not(.has-title):not(.is-terminal) .header::after {
-	content: "";
-	position: absolute;
-	pointer-events: none;
-	inset: 0;
-	border-bottom: var(--ec-brdWd) solid var(--ec-frm-trmTtbBrdBtmCol);
-}
-html .expressive-code .frame:not(.has-title):not(.is-terminal) pre,
-html .expressive-code .frame:not(.has-title):not(.is-terminal) code {
-	border-top: none;
-	border-top-left-radius: 0;
-	border-top-right-radius: 0;
 }
 

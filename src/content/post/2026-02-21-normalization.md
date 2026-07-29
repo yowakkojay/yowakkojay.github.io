@@ -92,7 +92,7 @@ print(np.abs(normalized_manual - normalized_sklearn))
 <details>
 <summary>点击查看运行结果</summary>
 
-```text
+```text frame="terminal"
 📌 原始数据：
 [[ 50   2]
  [ 80   3]
@@ -216,7 +216,7 @@ print(ln(x))
 <details>
 <summary>点击查看运行结果</summary>
 
-```text
+```text frame="terminal"
 tensor([[-1.0000, -1.0000, -1.0000],
         [ 1.0000,  1.0000,  1.0000]], grad_fn=<NativeBatchNormBackward0>)
 tensor([[-1.2247,  0.0000,  1.2247],
@@ -287,7 +287,7 @@ print(mean)
 <details>
 <summary>点击查看运行结果</summary>
 
-```text
+```text frame="terminal"
 torch.Size([1, 3, 1, 1])
 tensor([[[[-0.0007]],
 
@@ -338,7 +338,7 @@ print(mean)
 <details>
 <summary>点击查看运行结果</summary>
 
-```text
+```text frame="terminal"
 torch.Size([32, 1, 1, 1])
 tensor([[[[-0.0035]]],
 
@@ -686,7 +686,7 @@ print(f"LayerNorm std  (should be approx 1): {out_ln[0, 0].std(unbiased=False).i
 <details>
 <summary>点击查看运行结果</summary>
 
-```text
+```text frame="terminal"
 Input shape: torch.Size([2, 5, 4])
 RMSNorm output shape: torch.Size([2, 5, 4])
 

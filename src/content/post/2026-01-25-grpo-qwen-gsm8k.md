@@ -304,7 +304,7 @@ $$
 
 下面来验证一下吧，拿了step1600的checkpoint来测试一下，max_completion_length为512，拿了10个样本测试，每个样本的num_generations为4，结果如下：
 
-```log
+```log frame="terminal"
 sample=0 reward_mean=1.0000 reward_std=0.0000 trunc_ratio=1.00
 sample=1 reward_mean=1.0000 reward_std=0.0000 trunc_ratio=1.00
 sample=2 reward_mean=0.0100 reward_std=0.0000 trunc_ratio=1.00
@@ -326,7 +326,7 @@ trunc_ratio=1.00
 
 难不成是因为max_completion_length=512太短了？换成1024试试好了。结果如下：
 
-```log
+```log frame="terminal"
 sample=0 reward_mean=1.0000 reward_std=0.0000 trunc_ratio=1.00 eos_ratio=0.00
 sample=1 reward_mean=1.0000 reward_std=0.0000 trunc_ratio=1.00 eos_ratio=0.00
 sample=2 reward_mean=0.0100 reward_std=0.0000 trunc_ratio=1.00 eos_ratio=0.00
@@ -349,7 +349,7 @@ eos_ratio=0.00
 
 果然是这样，在测试结果中找了一条比较明显的，其输出如下：
 
-```log
+```log frame="terminal"
 sample=1 gen=1 truncated=True has_eos=False
 Given that the robe takes 2 bolts of blue fiber, for the white fiber, it takes half of the blue fiber, so for the blue fiber, it takes 2 bolts, therefore, for the white fiber, it takes \( \frac{2}{2}} = 1)\ bolt).
 
@@ -380,7 +380,7 @@ So, ...
 
 虽然变成复读机了，但是也可以看一下训练的acc如何，对比结果如下：
 
-```txt
+```txt frame="terminal"
 正在验证模型: Initial_Model-7B (Batch Size: 32)...
 模型 Initial_Model-7B 的准确率: 89.23%
 
@@ -440,7 +440,7 @@ def reward_func(completions, ground_truth, **kwargs):
 
 ![](/images/2026-01-25-grpo-qwen-gsm8k/7b-mean_terminated_length-2.webp)
 
-```log
+```log frame="terminal"
 正在验证模型: Initial_Model-7B (Batch Size: 32)...
 模型 Initial_Model-7B 的准确率: 89.23%
 
@@ -466,7 +466,7 @@ def reward_func(completions, ground_truth, **kwargs):
 
 ![](/images/2026-01-25-grpo-qwen-gsm8k/7b-clipped_ratio-3.webp)
 
-```log
+```log frame="terminal"
 ==============================
 模型 GRPO_Trained_Model | 准确率: 85.22%
 ==============================
@@ -596,7 +596,7 @@ config = GRPOConfig(
 
 ![](/images/2026-01-25-grpo-qwen-gsm8k/7b-penalty-4.webp)
 
-```log
+```log frame="terminal"
 Base_7B: Accuracy=90.98%, AvgCorrectness=1.8196, AvgFormat=0.4511, AvgRepeatPenalty=-0.0346, AvgTotal=2.2361
 GRPO_Stage3_7B: Accuracy=84.76%, AvgCorrectness=1.6952, AvgFormat=0.4927, AvgRepeatPenalty=-0.0309, AvgTotal=2.1570
 ```
