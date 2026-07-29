@@ -132,13 +132,14 @@
 
 		const draw = (now: number) => {
 			// 矩阵关键帧插值：每 MORPH_MS 毫秒平滑过渡到一个新的随机变换
-			const mt = (now - morphStart) / MORPH_MS;
+			let mt = (now - morphStart) / MORPH_MS;
 			if (mt >= 1) {
 				matFrom = matTo;
 				matTo = randomMatrix();
 				morphStart = now;
+				mt = 0; // 重置后必须从零开始插值，否则会跳变一帧（周期性闪烁）
 			}
-			const s = smoothstep(Math.min(mt, 1));
+			const s = smoothstep(Math.min(Math.max(mt, 0), 1));
 			const m: Mat = {
 				a: lerp(matFrom.a, matTo.a, s),
 				b: lerp(matFrom.b, matTo.b, s),
