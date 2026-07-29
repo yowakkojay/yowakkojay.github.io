@@ -109,12 +109,19 @@
 		/* 手动切换主题时的圆形揭示动画（View Transitions）：
 		   禁用默认的整页交叉淡化——新旧主题颜色互为反色，淡化会产生
 		   "先变黑/白再变目标色"的双重曝光伪影。旧态截图静止垫底，
-		   新态截图由 ThemeToggle.astro 用 clip-path 圆形扩散覆盖。 */
+		   新态截图由 ThemeToggle.astro 用 WAAPI 做 clip-path 圆形扩散覆盖。 */
 		&.theme-reveal {
 			&::view-transition-old(root),
 			&::view-transition-new(root) {
 				animation: none;
 				mix-blend-mode: normal;
+			}
+
+			/* 兜底：拉长 UA 组动画时长，确保伪元素树存活到 WAAPI 裁剪动画结束。
+			   部分浏览器会在默认动画（250ms）结束时提前移除伪元素树，
+			   导致未覆盖的角落瞬间填满（跳变）。 */
+			&::view-transition-group(root) {
+				animation-duration: 500ms;
 			}
 		}
 	}
