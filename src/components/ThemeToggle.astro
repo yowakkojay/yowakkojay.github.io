@@ -68,23 +68,35 @@
 
 			// button event
 			button.addEventListener("click", () => {
-				// 临时启用颜色过渡（仅手动切换时有动画），避免页面加载时闪烁
-				const root = document.documentElement;
-				root.classList.add("theme-transition");
-				window.setTimeout(() => root.classList.remove("theme-transition"), 350);
+				const nextTheme = rootInDarkMode() ? "light" : "dark";
 
-				// invert theme
-				let themeChangeEvent = new CustomEvent("theme-change", {
-					detail: {
-						theme: rootInDarkMode() ? "light" : "dark",
-					},
-				});
-					// dispatch event -> ThemeProvider.astro
-					document.dispatchEvent(themeChangeEvent);
+				// dispatch event -> ThemeProvider.astro
+				const applyTheme = () => {
+					document.dispatchEvent(
+						new CustomEvent("theme-change", { detail: { theme: nextTheme } }),
+					);
+				};
 
-					// set the aria-checked attribute
-					button.setAttribute("aria-checked", String(rootInDarkMode()));
-				});
+				// 减少动态效果偏好：直接切换，不做任何动画
+				const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+				if (reduceMotion) {
+					applyTheme();
+				} else if (document.startViewTransition) {
+					// 优先使用 View Transitions API：浏览器对切换前后两个状态截图，
+					// 在合成器（GPU）上做交叉淡化，帧率远高于逐帧重算整页的 CSS 变量过渡。
+					document.startViewTransition(applyTheme);
+				} else {
+					// 回退方案：临时启用颜色过渡（仅手动切换时有动画），避免页面加载时闪烁
+					const root = document.documentElement;
+					root.classList.add("theme-transition");
+					window.setTimeout(() => root.classList.remove("theme-transition"), 350);
+					applyTheme();
+				}
+
+				// set the aria-checked attribute
+				button.setAttribute("aria-checked", String(rootInDarkMode()));
+			});
 			} else {
 				console.warn("Theme Toggle: No button found");
 			}
