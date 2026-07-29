@@ -18,11 +18,17 @@
 		height: 100%;
 	}
 
-	/* 底部渐隐，融入页面背景 */
+	/* 上下边缘渐隐，融入页面背景 */
 	.hero-canvas-fade {
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(to bottom, transparent 45%, var(--color-global-bg) 96%);
+		background: linear-gradient(
+			to bottom,
+			var(--color-global-bg) 0%,
+			transparent 20%,
+			transparent 55%,
+			var(--color-global-bg) 96%
+		);
 	}
 </style>
 

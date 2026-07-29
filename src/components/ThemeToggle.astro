@@ -97,10 +97,11 @@
 							const rect = button.getBoundingClientRect();
 							const x = e.clientX || rect.left + rect.width / 2;
 							const y = e.clientY || rect.top + rect.height / 2;
-							const radius = Math.hypot(
-								Math.max(x, window.innerWidth - x),
-								Math.max(y, window.innerHeight - y),
-							);
+							const radius =
+								Math.hypot(
+									Math.max(x, window.innerWidth - x),
+									Math.max(y, window.innerHeight - y),
+								) * 1.15; // 余量：确保圆在动画结束前就完整覆盖屏幕，避免角落后"跳变"填满
 							root.animate(
 								{
 									clipPath: [
