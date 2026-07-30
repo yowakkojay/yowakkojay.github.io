@@ -107,22 +107,42 @@
 		}
 
 		/* 手动切换主题时的圆形揭示动画（View Transitions）：
-		   禁用默认的整页交叉淡化——新旧主题颜色互为反色，淡化会产生
+		   禁用默认整页交叉淡化——新旧主题颜色互为反色，淡化会产生
 		   "先变黑/白再变目标色"的双重曝光伪影。旧态截图静止垫底，
-		   新态截图由 ThemeToggle.astro 用 WAAPI 做 clip-path 圆形扩散覆盖。
-		   扩散动画限定 240ms：部分 Chrome 版本会在默认动画（250ms）结束时
-		   拆除过渡图层，动画若跑不完会导致未覆盖的角落瞬间填满。 */
+		   新态截图由 @keyframes 做 clip-path 圆形扩散覆盖。
+
+		   forwards 冻结满覆盖态：避免动画结束时 clip 丢失、新态截图从
+		   "圆形覆盖"瞬间跳回"全屏覆盖"，导致未覆盖的角落被瞬间补全。
+		   动画绑定在一次性的 ::view-transition-new(root) 伪元素上，
+		   UA 结束 transition 时会自动回收该伪元素并销毁动画，
+		   不会残留、无需手动 cancel（规避此前 Edge 在 WAAPI fill:forwards
+		   下因动画残留在已拆除伪元素上而出现的切换后闪烁）。 */
 		&.theme-reveal {
-			&::view-transition-old(root),
-			&::view-transition-new(root) {
+			&::view-transition-old(root) {
 				animation: none;
 				mix-blend-mode: normal;
+			}
+			&::view-transition-new(root) {
+				mix-blend-mode: normal;
+				animation: theme-reveal 400ms ease-out forwards;
 			}
 		}
 	}
 
 	:target {
 		scroll-margin-block: 5ex;
+	}
+
+	/* 圆形揭示动画：圆心与半径由 ThemeToggle.astro 通过 --vt-x/--vt-y/--vt-r
+	   传入；未设置时给安全回退——半径 150vmax 足以覆盖任意视口的四角，
+	   绝不会出现"圆没扩到角落"的暴露窗口。 */
+	@keyframes theme-reveal {
+		from {
+			clip-path: circle(0px at var(--vt-x, 50%) var(--vt-y, 50%));
+		}
+		to {
+			clip-path: circle(var(--vt-r, 150vmax) at var(--vt-x, 50%) var(--vt-y, 50%));
+		}
 	}
 
 	/* Astro image responsive styles, modified from -> https://docs.astro.build/en/guides/images/#responsive-image-styles */
