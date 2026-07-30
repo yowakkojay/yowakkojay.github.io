@@ -90,23 +90,39 @@
 			--color-quote: oklch(94.8% 0.106 136.49);
 		}
 
+		--color-mode-transition-duration: 300ms;
+		--color-mode-transition-easing: ease-in-out;
+
+		/* 默认不应用颜色过渡，避免页面加载/跳转时亮→暗闪烁（FOUC）。
+		   仅在 .theme-transition（用户手动切换主题）时启用过渡。 */
+		&.theme-transition {
+			transition:
+				--color-global-bg var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+				--color-global-text var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+				--color-muted var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+				--color-link var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+				--color-accent var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+				--color-accent-2 var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+				--color-quote var(--color-mode-transition-duration) var(--color-mode-transition-easing);
+		}
+
+		/* 手动切换主题时的圆形揭示动画（View Transitions）：
+		   禁用默认的整页交叉淡化——新旧主题颜色互为反色，淡化会产生
+		   "先变黑/白再变目标色"的双重曝光伪影。旧态截图静止垫底，
+		   新态截图由 ThemeToggle.astro 用 WAAPI 做 clip-path 圆形扩散覆盖。
+		   扩散动画限定 240ms：部分 Chrome 版本会在默认动画（250ms）结束时
+		   拆除过渡图层，动画若跑不完会导致未覆盖的角落瞬间填满。 */
+		&.theme-reveal {
+			&::view-transition-old(root),
+			&::view-transition-new(root) {
+				animation: none;
+				mix-blend-mode: normal;
+			}
+		}
 	}
 
 	:target {
 		scroll-margin-block: 5ex;
-	}
-
-	/* 主题切换圆形揭示 overlay：独立 DOM 元素，不依赖 View Transitions，
-	   避免 Chrome/Edge 对 VT tree 生命周期处理不一致导致的边角截断。
-	   背景色由 --reveal-bg 传入（目标主题色），圆心/半径由 ThemeToggle.astro
-	   通过 WAAPI 直接驱动 clip-path，初始态这里给 circle(0) 作为挂载瞬间的基线。 */
-	.theme-reveal-overlay {
-		position: fixed;
-		inset: 0;
-		z-index: 9999;
-		pointer-events: none;
-		background: var(--reveal-bg);
-		clip-path: circle(0px at 50% 50%);
 	}
 
 	/* Astro image responsive styles, modified from -> https://docs.astro.build/en/guides/images/#responsive-image-styles */
