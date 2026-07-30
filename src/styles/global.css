@@ -90,75 +90,23 @@
 			--color-quote: oklch(94.8% 0.106 136.49);
 		}
 
-		--color-mode-transition-duration: 300ms;
-		--color-mode-transition-easing: ease-in-out;
-
-		/* 默认不应用颜色过渡，避免页面加载/跳转时亮→暗闪烁（FOUC）。
-		   仅在 .theme-transition（用户手动切换主题）时启用过渡。 */
-		&.theme-transition {
-			transition:
-				--color-global-bg var(--color-mode-transition-duration) var(--color-mode-transition-easing),
-				--color-global-text var(--color-mode-transition-duration) var(--color-mode-transition-easing),
-				--color-muted var(--color-mode-transition-duration) var(--color-mode-transition-easing),
-				--color-link var(--color-mode-transition-duration) var(--color-mode-transition-easing),
-				--color-accent var(--color-mode-transition-duration) var(--color-mode-transition-easing),
-				--color-accent-2 var(--color-mode-transition-duration) var(--color-mode-transition-easing),
-				--color-quote var(--color-mode-transition-duration) var(--color-mode-transition-easing);
-		}
-
-		/* 手动切换主题时的圆形揭示动画（View Transitions）：
-		   禁用默认整页交叉淡化——新旧主题颜色互为反色，淡化会产生
-		   "先变黑/白再变目标色"的双重曝光伪影。旧态截图静止垫底，
-		   新态截图由 @keyframes 做 clip-path 圆形扩散覆盖。
-
-		   forwards 冻结满覆盖态：避免动画结束时 clip 丢失、新态截图从
-		   "圆形覆盖"瞬间跳回"全屏覆盖"，导致未覆盖的角落被瞬间补全。
-		   动画绑定在一次性的 ::view-transition-new(root) 伪元素上，
-		   UA 结束 transition 时会自动回收该伪元素并销毁动画，
-		   不会残留、无需手动 cancel（规避此前 Edge 在 WAAPI fill:forwards
-		   下因动画残留在已拆除伪元素上而出现的切换后闪烁）。
-
-		   同时把 ::view-transition-group(root) 的 animation-duration 提到
-		   与 reveal 一致（500ms）——否则 Chrome 会在 group 默认动画
-		   （250ms）结束时拆除整棵过渡树，此时圆尚未扩到边角，底下已切换的
-		   真实 DOM 会瞬间暴露，边角被瞬间填满。见下方 group 规则的注释。 */
-		&.theme-reveal {
-			&::view-transition-old(root) {
-				animation: none;
-				mix-blend-mode: normal;
-			}
-			&::view-transition-new(root) {
-				mix-blend-mode: normal;
-				animation: theme-reveal 500ms ease-out forwards;
-			}
-			/* 撑住过渡伪元素树：UA 默认给 group 设 animation-duration: 0.25s，
-			   Chrome 会在该默认动画结束时拆除整棵过渡树——若 reveal 动画
-			   （500ms）尚未扩到边角，底下已切换的真实 DOM 会瞬间暴露，
-			   导致边角被瞬间填满。把 group 时长提到与 reveal 一致，确保 tree
-			   存活到圆形扩散完整覆盖四角。
-			   ⚠️ 只能用 animation-duration 长属性，不能用 animation 简写——
-			   否则会丢掉 UA 注入的 morph keyframes（width/height/transform），
-			   破坏快照定位。 */
-			&::view-transition-group(root) {
-				animation-duration: 500ms;
-			}
-		}
 	}
 
 	:target {
 		scroll-margin-block: 5ex;
 	}
 
-	/* 圆形揭示动画：圆心与半径由 ThemeToggle.astro 通过 --vt-x/--vt-y/--vt-r
-	   传入；未设置时给安全回退——半径 150vmax 足以覆盖任意视口的四角，
-	   绝不会出现"圆没扩到角落"的暴露窗口。 */
-	@keyframes theme-reveal {
-		from {
-			clip-path: circle(0px at var(--vt-x, 50%) var(--vt-y, 50%));
-		}
-		to {
-			clip-path: circle(var(--vt-r, 150vmax) at var(--vt-x, 50%) var(--vt-y, 50%));
-		}
+	/* 主题切换圆形揭示 overlay：独立 DOM 元素，不依赖 View Transitions，
+	   避免 Chrome/Edge 对 VT tree 生命周期处理不一致导致的边角截断。
+	   背景色由 --reveal-bg 传入（目标主题色），圆心/半径由 ThemeToggle.astro
+	   通过 WAAPI 直接驱动 clip-path，初始态这里给 circle(0) 作为挂载瞬间的基线。 */
+	.theme-reveal-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 9999;
+		pointer-events: none;
+		background: var(--reveal-bg);
+		clip-path: circle(0px at 50% 50%);
 	}
 
 	/* Astro image responsive styles, modified from -> https://docs.astro.build/en/guides/images/#responsive-image-styles */

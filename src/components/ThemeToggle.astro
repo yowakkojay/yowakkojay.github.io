@@ -79,45 +79,59 @@
 
 				// 减少动态效果偏好：直接切换，不做任何动画
 				const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-				const root = document.documentElement;
 
 				if (reduceMotion) {
 					applyTheme();
-				} else if (document.startViewTransition) {
-					// View Transitions：浏览器对切换前后两个状态截图，在合成器（GPU）上动画，
-					// 帧率远高于逐帧重算整页的 CSS 变量过渡。
-					// 不用默认的整页交叉淡化（新旧主题颜色互为反色，淡化会产生
-					// "先变黑/白再变目标色"的双重曝光伪影），改为旧态垫底、新态从点击处圆形扩散揭示。
+				} else {
+					// 独立 overlay 圆形揭示：创建一个铺满视口的 overlay（目标主题色），
+					// 从点击处 clip-path circle(0) 扩散到覆盖全屏。
+					// 动画期间真实 DOM 保持旧主题（被 overlay 遮住），动画结束瞬间才切换
+					// data-theme 并移除 overlay——底下已是新色，无缝衔接。
 					//
-					// 圆心/半径通过 CSS 变量传给 global.css 里的 @keyframes theme-reveal，
-					// 动画用 forwards 冻结满覆盖态并由 UA 在伪元素回收时自动销毁——
-					// 无需手动 vt.ready + Element.animate + cancel 的竞态清理。
-					root.classList.add("theme-reveal");
+					// 不用 View Transitions：Chrome 会在 group 默认动画（250ms）结束时强拆
+					// 过渡树，导致圆未扩到边角就被截断；独立 DOM overlay 由 JS 完全控制生命周期，
+					// Chrome/Edge 行为一致。
+
+					// 清理上一次未完成的 overlay：连续快速切换时，旧动画的 finish 回调会
+					// 把主题翻回去，这里先取消并移除，保证只有最新点击生效。
+					document.querySelectorAll(".theme-reveal-overlay").forEach((el) => {
+						el.getAnimations().forEach((a) => a.cancel());
+						el.remove();
+					});
 
 					// 键盘触发时 clientX/Y 为 0，回退到按钮中心
 					const rect = button.getBoundingClientRect();
 					const x = e.clientX || rect.left + rect.width / 2;
 					const y = e.clientY || rect.top + rect.height / 2;
-					// 半径取视口全对角线（任意点击位置到最远角的距离都不超过它），再留 5% 余量
+					// 半径取视口全对角线 + 5% 余量，确保覆盖任意远端角落
 					const radius = Math.hypot(window.innerWidth, window.innerHeight) * 1.05;
-					root.style.setProperty("--vt-x", `${x}px`);
-					root.style.setProperty("--vt-y", `${y}px`);
-					root.style.setProperty("--vt-r", `${radius}px`);
 
-					const vt = document.startViewTransition(applyTheme);
-					vt.finished
-						.catch(() => {})
-						.finally(() => {
-							root.classList.remove("theme-reveal");
-							root.style.removeProperty("--vt-x");
-							root.style.removeProperty("--vt-y");
-							root.style.removeProperty("--vt-r");
-						});
-				} else {
-					// 回退方案：临时启用颜色过渡（仅手动切换时有动画），避免页面加载时闪烁
-					root.classList.add("theme-transition");
-					window.setTimeout(() => root.classList.remove("theme-transition"), 350);
-					applyTheme();
+					const overlay = document.createElement("div");
+					overlay.className = "theme-reveal-overlay";
+					// overlay 背景用目标主题色：动画期间 data-theme 还是旧值，不能直接用
+					// var(--color-global-bg)，这里显式传目标色（与 global.css 的定义保持一致）。
+					overlay.style.setProperty(
+						"--reveal-bg",
+						nextTheme === "dark" ? "oklch(23.64% 0.0045 248)" : "oklch(98.48% 0 0)",
+					);
+					document.body.append(overlay);
+
+					// 真实 DOM 元素的 WAAPI 动画：finish 后 applyTheme + remove，
+					// 动画随元素销毁，无 VT 伪元素 fill 残留问题。
+					const anim = overlay.animate(
+						[
+							{ clipPath: `circle(0px at ${x}px ${y}px)` },
+							{ clipPath: `circle(${radius}px at ${x}px ${y}px)` },
+						],
+						{ duration: 500, easing: "ease-out" },
+					);
+					anim.addEventListener("finish", () => {
+						// 仅当该 overlay 仍在 DOM 中才应用主题（被后续点击清理过则跳过）
+						if (overlay.isConnected) {
+							applyTheme();
+							overlay.remove();
+						}
+					});
 				}
 
 				// set the aria-checked attribute
