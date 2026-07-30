@@ -88,6 +88,8 @@
 					// 帧率远高于逐帧重算整页的 CSS 变量过渡。
 					// 不用默认的整页交叉淡化（新旧主题颜色互为反色，淡化会产生
 					// "先变黑/白再变目标色"的双重曝光伪影），改为旧态垫底、新态从点击处圆形扩散揭示。
+					// 注意：扩散动画时长必须小于浏览器默认动画（250ms）——部分 Chrome 版本
+					// 会在默认动画结束时拆除过渡图层，动画跑不完会导致未覆盖的角落瞬间填满。
 					root.classList.add("theme-reveal");
 					const vt = document.startViewTransition(applyTheme);
 
@@ -108,8 +110,9 @@
 									],
 								},
 								{
-									duration: 450,
+									duration: 240,
 									easing: "ease-out",
+									fill: "forwards",
 									pseudoElement: "::view-transition-new(root)",
 								},
 							);
