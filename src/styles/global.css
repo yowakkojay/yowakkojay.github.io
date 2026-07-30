@@ -116,7 +116,12 @@
 		   动画绑定在一次性的 ::view-transition-new(root) 伪元素上，
 		   UA 结束 transition 时会自动回收该伪元素并销毁动画，
 		   不会残留、无需手动 cancel（规避此前 Edge 在 WAAPI fill:forwards
-		   下因动画残留在已拆除伪元素上而出现的切换后闪烁）。 */
+		   下因动画残留在已拆除伪元素上而出现的切换后闪烁）。
+
+		   同时把 ::view-transition-group(root) 的 animation-duration 提到
+		   与 reveal 一致（500ms）——否则 Chrome 会在 group 默认动画
+		   （250ms）结束时拆除整棵过渡树，此时圆尚未扩到边角，底下已切换的
+		   真实 DOM 会瞬间暴露，边角被瞬间填满。见下方 group 规则的注释。 */
 		&.theme-reveal {
 			&::view-transition-old(root) {
 				animation: none;
@@ -124,7 +129,18 @@
 			}
 			&::view-transition-new(root) {
 				mix-blend-mode: normal;
-				animation: theme-reveal 400ms ease-out forwards;
+				animation: theme-reveal 500ms ease-out forwards;
+			}
+			/* 撑住过渡伪元素树：UA 默认给 group 设 animation-duration: 0.25s，
+			   Chrome 会在该默认动画结束时拆除整棵过渡树——若 reveal 动画
+			   （500ms）尚未扩到边角，底下已切换的真实 DOM 会瞬间暴露，
+			   导致边角被瞬间填满。把 group 时长提到与 reveal 一致，确保 tree
+			   存活到圆形扩散完整覆盖四角。
+			   ⚠️ 只能用 animation-duration 长属性，不能用 animation 简写——
+			   否则会丢掉 UA 注入的 morph keyframes（width/height/transform），
+			   破坏快照定位。 */
+			&::view-transition-group(root) {
+				animation-duration: 500ms;
 			}
 		}
 	}
