@@ -83,45 +83,51 @@
 
 				if (reduceMotion) {
 					applyTheme();
-				} else if (document.startViewTransition) {
-					// View Transitions：浏览器对切换前后两个状态截图，在合成器（GPU）上动画，
-					// 帧率远高于逐帧重算整页的 CSS 变量过渡。
-					// 不用默认的整页交叉淡化（新旧主题颜色互为反色，淡化会产生
-					// "先变黑/白再变目标色"的双重曝光伪影），改为旧态垫底、新态从点击处圆形扩散揭示。
-					// 注意：扩散动画时长必须小于浏览器默认动画（250ms）——部分 Chrome 版本
-					// 会在默认动画结束时拆除过渡图层，动画跑不完会导致未覆盖的角落瞬间填满。
-					root.classList.add("theme-reveal");
-					const vt = document.startViewTransition(applyTheme);
+				} else if (typeof document.body.animate === "function") {
+					// 纯色幕布揭示动画（所有现代浏览器行为一致，不依赖 View Transitions 的
+					// 快照机制——各浏览器对其实现差异大，曾导致角落跳变、切换后闪烁等 bug）。
+					// 原理：从点击处用新主题背景色的圆形幕布扩散覆盖全屏，
+					// 全覆盖后在幕布下无感知切换主题，最后幕布淡出露出新页面。
+					const currentTheme = root.getAttribute("data-theme");
+					// 瞬时切到新主题取背景色再切回（同一任务内完成，不会绘制中间态）
+					root.setAttribute("data-theme", nextTheme);
+					const newBg = getComputedStyle(document.body).backgroundColor;
+					if (currentTheme) root.setAttribute("data-theme", currentTheme);
 
-					vt.ready
-						.then(() => {
-							// 键盘触发时 clientX/Y 为 0，回退到按钮中心
-							const rect = button.getBoundingClientRect();
-							const x = e.clientX || rect.left + rect.width / 2;
-							const y = e.clientY || rect.top + rect.height / 2;
-							// 半径取视口全对角线（任意点击位置到最远角的距离都不超过它），
-							// 再留 5% 余量，确保圆在动画结束前就完整覆盖屏幕
-							const radius = Math.hypot(window.innerWidth, window.innerHeight) * 1.05;
-							root.animate(
-								{
-									clipPath: [
-										`circle(0px at ${x}px ${y}px)`,
-										`circle(${radius}px at ${x}px ${y}px)`,
-									],
-								},
-								{
-									duration: 240,
-									easing: "ease-out",
-									fill: "forwards",
-									pseudoElement: "::view-transition-new(root)",
-								},
-							);
-						})
-						.catch(() => {});
+					const rect = button.getBoundingClientRect();
+					const x = e.clientX || rect.left + rect.width / 2;
+					const y = e.clientY || rect.top + rect.height / 2;
 
-					vt.finished
+					const overlay = document.createElement("div");
+					overlay.setAttribute("aria-hidden", "true");
+					overlay.style.cssText = `position:fixed;inset:0;z-index:9999;pointer-events:none;background:${newBg};clip-path:circle(0px at ${x}px ${y}px);`;
+					document.body.appendChild(overlay);
+
+					// 半径取视口全对角线（任意点击位置到最远角的距离都不超过它），留 5% 余量
+					const radius = Math.hypot(window.innerWidth, window.innerHeight) * 1.05;
+					const expand = overlay.animate(
+						{
+							clipPath: [
+								`circle(0px at ${x}px ${y}px)`,
+								`circle(${radius}px at ${x}px ${y}px)`,
+							],
+						},
+						{ duration: 220, easing: "ease-out", fill: "forwards" },
+					);
+					expand.finished
 						.catch(() => {})
-						.finally(() => root.classList.remove("theme-reveal"));
+						.then(() => {
+							applyTheme(); // 幕布已全屏覆盖，此时切换无感知
+							// 幕布淡出，露出新页面（避免内容瞬间出现的生硬感）
+							return overlay.animate([{ opacity: 1 }, { opacity: 0 }], {
+								duration: 140,
+								easing: "ease-out",
+								fill: "forwards",
+							}).finished.catch(() => {});
+						})
+						.finally(() => overlay.remove());
+					// 动画中途发生页面跳转（ClientRouter）时兜底清理
+					document.addEventListener("astro:before-swap", () => overlay.remove(), { once: true });
 				} else {
 					// 回退方案：临时启用颜色过渡（仅手动切换时有动画），避免页面加载时闪烁
 					root.classList.add("theme-transition");
@@ -129,8 +135,8 @@
 					applyTheme();
 				}
 
-				// set the aria-checked attribute
-				button.setAttribute("aria-checked", String(rootInDarkMode()));
+				// set the aria-checked attribute（切换可能是延迟动画完成的，直接用目标主题）
+				button.setAttribute("aria-checked", String(nextTheme === "dark"));
 			});
 			} else {
 				console.warn("Theme Toggle: No button found");
