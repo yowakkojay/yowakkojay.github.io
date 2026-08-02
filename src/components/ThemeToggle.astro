@@ -45,8 +45,8 @@
 		>
 			<path d="M0 0h24v24H0z" fill="none" stroke="none"></path>
 			<path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"
-			></path>
-			<path d="M17 4a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2"></path>
+				stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
+			<path d="M17 4a2 2 0 0 0 2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 -2 2a2 2 0 0 0 2 -2a2 2 0 0 0 2 -2"></path>
 			<path d="M19 11h2m-1 -1v2"></path>
 		</svg>
 	</button>
@@ -66,79 +66,37 @@
 				button.setAttribute("role", "switch");
 				button.setAttribute("aria-checked", String(rootInDarkMode()));
 
-			// button event
-			button.addEventListener("click", (e) => {
-				const nextTheme = rootInDarkMode() ? "light" : "dark";
+				// button event
+				button.addEventListener("click", () => {
+					const nextTheme = rootInDarkMode() ? "light" : "dark";
 
-				// dispatch event -> ThemeProvider.astro
-				const applyTheme = () => {
-					document.dispatchEvent(
-						new CustomEvent("theme-change", { detail: { theme: nextTheme } }),
-					);
-				};
+					// dispatch event -> ThemeProvider.astro
+					const applyTheme = () => {
+						document.dispatchEvent(
+							new CustomEvent("theme-change", { detail: { theme: nextTheme } }),
+						);
+					};
 
-				// 减少动态效果偏好：直接切换，不做任何动画
-				const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-				const root = document.documentElement;
+					// 减少动态效果偏好：直接切换，不做任何动画
+					const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+					const root = document.documentElement;
 
-				if (reduceMotion) {
-					applyTheme();
-				} else if ("registerProperty" in CSS) {
-					// 圆形扩散揭示（2026-08 重写：覆盖层开孔方案，弃用 View Transitions）。
-					// 背景：Chrome 150 起 ::view-transition-new(root) 上的 clip-path 动画在
-					// 部分构建中渲染坐标系错位——计算样式完全正确，实际栅格化的圆心偏移、
-					// 半径虚胖（本站逐像素实测；Element Plus #24589 / crbug 480074843 同源），
-					// 且过渡树生命周期紊乱（非 clip-path 动画被立即快进、树提前拆除）。
-					// 该回归位于浏览器栅格化层，页面侧无法规避，故改用普通 DOM 覆盖层：
-					// 旧主题背景整屏覆盖 → 底层瞬时切换主题 → 覆盖层用 mask 从点击处开一个
-					// 500ms 扩大的圆孔，露出已就位的新主题。全程无 view-transition，行为确定。
-					const rect = button.getBoundingClientRect();
-					const x = e.clientX || rect.left + rect.width / 2;
-					const y = e.clientY || rect.top + rect.height / 2;
-					const w = window.innerWidth;
-					const h = window.innerHeight;
-					// 半径取点击点到最远角的距离 + 2% 余量：恰好覆盖全屏的时刻贴近动画结束
-					const radius = Math.hypot(Math.max(x, w - x), Math.max(y, h - y)) * 1.02;
+					if (reduceMotion) {
+						applyTheme();
+					} else {
+						// 主题切换动画（2026-08 定稿）：全页颜色 300ms 原地渐变。
+						// 临时挂 .theme-transition 启用颜色过渡（见 global.css），避免页面加载时闪烁。
+						// 历史上的圆形扩散方案（View Transitions clip-path / DOM 覆盖层开孔）因
+						// Chrome 150 伪元素 clip-path 渲染坐标系回归（Element Plus #24589 /
+						// crbug 480074843）及视觉取舍废弃，回归此方案。
+						root.classList.add("theme-transition");
+						window.setTimeout(() => root.classList.remove("theme-transition"), 350);
+						applyTheme();
+					}
 
-					const PROP = "--theme-reveal-r";
-					try {
-						// 第二次点击会重复注册抛错，属预期，忽略
-						CSS.registerProperty({ name: PROP, syntax: "<length>", inherits: false, initialValue: "0px" });
-					} catch {}
-
-					const bodyStyle = getComputedStyle(document.body);
-					const overlay = document.createElement("div");
-					overlay.setAttribute("aria-hidden", "true");
-					overlay.style.cssText =
-						"position:fixed;top:0;left:0;width:calc(100vw + 20px);height:100vh;z-index:2147483647;pointer-events:none;" +
-						`background-color:${bodyStyle.backgroundColor};` +
-						`background-image:${bodyStyle.backgroundImage};` +
-						`-webkit-mask-image:radial-gradient(circle at ${x}px ${y}px, transparent var(${PROP}), black calc(var(${PROP}) + 1px));` +
-						`mask-image:radial-gradient(circle at ${x}px ${y}px, transparent var(${PROP}), black calc(var(${PROP}) + 1px));` +
-						`transition:${PROP} 500ms ease-in-out;`;
-					overlay.style.setProperty(PROP, "0px");
-					document.body.append(overlay);
-
-					// 底层瞬时切换主题（被覆盖层遮住，不可见）
-					applyTheme();
-
-					// 强制样式结算后推到终半径，触发 transition
-					void overlay.offsetWidth;
-					overlay.style.setProperty(PROP, `${radius}px`);
-
-					const cleanup = () => overlay.remove();
-					overlay.addEventListener("transitionend", cleanup, { once: true });
-					window.setTimeout(cleanup, 800); // transitionend 未触发的兜底
-				} else {
-					// 回退方案：临时启用颜色过渡（仅手动切换时有动画），避免页面加载时闪烁
-					root.classList.add("theme-transition");
-					window.setTimeout(() => root.classList.remove("theme-transition"), 350);
-					applyTheme();
-				}
-
-				// set the aria-checked attribute
-				button.setAttribute("aria-checked", String(rootInDarkMode()));
-			});
+					// set the aria-checked attribute
+					button.setAttribute("aria-checked", String(rootInDarkMode()));
+				});
 			} else {
 				console.warn("Theme Toggle: No button found");
 			}

@@ -236,14 +236,9 @@
 		],
 		"motion": [
 			{
-				"name": "theme-circle-reveal",
-				"value": "500ms ease-in-out, DOM overlay + mask radial-gradient hole (no View Transitions)",
-				"purpose": "手动切换主题的签名动画：新主题从点击处圆形扩散，半径取点击点到最远角 +2%（圆心可读、收尾无跳变）。prefers-reduced-motion 下直切。"
-			},
-			{
-				"name": "color-mode-fallback",
-				"value": "300ms ease-in-out on @property-registered color tokens",
-				"purpose": "不支持 View Transitions 时的回退过渡；仅手动切换时启用（.theme-transition），页面加载不挂过渡避免 FOUC。"
+				"name": "theme-color-crossfade",
+				"value": "300ms ease-in-out, .theme-transition 类启用 7 个颜色 token 的 @property 过渡（含 Expressive Code 同步过渡）",
+				"purpose": "手动切换主题时的全页颜色渐变；仅点击时挂类启用，页面加载不挂过渡避免 FOUC。曾用 View Transitions 圆形扩散，因 Chrome 150 回归废弃。"
 			},
 			{
 				"name": "surface-fade",
@@ -261,7 +256,16 @@
 				"purpose": "Hero 画布矩阵关键帧插值周期：点阵与椭圆在线性变换间平滑形变。"
 			}
 		],
-		"breakpoints": [{ "name": "sm", "value": "640px" }, { "name": "lg", "value": "1024px" }]
+		"breakpoints": [
+			{
+				"name": "sm",
+				"value": "640px"
+			},
+			{
+				"name": "lg",
+				"value": "1024px"
+			}
+		]
 	},
 	"components": [
 		{

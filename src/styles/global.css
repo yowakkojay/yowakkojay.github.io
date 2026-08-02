@@ -106,10 +106,10 @@
 				--color-quote var(--color-mode-transition-duration) var(--color-mode-transition-easing);
 		}
 
-		/* 手动切换主题时的圆形揭示动画：2026-08 起改为 ThemeToggle.astro 的
-		   覆盖层开孔方案（普通 DOM + mask，弃用 View Transitions——Chrome 150 的
-		   伪元素 clip-path 动画存在渲染坐标系错位回归，见组件内注释），
-		   此处不再保留 view-transition 相关规则。 */
+		/* 主题切换动画（2026-08 定稿）：全页颜色 300ms 原地渐变（.theme-transition），
+		   由 ThemeToggle.astro 在点击时短暂启用。曾用 View Transitions 圆形扩散与
+		   覆盖层开孔方案，因 Chrome 150 伪元素 clip-path 渲染坐标系回归
+		   （Element Plus #24589 / crbug 480074843）及视觉取舍，最终回归此方案。 */
 	}
 
 	:target {
@@ -127,6 +127,17 @@
 	[data-astro-image="constrained"] {
 		max-width: 100%;
 	}
+}
+
+/* 主题切换时 Expressive Code 语法高亮等选择器驱动颜色的同步过渡。
+   必须放在任何 @layer 之外：EC 的样式重置（含 transition: revert）是无层级的，
+   而无层级样式在层叠中压过所有 @layer 规则——放在 @layer base 里永远抢不回过渡。
+   时长与曲线跟 html.theme-transition 内的 token 过渡一致（300ms ease-in-out）。 */
+html.theme-transition .expressive-code :not(:is(svg, svg *)) {
+	transition:
+		color var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+		background-color var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+		border-color var(--color-mode-transition-duration) var(--color-mode-transition-easing);
 }
 
 @layer components {
