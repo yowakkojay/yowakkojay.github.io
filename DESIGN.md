@@ -258,7 +258,7 @@ components:
 
 ### 主题切换（Theme Toggle）—— 签名组件
 
-36px 图标按钮，日/月 SVG 在缩放与透明度间互换，hover 变 accent。点击触发全页颜色 300ms 原地渐变：临时挂 `.theme-transition` 类启用七个颜色 token 的 @property 过渡，内容原地保留、颜色同拍变换；Expressive Code 语法高亮等选择器驱动的颜色由顶层规则同步过渡，避免失步闪烁。历史上曾用 View Transitions 圆形扩散与覆盖层开孔方案，因 Chrome 150 伪元素 clip-path 渲染坐标系回归（Element Plus #24589 / crbug 480074843）及视觉取舍废弃。`prefers-reduced-motion` 下直接切换，无动画。
+36px 图标按钮，日/月 SVG 在缩放与透明度间互换，hover 变 accent。点击触发全页颜色 300ms 原地渐变：临时挂 `.theme-transition` 类启用七个颜色 token 的 @property 过渡，内容原地保留、颜色同拍变换；代码块语法高亮等选择器驱动的颜色随切换瞬变（与其他 shiki 站点一致）。历史上曾用 View Transitions 圆形扩散与覆盖层开孔方案，因 Chrome 150 伪元素 clip-path 渲染坐标系回归（Element Plus #24589 / crbug 480074843）及视觉取舍废弃。`prefers-reduced-motion` 下直接切换，无动画。
 
 ### Hero 画布（Hero Canvas）—— 签名组件
 

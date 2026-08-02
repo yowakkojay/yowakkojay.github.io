@@ -237,7 +237,7 @@
 		"motion": [
 			{
 				"name": "theme-color-crossfade",
-				"value": "300ms ease-in-out, .theme-transition 类启用 7 个颜色 token 的 @property 过渡（含 Expressive Code 同步过渡）",
+				"value": "300ms ease-in-out, .theme-transition 类启用 7 个颜色 token 的 @property 过渡",
 				"purpose": "手动切换主题时的全页颜色渐变；仅点击时挂类启用，页面加载不挂过渡避免 FOUC。曾用 View Transitions 圆形扩散，因 Chrome 150 回归废弃。"
 			},
 			{
