@@ -1,0 +1,412 @@
+{
+	"schemaVersion": 2,
+	"generatedAt": "2026-08-03",
+	"title": "Design System: Yowakko Jay",
+	"extensions": {
+		"colorMeta": {
+			"paper": {
+				"role": "neutral",
+				"displayName": "纸 Paper",
+				"canonical": "oklch(98.48% 0 0)",
+				"tonalRamp": [
+					"oklch(20% 0 0)",
+					"oklch(35% 0 0)",
+					"oklch(50% 0 0)",
+					"oklch(65% 0 0)",
+					"oklch(78% 0 0)",
+					"oklch(88% 0 0)",
+					"oklch(94% 0 0)",
+					"oklch(98.48% 0 0)"
+				]
+			},
+			"ink": {
+				"role": "neutral",
+				"displayName": "墨 Ink",
+				"canonical": "oklch(26.99% 0.0096 235.05)",
+				"tonalRamp": [
+					"oklch(18% 0.007 235)",
+					"oklch(26.99% 0.0096 235.05)",
+					"oklch(36% 0.01 235)",
+					"oklch(48% 0.01 235)",
+					"oklch(60% 0.008 235)",
+					"oklch(72% 0.006 235)",
+					"oklch(85% 0.004 235)",
+					"oklch(94% 0.002 235)"
+				]
+			},
+			"ink-muted": {
+				"role": "neutral",
+				"displayName": "灰墨 Muted Ink",
+				"canonical": "oklch(44.6% 0.03 256.802)",
+				"tonalRamp": [
+					"oklch(20% 0.015 256.8)",
+					"oklch(30% 0.022 256.8)",
+					"oklch(38% 0.027 256.8)",
+					"oklch(44.6% 0.03 256.802)",
+					"oklch(56% 0.028 256.8)",
+					"oklch(68% 0.02 256.8)",
+					"oklch(80% 0.012 256.8)",
+					"oklch(92% 0.005 256.8)"
+				]
+			},
+			"sumi": {
+				"role": "neutral",
+				"displayName": "松烟 Sumi",
+				"canonical": "oklch(18.15% 0 0)",
+				"tonalRamp": [
+					"oklch(18.15% 0 0)",
+					"oklch(28% 0 0)",
+					"oklch(40% 0 0)",
+					"oklch(52% 0 0)",
+					"oklch(64% 0 0)",
+					"oklch(76% 0 0)",
+					"oklch(87% 0 0)",
+					"oklch(95% 0 0)"
+				]
+			},
+			"night": {
+				"role": "neutral",
+				"displayName": "夜 Night",
+				"canonical": "oklch(23.64% 0.0045 248)",
+				"tonalRamp": [
+					"oklch(16% 0.004 248)",
+					"oklch(20% 0.0045 248)",
+					"oklch(23.64% 0.0045 248)",
+					"oklch(32% 0.005 248)",
+					"oklch(45% 0.004 248)",
+					"oklch(60% 0.003 248)",
+					"oklch(78% 0.002 248)",
+					"oklch(93% 0.001 248)"
+				]
+			},
+			"chalk": {
+				"role": "neutral",
+				"displayName": "粉笔 Chalk",
+				"canonical": "oklch(83.54% 0 264)",
+				"tonalRamp": [
+					"oklch(22% 0 0)",
+					"oklch(34% 0 0)",
+					"oklch(46% 0 0)",
+					"oklch(58% 0 0)",
+					"oklch(70% 0 0)",
+					"oklch(83.54% 0 0)",
+					"oklch(90% 0 0)",
+					"oklch(96% 0 0)"
+				]
+			},
+			"chalk-muted": {
+				"role": "neutral",
+				"displayName": "灰粉笔 Muted Chalk",
+				"canonical": "oklch(70.7% 0.022 261.325)",
+				"tonalRamp": [
+					"oklch(24% 0.01 261.3)",
+					"oklch(36% 0.015 261.3)",
+					"oklch(48% 0.02 261.3)",
+					"oklch(60% 0.022 261.3)",
+					"oklch(70.7% 0.022 261.325)",
+					"oklch(80% 0.015 261.3)",
+					"oklch(89% 0.008 261.3)",
+					"oklch(95% 0.004 261.3)"
+				]
+			},
+			"moonlight": {
+				"role": "neutral",
+				"displayName": "月光 Moonlight",
+				"canonical": "oklch(94.66% 0 0)",
+				"tonalRamp": [
+					"oklch(25% 0 0)",
+					"oklch(38% 0 0)",
+					"oklch(50% 0 0)",
+					"oklch(62% 0 0)",
+					"oklch(74% 0 0)",
+					"oklch(85% 0 0)",
+					"oklch(90% 0 0)",
+					"oklch(94.66% 0 0)"
+				]
+			},
+			"cinnabar": {
+				"role": "primary",
+				"displayName": "朱砂 Cinnabar Vermilion",
+				"canonical": "oklch(55.27% 0.195 19.06)",
+				"tonalRamp": [
+					"oklch(25% 0.09 19.06)",
+					"oklch(35% 0.13 19.06)",
+					"oklch(45% 0.17 19.06)",
+					"oklch(55.27% 0.195 19.06)",
+					"oklch(65% 0.17 19.06)",
+					"oklch(75% 0.13 19.06)",
+					"oklch(85% 0.08 19.06)",
+					"oklch(93% 0.04 19.06)"
+				]
+			},
+			"peacock": {
+				"role": "secondary",
+				"displayName": "孔雀 Peacock Cyan",
+				"canonical": "oklch(52.5% 0.115 200)",
+				"tonalRamp": [
+					"oklch(24% 0.05 200)",
+					"oklch(34% 0.08 200)",
+					"oklch(43% 0.1 200)",
+					"oklch(52.5% 0.115 200)",
+					"oklch(62% 0.1 200)",
+					"oklch(72% 0.08 200)",
+					"oklch(83% 0.05 200)",
+					"oklch(93% 0.025 200)"
+				]
+			},
+			"phosphor": {
+				"role": "primary",
+				"displayName": "磷光 Phosphor Mint",
+				"canonical": "oklch(70.91% 0.1415 163.7)",
+				"tonalRamp": [
+					"oklch(28% 0.06 163.7)",
+					"oklch(40% 0.09 163.7)",
+					"oklch(52% 0.12 163.7)",
+					"oklch(62% 0.135 163.7)",
+					"oklch(70.91% 0.1415 163.7)",
+					"oklch(79% 0.12 163.7)",
+					"oklch(87% 0.08 163.7)",
+					"oklch(94% 0.04 163.7)"
+				]
+			},
+			"sakura": {
+				"role": "secondary",
+				"displayName": "樱粉 Sakura Pink",
+				"canonical": "oklch(70.44% 0.1133 349)",
+				"tonalRamp": [
+					"oklch(26% 0.06 349)",
+					"oklch(38% 0.09 349)",
+					"oklch(50% 0.11 349)",
+					"oklch(60% 0.115 349)",
+					"oklch(70.44% 0.1133 349)",
+					"oklch(79% 0.09 349)",
+					"oklch(87% 0.06 349)",
+					"oklch(94% 0.03 349)"
+				]
+			},
+			"celadon": {
+				"role": "tertiary",
+				"displayName": "青瓷 Celadon",
+				"canonical": "oklch(94.8% 0.106 136.49)",
+				"tonalRamp": [
+					"oklch(30% 0.05 136.49)",
+					"oklch(42% 0.08 136.49)",
+					"oklch(54% 0.1 136.49)",
+					"oklch(66% 0.11 136.49)",
+					"oklch(76% 0.11 136.49)",
+					"oklch(85% 0.1 136.49)",
+					"oklch(90% 0.105 136.49)",
+					"oklch(94.8% 0.106 136.49)"
+				]
+			}
+		},
+		"typographyMeta": {
+			"display": {
+				"displayName": "Display / 页面标题",
+				"purpose": "页面级标题（.title）：首页 H1、文章标题。标题色，不用 accent。"
+			},
+			"headline": {
+				"displayName": "Headline / 章节标题",
+				"purpose": "章节标题与 prose H2；栏头可用 accent 着色。"
+			},
+			"title": {
+				"displayName": "Title / 小节标题",
+				"purpose": "prose H3、目录摘要等 18px semibold 场景。"
+			},
+			"body": {
+				"displayName": "Body / 正文",
+				"purpose": "正文与 UI，16px/1.75，阅读宽度约 65ch，中文呼吸空间。"
+			},
+			"label": {
+				"displayName": "Label / 元数据",
+				"purpose": "等宽 semibold：日期戳、阅读时长、代码、搜索 UI、键盘提示。"
+			}
+		},
+		"shadows": [
+			{
+				"name": "chrome-low",
+				"value": "0 1px 2px 0 rgb(0 0 0 / 0.05), 0 0 0 1px rgb(0 0 0 / 0.10)",
+				"purpose": "悬浮控制 pill（搜索 + 主题切换）。暗色主题 ring 换 rgb(255 255 255 / 0.15)。"
+			},
+			{
+				"name": "chrome-high",
+				"value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1), 0 0 0 1px rgb(0 0 0 / 0.10)",
+				"purpose": "移动端导航下拉菜单。暗色主题 ring 换 rgb(255 255 255 / 0.15)。"
+			}
+		],
+		"motion": [
+			{
+				"name": "theme-circle-reveal",
+				"value": "240ms ease-out, WAAPI clip-path circle() on ::view-transition-new(root)",
+				"purpose": "手动切换主题的签名动画：新主题从点击处圆形扩散，半径取视口对角线 +5%。prefers-reduced-motion 下直切。"
+			},
+			{
+				"name": "color-mode-fallback",
+				"value": "300ms ease-in-out on @property-registered color tokens",
+				"purpose": "不支持 View Transitions 时的回退过渡；仅手动切换时启用（.theme-transition），页面加载不挂过渡避免 FOUC。"
+			},
+			{
+				"name": "surface-fade",
+				"value": "200ms ease",
+				"purpose": "灯箱遮罩透明度与图片 scale(0.96→1)。"
+			},
+			{
+				"name": "chrome-slide",
+				"value": "300ms transition-all transition-discrete",
+				"purpose": "回到顶部按钮从视口外滑入/滑出。"
+			},
+			{
+				"name": "hero-morph",
+				"value": "4200ms smoothstep(3t²-2t³)",
+				"purpose": "Hero 画布矩阵关键帧插值周期：点阵与椭圆在线性变换间平滑形变。"
+			}
+		],
+		"breakpoints": [{ "name": "sm", "value": "640px" }, { "name": "lg", "value": "1024px" }]
+	},
+	"components": [
+		{
+			"name": "导航 Nav Link",
+			"kind": "nav",
+			"refersTo": "nav-link",
+			"description": "站点主导航：accent 色 semibold 链接，当前页以 2px 下划线标记，条目间 1px 分隔线。",
+			"html": "<nav class='ds-nav'><a class='ds-nav-link' aria-current='page' href='#'>首页</a><a class='ds-nav-link' href='#'>博客</a><a class='ds-nav-link' href='#'>关于</a></nav>",
+			"css": ".ds-nav { display: flex; align-items: center; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif; } .ds-nav-link { color: oklch(55.27% 0.195 19.06); font-weight: 600; font-size: 16px; line-height: 1.75; text-decoration: none; padding: 0 16px; transition: color 150ms; } .ds-nav-link + .ds-nav-link { border-left: 1px solid color-mix(in oklab, currentColor 45%, transparent); } .ds-nav-link:first-child { padding-left: 0; } .ds-nav-link:hover { text-decoration: underline; text-underline-offset: 2px; } .ds-nav-link[aria-current='page'] { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; } .ds-nav-link:focus-visible { outline: 2px solid oklch(55.27% 0.195 19.06); outline-offset: 2px; }"
+		},
+		{
+			"name": "内容链接 Inline Link",
+			"kind": "custom",
+			"refersTo": "link-inline",
+			"description": "cactus-link：正文墨色 + 细下划线，hover 时下划线加粗 2px 并染成链接色（揭示法则）。",
+			"html": "<p class='ds-prose-para'>归一化是深度学习中最常被默认开启的组件之一。<a class='ds-cactus-link' href='#'>归一化（BN、LN 与 RMSNorm）</a>一文给出了完整推导。</p>",
+			"css": ".ds-prose-para { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif; font-size: 16px; line-height: 1.75; color: oklch(26.99% 0.0096 235.05); max-width: 65ch; } .ds-cactus-link { color: oklch(26.99% 0.0096 235.05); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; transition: text-decoration-color 150ms; } .ds-cactus-link:hover { text-decoration-color: oklch(52.5% 0.115 200); text-decoration-thickness: 2px; } .ds-cactus-link:focus-visible { outline: 2px solid oklch(52.5% 0.115 200); outline-offset: 2px; }"
+		},
+		{
+			"name": "标签链接 Tag Chip",
+			"kind": "chip",
+			"refersTo": "link-inline",
+			"description": "文章标签：# 前缀的 cactus-link 变体，不是实心 chip——标签在此系统里是文字，不是容器。",
+			"html": "<span class='ds-tags'><a class='ds-tag-link' href='#'>强化学习</a>, <a class='ds-tag-link' href='#'>PyTorch</a>, <a class='ds-tag-link' href='#'>GSM8K</a></span>",
+			"css": ".ds-tags { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif; font-size: 16px; line-height: 1.75; color: oklch(26.99% 0.0096 235.05); } .ds-tag-link { color: oklch(26.99% 0.0096 235.05); text-decoration: underline; text-underline-offset: 2px; } .ds-tag-link::before { content: '#'; } .ds-tag-link:hover { text-decoration-color: oklch(52.5% 0.115 200); text-decoration-thickness: 2px; } .ds-tag-link:focus-visible { outline: 2px solid oklch(52.5% 0.115 200); outline-offset: 2px; }"
+		},
+		{
+			"name": "文章列表行 Post Preview Row",
+			"kind": "custom",
+			"refersTo": "link-inline",
+			"description": "列表即纸张：等宽 semibold 的 muted 日期戳 + 标题链接 + 三行截断的斜体摘要。",
+			"html": "<div class='ds-post-row'><time class='ds-post-date' datetime='2026-04-24'>2026年4月24日</time><div class='ds-post-main'><a class='ds-post-title' href='#'>自动化AI工作流实践与探索：Golutra + OpenClaw + Feishu</a><q class='ds-post-desc'>探索一套基于 Golutra + OpenClaw + Feishu 的自动化 AI 工作流系统，经一周实战测试验证其有效性。</q></div></div>",
+			"css": ".ds-post-row { display: grid; grid-template-columns: auto 1fr; column-gap: 16px; row-gap: 4px; align-items: baseline; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif; } .ds-post-date { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-weight: 600; font-size: 16px; line-height: 1.75; color: oklch(44.6% 0.03 256.802); white-space: nowrap; } .ds-post-main { display: grid; gap: 4px; } .ds-post-title { color: oklch(26.99% 0.0096 235.05); font-size: 16px; line-height: 1.75; text-decoration: underline; text-underline-offset: 2px; width: fit-content; } .ds-post-title:hover { text-decoration-color: oklch(52.5% 0.115 200); text-decoration-thickness: 2px; } .ds-post-desc { font-style: italic; color: oklch(26.99% 0.0096 235.05); font-size: 16px; line-height: 1.75; quotes: '“' '”'; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }"
+		},
+		{
+			"name": "Note 卡片 Note Card",
+			"kind": "card",
+			"refersTo": "card-note",
+			"description": "色调分层的载体：5% 文字色叠层 + 6px 圆角，无阴影无边框——纸面上的便签。",
+			"html": "<article class='ds-note-card'><h3 class='ds-note-title'><a class='ds-note-link' href='#'>GRPO 训练日志一则</a></h3><time class='ds-note-date' datetime='2026-04-24T21:30'>26/04/24 21:30</time><p class='ds-note-body'>把 reward shaping 的权重从 0.1 调到 0.3，GSM8K 的 pass@1 涨了两个点；记录一下对照组的曲线差异，周末写进正文。</p></article>",
+			"css": ".ds-note-card { background: oklch(26.99% 0.0096 235.05 / 5%); border-radius: 6px; padding: 12px 16px; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif; } .ds-note-title { color: oklch(18.15% 0 0); font-size: 16px; font-weight: 600; line-height: 1.5; margin: 0; } .ds-note-link { color: inherit; text-decoration: underline; text-underline-offset: 2px; } .ds-note-link:hover { text-decoration-color: oklch(52.5% 0.115 200); text-decoration-thickness: 2px; } .ds-note-date { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 14px; color: oklch(44.6% 0.03 256.802); } .ds-note-body { margin: 8px 0 0; font-size: 14px; line-height: 1.7; color: oklch(26.99% 0.0096 235.05); }"
+		},
+		{
+			"name": "GitHub 仓库卡片 GitHub Card",
+			"kind": "card",
+			"refersTo": "card-note",
+			"description": "remark 插件生成的仓库卡片：同一 5% 叠层家族，内含头像圆、标题、描述与星/叉 chips。",
+			"html": "<div class='ds-gh-card'><div class='ds-gh-title'><span class='ds-gh-avatar'></span><a class='ds-gh-text' href='#'>yowakkojay / yowakkojay.github.io</a></div><p class='ds-gh-desc'>郁二杰的博客 · AI / 深度学习 · Astro 6 + Tailwind CSS 4</p><div class='ds-gh-chips'><span class='ds-gh-chip'><svg viewBox='0 0 16 16' width='16' height='16' fill='currentColor' aria-hidden='true'><path d='M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Zm0 2.445L6.615 5.5a.75.75 0 0 1-.564.41l-3.097.45 2.24 2.184a.75.75 0 0 1 .216.664l-.528 3.084 2.769-1.456a.75.75 0 0 1 .698 0l2.77 1.456-.53-3.084a.75.75 0 0 1 .216-.664l2.24-2.183-3.096-.45a.75.75 0 0 1-.564-.41L8 2.694Z'/></svg>128</span><span class='ds-gh-chip'><svg viewBox='0 0 16 16' width='16' height='16' fill='currentColor' aria-hidden='true'><path d='M5 5.372v.878c0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75v-.878a2.25 2.25 0 1 1 1.5 0v.878A2.25 2.25 0 0 1 9.5 8.5H8v2.128a2.251 2.251 0 1 1-1.5 0V8.5H5A2.25 2.25 0 0 1 2.75 6.25v-.878a2.25 2.25 0 1 1 1.5 0ZM5 3.25a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Zm6.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm-3 8.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z'/></svg>12</span></div></div>",
+			"css": ".ds-gh-card { background: oklch(26.99% 0.0096 235.05 / 5%); border-radius: 6px; padding: 12px 16px; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif; color: oklch(26.99% 0.0096 235.05); } .ds-gh-title { display: flex; align-items: center; gap: 8px; font-size: 16px; } .ds-gh-avatar { width: 24px; height: 24px; border-radius: 9999px; background: oklch(26.99% 0.0096 235.05 / 20%); flex: none; } .ds-gh-text { color: oklch(26.99% 0.0096 235.05); text-decoration: underline; text-underline-offset: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .ds-gh-text:hover { text-decoration-color: oklch(52.5% 0.115 200); text-decoration-thickness: 2px; } .ds-gh-desc { margin: 12px 0 0; line-height: 1.4; font-size: 15px; } .ds-gh-chips { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 16px; } .ds-gh-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; } .ds-gh-chip svg { display: block; }"
+		},
+		{
+			"name": "边注 Admonition",
+			"kind": "custom",
+			"refersTo": "card-note",
+			"description": "2px 类型色左边框 + 5% 底色 + mask 图标的备注块（note/tip/important/caution/warning 五色）。",
+			"html": "<div class='ds-admonition'><p class='ds-admonition-title'>Note</p><div class='ds-admonition-content'><p>KaTeX 块级公式支持横向滚动，移动端不会撑破版面；行内公式注意与中文标点的间距。</p></div></div>",
+			"css": ".ds-admonition { --ds-adm-color: oklch(70.7% 0.165 254.624); border-left: 2px solid var(--ds-adm-color); background: color-mix(in oklab, var(--ds-adm-color) 5%, transparent); padding: 16px 0 16px 16px; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif; color: oklch(26.99% 0.0096 235.05); } .ds-admonition-title { margin: 0 0 8px; display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; color: var(--ds-adm-color); text-transform: capitalize; } .ds-admonition-title::before { content: ''; display: inline-block; width: 16px; height: 16px; flex: none; background: var(--ds-adm-color); -webkit-mask: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Cpath d=%22M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z%22/%3E%3C/svg%3E') center / contain no-repeat; mask: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Cpath d=%22M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z%22/%3E%3C/svg%3E') center / contain no-repeat; } .ds-admonition-content p { margin: 0; font-size: 16px; line-height: 1.75; }"
+		},
+		{
+			"name": "代码块 Code Frame",
+			"kind": "custom",
+			"refersTo": "card-note",
+			"description": "Expressive Code 终端窗：dracula 底色、4px 圆角、无阴影，macOS 红黄绿三色窗口圆点。",
+			"html": "<figure class='ds-code-frame'><div class='ds-code-header'><span class='ds-code-dots' aria-hidden='true'></span><span class='ds-code-title'>terminal</span></div><pre class='ds-code-body'><code><span class='ds-code-prompt'>$</span> python train_grpo.py --model qwen3-8b --dataset gsm8k\n<span class='ds-code-ok'>✓</span> epoch 3/3 · mean reward 0.82 · wall time 12min</code></pre></figure>",
+			"css": ".ds-code-frame { background: #282a36; border-radius: 4px; overflow: hidden; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; margin: 0; } .ds-code-header { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: rgb(0 0 0 / 20%); } .ds-code-dots { width: 60px; height: 16px; flex: none; background-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 60 16%22%3E%3Ccircle cx=%228%22 cy=%228%22 r=%228%22 fill=%22%23FF5F57%22/%3E%3Ccircle cx=%2230%22 cy=%228%22 r=%228%22 fill=%22%23FEBC2E%22/%3E%3Ccircle cx=%2252%22 cy=%228%22 r=%228%22 fill=%22%2328C840%22/%3E%3C/svg%3E'); background-repeat: no-repeat; } .ds-code-title { color: rgb(248 248 242 / 55%); font-size: 12px; } .ds-code-body { padding: 16px; margin: 0; font-size: 14px; line-height: 1.714; color: #f8f8f2; overflow-x: auto; white-space: pre; } .ds-code-prompt, .ds-code-ok { color: #50fa7b; }"
+		},
+		{
+			"name": "控制 pill Chrome Pill（搜索 + 主题切换）",
+			"kind": "button",
+			"refersTo": "button-icon",
+			"description": "右上角悬浮铬件：chrome-low 阴影 + ring 的圆形 pill，内装 36px 方角图标钮，hover 变 accent。",
+			"html": "<div class='ds-chrome-pill'><button class='ds-icon-button' type='button' aria-label='搜索'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M0 0h24v24H0z' stroke='none'/><path d='M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M21 21l-6-6'/></svg></button><button class='ds-icon-button' type='button' aria-label='切换主题'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z'/><path d='M22 12L23 12'/><path d='M12 2V1'/><path d='M12 23V22'/><path d='M20 20L19 19'/><path d='M20 4L19 5'/><path d='M4 20L5 19'/><path d='M4 4L5 5'/><path d='M1 12L2 12'/></svg></button></div>",
+			"css": ".ds-chrome-pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px; border-radius: 9999px; background: oklch(98.48% 0 0); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05), 0 0 0 1px rgb(0 0 0 / 0.10); } .ds-icon-button { width: 36px; height: 36px; padding: 8px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 0; cursor: pointer; color: oklch(26.99% 0.0096 235.05); transition: color 150ms; } .ds-icon-button svg { width: 28px; height: 28px; } .ds-icon-button:hover { color: oklch(55.27% 0.195 19.06); } .ds-icon-button:focus-visible { outline: auto; }"
+		},
+		{
+			"name": "目录 TOC",
+			"kind": "nav",
+			"refersTo": "nav-link",
+			"description": "可折叠目录：摘要 18px semibold，marker hover 变 accent；条目无下划线、自带 # 前缀，hover 整行变 accent，子级 text-xs。桌面粘性右栏，移动默认折叠。",
+			"html": "<details class='ds-toc' open><summary class='ds-toc-summary'>目录</summary><nav class='ds-toc-nav'><ol class='ds-toc-list'><li class='ds-toc-item'><a class='ds-toc-link' href='#'><span class='ds-toc-hash' aria-hidden='true'>#</span>为什么需要归一化</a></li><li class='ds-toc-item ds-toc-sub'><a class='ds-toc-link' href='#'><span class='ds-toc-hash' aria-hidden='true'>#</span>BatchNorm 的推导</a></li><li class='ds-toc-item ds-toc-sub'><a class='ds-toc-link' href='#'><span class='ds-toc-hash' aria-hidden='true'>#</span>RMSNorm 为什么有效</a></li></ol></nav></details>",
+			"css": ".ds-toc { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif; } .ds-toc-summary { font-size: 18px; font-weight: 600; line-height: 1.556; color: oklch(18.15% 0 0); cursor: pointer; } .ds-toc-summary:hover::marker { color: oklch(55.27% 0.195 19.06); } .ds-toc-nav { margin-left: 16px; } .ds-toc-list { margin-top: 16px; padding: 0; list-style: none; } .ds-toc-item { margin-top: 12px; } .ds-toc-item.ds-toc-sub { margin-top: 8px; margin-left: 8px; } .ds-toc-link { color: oklch(26.99% 0.0096 235.05); text-decoration: none; font-size: 16px; line-height: 1.75; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: color 150ms; } .ds-toc-sub .ds-toc-link { font-size: 12px; } .ds-toc-hash { margin-right: 2px; } .ds-toc-link:hover { color: oklch(55.27% 0.195 19.06); }"
+		}
+	],
+	"narrative": {
+		"northStar": "实验笔记本 The Lab Notebook",
+		"overview": "一本摊开在桌上的实验笔记本：克制、精确、有体温。每条记录都有等宽字体的日期戳，每个结论都可以推导，每段代码都可以运行。设计不抢内容的风头——密度舒适的排版、大量留白、列表而非卡片——但每一处保留下来的装饰都有理由：首页 Hero 画布上，单位圆被连续变化的线性变换拉成椭圆，这是整本笔记本的扉页版画，声明\"这里的数学是活的\"。\n\n这个系统有昼夜双重身份。亮色主题是白天实验台上的纸面：近白的纸、蓝灰的墨迹、朱砂红橙的记号笔。暗色主题是深夜的终端：深青灰的屏、粉笔灰的字、磷光薄荷绿的光标。两套主题共享同一副骨架，accent 与链接色随主题翻转色相——切换主题就像从纸笔切换到磷光屏，圆形揭示动画是这次切换的仪式。\n\n装饰极少，但不冷淡。语气是研究者写给同行的笔记：诚实、可追溯、偶尔玩味（macOS 三色窗口圆点、# 标题锚点、鼠标划过网格的排斥泡）。已确认的反面：不用 emoji 充当图标。",
+		"keyCharacteristics": [
+			"昼夜双生的色彩系统：accent 与链接色随主题翻转（朱砂 ↔ 磷光，孔雀青 ↔ 樱粉）",
+			"内容永远是平坦的纸面；阴影只给悬浮其上的铬件（floating chrome）",
+			"等宽字体只承载元数据（日期、阅读时长、代码、搜索），正文是中文友好的系统无衬线",
+			"唯一的\"大手笔\"装饰是 Hero 线性变换画布——全站其余部分保持安静",
+			"所有主题色都是 oklch + @property 注册，可以在主题切换时做属性级过渡"
+		],
+		"rules": [
+			{
+				"name": "昼夜法则 The Day-and-Night Rule",
+				"body": "每一个主题色决策都必须以亮/暗一对的形式交付，写入 @theme 与 html[data-theme=\"dark\"] 两处。accent 与链接色跨主题翻转色相族，绝不允许只改一个主题或硬编码某一主题的值。",
+				"section": "colors"
+			},
+			{
+				"name": "荧光笔法则 The Highlighter Rule",
+				"body": "accent 是记号笔，不是油漆桶：它出现在导航、当前页标记、2px 进度条、锚点、描边和 hover 态上，任何一屏的占比都很小。它从不填充大面积表面——没有 accent 底色的按钮或卡片。",
+				"section": "colors"
+			},
+			{
+				"name": "揭示法则 The Hover-Reveal Rule",
+				"body": "链接常态穿正文墨色、带 2px 偏移的细下划线；链接色（孔雀/樱粉）只在 hover 时以加粗下划线（2px）揭示。链接色不是链接的常态颜色。",
+				"section": "colors"
+			},
+			{
+				"name": "等宽即元数据法则 The Mono-is-Metadata Rule",
+				"body": "等宽字体只用于日期、阅读时长、代码、搜索框与脚注标号——数据，不是散文。正文、标题、导航永远用无衬线。",
+				"section": "typography"
+			},
+			{
+				"name": "井号法则 The Hash-Mark Rule",
+				"body": "prose 内的标题在左侧沟槽携带一个 # 锚点标记：常态用 muted 色、绝对定位在 -1rem 处，hover 时变 accent 色。这是笔记本页边的索引符号，移动端（<sm）不出现。",
+				"section": "typography"
+			},
+			{
+				"name": "浮铬法则 The Floating Chrome Rule",
+				"body": "阴影只允许出现在悬浮于内容之上的铬件（控制 pill、下拉菜单、对话框、灯箱）。内容表面——卡片、列表、文章体——永远平坦。新增 UI 时先问：\"它浮在纸面上吗？\"不是，就没有阴影。",
+				"section": "elevation"
+			},
+			{
+				"name": "圆角预算法则 The Radius Budget Rule",
+				"body": "圆角矩形不超过 8px；9999px 完全圆是 pill 与纯圆控件的特权，不分配给卡片或内容容器。",
+				"section": "shapes"
+			}
+		],
+		"dos": [
+			"Do 以亮/暗成对的方式交付每个主题色，写入 @theme 与 [data-theme=\"dark\"] 两处，并用 @property 注册保证可过渡（昼夜法则）。",
+			"Do 把 accent 当荧光笔用：导航、锚点、发丝进度条、描边、hover 态（荧光笔法则）。",
+			"Do 用等宽 + semibold 承载元数据（日期、阅读时长、代码、搜索 UI），正文与标题留给无衬线（等宽即元数据法则）。",
+			"Do 尊重 prefers-reduced-motion：主题切换直切、Hero 画布只画静态一帧。",
+			"Do 用 5% 文字色叠层表达内容层的深度（Note 卡、GitHub 卡），保持纸面平坦。",
+			"Do 新增 UI 时用现有的两级阴影词汇（chrome-low / chrome-high），且只给浮在纸面上的铬件。"
+		],
+		"donts": [
+			"Don't 用 emoji 充当图标——图标只用 SVG（MDI 图标集或内联 SVG，mask 着色的 16px 小图标）。",
+			"Don't 硬编码单一主题的 accent 或链接色值；它们随主题翻转，引用 token 而非数值。",
+			"Don't 引入网络字体；系统无衬线/等宽栈是有意决策（中文原生渲染、零 FOUT）。",
+			"Don't 给 blockquote 加左边框；它靠引用色与斜体识别，左边框属于 admonition。",
+			"Don't 给内容表面（卡片、列表、文章体）加阴影或超过 8px 的圆角；阴影属于浮铬，圆角预算 ≤8px。",
+			"Don't 在正文密度上使用卡片网格；文章列表就是\"日期戳 + 链接\"的行，列表即纸张。"
+		]
+	}
+}
