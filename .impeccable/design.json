@@ -237,8 +237,8 @@
 		"motion": [
 			{
 				"name": "theme-circle-reveal",
-				"value": "240ms ease-out, WAAPI clip-path circle() on ::view-transition-new(root)",
-				"purpose": "手动切换主题的签名动画：新主题从点击处圆形扩散，半径取视口对角线 +5%。prefers-reduced-motion 下直切。"
+				"value": "500ms ease-in-out, DOM overlay + mask radial-gradient hole (no View Transitions)",
+				"purpose": "手动切换主题的签名动画：新主题从点击处圆形扩散，半径取点击点到最远角 +2%（圆心可读、收尾无跳变）。prefers-reduced-motion 下直切。"
 			},
 			{
 				"name": "color-mode-fallback",

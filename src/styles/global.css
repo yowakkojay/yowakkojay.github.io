@@ -106,19 +106,10 @@
 				--color-quote var(--color-mode-transition-duration) var(--color-mode-transition-easing);
 		}
 
-		/* 手动切换主题时的圆形揭示动画（View Transitions）：
-		   禁用默认的整页交叉淡化——新旧主题颜色互为反色，淡化会产生
-		   "先变黑/白再变目标色"的双重曝光伪影。旧态截图静止垫底，
-		   新态截图由 ThemeToggle.astro 用 WAAPI 做 clip-path 圆形扩散覆盖。
-		   扩散动画限定 240ms：部分 Chrome 版本会在默认动画（250ms）结束时
-		   拆除过渡图层，动画若跑不完会导致未覆盖的角落瞬间填满。 */
-		&.theme-reveal {
-			&::view-transition-old(root),
-			&::view-transition-new(root) {
-				animation: none;
-				mix-blend-mode: normal;
-			}
-		}
+		/* 手动切换主题时的圆形揭示动画：2026-08 起改为 ThemeToggle.astro 的
+		   覆盖层开孔方案（普通 DOM + mask，弃用 View Transitions——Chrome 150 的
+		   伪元素 clip-path 动画存在渲染坐标系错位回归，见组件内注释），
+		   此处不再保留 view-transition 相关规则。 */
 	}
 
 	:target {

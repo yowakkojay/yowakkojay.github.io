@@ -258,7 +258,7 @@ components:
 
 ### 主题切换（Theme Toggle）—— 签名组件
 
-36px 图标按钮，日/月 SVG 在缩放与透明度间互换，hover 变 accent。点击触发 View Transitions 圆形揭示：旧主题截图垫底，新主题从点击处以 `clip-path: circle()` 扩散覆盖（240ms ease-out，半径取视口对角线 +5%）；不支持的浏览器回退为 300ms 属性级颜色过渡。`prefers-reduced-motion` 下直接切换，无动画。
+36px 图标按钮，日/月 SVG 在缩放与透明度间互换，hover 变 accent。点击触发圆形揭示：旧主题背景以覆盖层整屏遮盖，底层瞬时切换主题，覆盖层用 mask 从点击处开一个渐扩的圆孔露出新主题（500ms ease-in-out，半径取点击点到最远角 +2%——时长保证圆心可读，半径保证覆盖全屏的时刻贴近动画结束、收尾无跳变）；不用 View Transitions——Chrome 150 的伪元素 clip-path 动画存在渲染坐标系错位回归（Element Plus #24589 / crbug 480074843），覆盖层方案行为在所有浏览器确定一致。不支持注册自定义属性的浏览器回退为 300ms 属性级颜色过渡。`prefers-reduced-motion` 下直接切换，无动画。
 
 ### Hero 画布（Hero Canvas）—— 签名组件
 
