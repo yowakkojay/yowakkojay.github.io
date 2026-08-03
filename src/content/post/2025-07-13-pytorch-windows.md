@@ -2,7 +2,7 @@
 title: 配置Pytorch环境（Win系统）
 publishDate: 2025-07-13T08:00:00+08:00
 description: 在 Windows 10/11 系统上从零配置 Pytorch 深度学习环境，涵盖 VSCode、Conda、NVIDIA 驱动、CUDA Toolkit、cuDNN 与 pip 安装 Pytorch 的全流程。
-category: 工程实践
+category: engineering
 tags:
   - pytorch
   - windows

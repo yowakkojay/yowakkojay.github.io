@@ -2,7 +2,7 @@
 title: 归一化（BN、LN 与 RMSNorm）
 publishDate: 2026-02-21T08:00:00+08:00
 description: 从 Z-Score 标准化到 Batch Norm、Layer Norm、RMSNorm，深入对比深度学习中的归一化方法，并用 Pytorch 代码演示它们在 4 维张量上的差异。
-category: 深度学习
+category: deep-learning
 tags:
   - 深度学习
   - normalization
