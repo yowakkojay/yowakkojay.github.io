@@ -96,23 +96,6 @@
 
 		/* 默认不应用颜色过渡，避免页面加载/跳转时亮→暗闪烁（FOUC）。
 		   仅在 .theme-transition（用户手动切换主题）时启用过渡。 */
-		&.theme-transition {
-			transition:
-				--color-global-bg var(--color-mode-transition-duration) var(--color-mode-transition-easing),
-				--color-global-text var(--color-mode-transition-duration) var(--color-mode-transition-easing),
-				--color-muted var(--color-mode-transition-duration) var(--color-mode-transition-easing),
-				--color-link var(--color-mode-transition-duration) var(--color-mode-transition-easing),
-				--color-accent var(--color-mode-transition-duration) var(--color-mode-transition-easing),
-				--color-accent-2 var(--color-mode-transition-duration) var(--color-mode-transition-easing),
-				--color-quote var(--color-mode-transition-duration) var(--color-mode-transition-easing);
-		}
-
-		/* 主题切换动画（2026-08 定稿）：全页颜色 300ms 原地渐变（.theme-transition），
-		   由 ThemeToggle.astro 在点击时短暂启用。曾用 View Transitions 圆形扩散与
-		   覆盖层开孔方案，因 Chrome 150 伪元素 clip-path 渲染坐标系回归
-		   （Element Plus #24589 / crbug 480074843）及视觉取舍，最终回归此方案。
-		   代码块语法高亮等选择器驱动的颜色随切换瞬变（与其他 shiki 站点一致），
-		   曾尝试为其加同步过渡，实测在本站环境下效果更差，故不保留。 */
 	}
 
 	:target {
@@ -130,6 +113,40 @@
 	[data-astro-image="constrained"] {
 		max-width: 100%;
 	}
+}
+
+/* 主题切换动画（350ms 原地渐变）：点击时 ThemeToggle.astro 给 <html> 挂
+   .theme-transition，并由 JS 在 rAF 循环里逐帧插值 7 个主题变量（inline style
+   驱动，oklab 空间、同一阻尼曲线），所有 var() 引用的颜色/背景/边框随继承
+   同拍渐变；此处的规则只负责【选择器驱动、不经过变量】的少数颜色。
+   ⚠️ 两个不要：
+   1) 不要在 :root 上 transition @property 自定义属性——该路径在 Chrome 150
+      （Linux）上会间歇性卡死在进度 0，变量停在旧色后整页瞬跳（文字先闪默认
+      色/旧色、再跳预设色）；
+   2) 不要给 * 全元素挂 color 等直接属性过渡——数千个并发动画簿记会把主线程
+      卡出 200ms+ 长帧。JS 逐帧写变量没有这两类问题。
+   规则必须放在任何 @layer 之外：EC 的样式重置（含 transition: revert）是无
+   层级的，无层级样式在层叠中压过所有 @layer 规则。 */
+
+/* Expressive Code：token 颜色由行内 --0/--1 双主题变量随 [data-theme] 选择器
+   瞬时翻转（不经站点变量），需专项规则做 color 插值；框体背景/边框同理。
+   transition: revert 重置选择器优先级高，这里用更高优先级压过。 */
+html.theme-transition .expressive-code .ec-line span[style^="--"]:not([class]) {
+	transition: color var(--color-mode-transition-duration) var(--color-mode-transition-easing);
+}
+html.theme-transition .expressive-code :is(.frame, .header, pre, .gutter, .copy button) {
+	transition:
+		color var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+		background-color var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+		border-color var(--color-mode-transition-duration) var(--color-mode-transition-easing);
+}
+
+/* 回到顶部按钮：bg-zinc-200 dark:bg-zinc-700 是选择器驱动的静态值，瞬翻会
+   突兀；单个元素，补一条背景过渡。 */
+html.theme-transition #to-top-btn {
+	transition:
+		color var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+		background-color var(--color-mode-transition-duration) var(--color-mode-transition-easing);
 }
 
 @layer components {
@@ -184,4 +201,3 @@ html .expressive-code .frame.is-terminal .header::before {
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 16'%3E%3Ccircle cx='8' cy='8' r='8' fill='%23FF5F57'/%3E%3Ccircle cx='30' cy='8' r='8' fill='%23FEBC2E'/%3E%3Ccircle cx='52' cy='8' r='8' fill='%2328C840'/%3E%3C/svg%3E");
 	background-repeat: no-repeat;
 }
-

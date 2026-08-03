@@ -78,8 +78,14 @@
 		);
 	}
 
-	// theme-change 事件由 ThemeToggle.astro 在用户切换主题时 dispatch
-	document.addEventListener("theme-change", syncGiscusTheme);
+	// theme-change 事件由 ThemeToggle.astro 在用户切换主题时 dispatch。
+	// iframe 重渲染评论是同步重活且与页面同线程，延后到整页渐变结束后再做，
+	// 避免在 350ms 动画窗口内阻塞主线程（评论区本身随 iframe 自行换肤即可）
+	let giscusSyncTimer: number | undefined;
+	document.addEventListener("theme-change", () => {
+		window.clearTimeout(giscusSyncTimer);
+		giscusSyncTimer = window.setTimeout(syncGiscusTheme, 450);
+	});
 	// bfcache 恢复时也同步一次
 	window.addEventListener("pageshow", (e) => {
 		if (e.persisted) syncGiscusTheme();

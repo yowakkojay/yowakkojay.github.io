@@ -56,7 +56,64 @@
 	// Note that if you fire the theme-change event outside of this component, it will not be reflected in the button's aria-checked attribute. You will need to add an event listener if you want that.
 	import { rootInDarkMode } from "@/utils/domElement";
 
+	/* 主题切换动画（2026-08 定稿）：点击后由 JS 在 rAF 循环里逐帧插值 7 个主题
+	   CSS 变量（inline style 写到 <html>，oklab 空间 + 下方同一阻尼曲线），
+	   页面上所有 var() 引用的颜色随继承同拍渐变；选择器驱动的少数颜色（代码块、
+	   回到顶部按钮）由 global.css 里的 .theme-transition 专项规则过渡。
+	   ⚠️ 不要用 CSS 在 :root 上 transition @property 自定义属性：该路径在
+	   Chrome 150（Linux）上间歇性卡死在进度 0（变量停旧色→整页瞬跳，文字先闪
+	   默认色再跳预设色）；也不要给 * 全元素挂直接属性过渡（并发动画簿记造成
+	   200ms+ 长帧）。JS 逐帧写变量两者都不沾，且连点时可从当前中间值平滑反向。 */
+	const THEME_VARS = [
+		"--color-global-bg",
+		"--color-global-text",
+		"--color-muted",
+		"--color-link",
+		"--color-accent",
+		"--color-accent-2",
+		"--color-quote",
+	] as const;
+	const TRANSITION_MS = 350; // 与 --color-mode-transition-duration 一致
+
+	// cubic-bezier(0.41, 0.1, 0.13, 1)，二分法按 x 求 y（与 CSS 侧同一条阻尼曲线）
+	const [BX1, BY1, BX2, BY2] = [0.41, 0.1, 0.13, 1];
+	const bezier = (a1: number, a2: number, t: number) =>
+		3 * (1 - t) ** 2 * t * a1 + 3 * (1 - t) * t * t * a2 + t ** 3;
+	function easeOutDamp(x: number): number {
+		let lo = 0;
+		let hi = 1;
+		let t = x;
+		for (let i = 0; i < 24; i++) {
+			const cx = bezier(BX1, BX2, t);
+			if (Math.abs(cx - x) < 1e-4) break;
+			if (cx < x) lo = t;
+			else hi = t;
+			t = (lo + hi) / 2;
+		}
+		return bezier(BY1, BY2, t);
+	}
+
+	type Oklab = [number, number, number];
+	// 解析 oklch(L[%] C H) / oklab(L[%] a b) → oklab 三元组（L 归一到 0–1），失败返回 null
+	function parseToOklab(s: string): Oklab | null {
+		const num = String.raw`(-?[\d.]+)`;
+		let m = s.match(new RegExp(String.raw`oklch\(\s*${num}(%?)\s+${num}\s+${num}`));
+		if (m) {
+			const l = parseFloat(m[1]!) / (m[2] ? 100 : 1);
+			const c = parseFloat(m[3]!);
+			const h = (parseFloat(m[4]!) * Math.PI) / 180;
+			return [l, c * Math.cos(h), c * Math.sin(h)];
+		}
+		m = s.match(new RegExp(String.raw`oklab\(\s*${num}(%?)\s+${num}\s+${num}`));
+		if (m) return [parseFloat(m[1]!) / (m[2] ? 100 : 1), parseFloat(m[3]!), parseFloat(m[4]!)];
+		return null;
+	}
+
 	class ThemeToggle extends HTMLElement {
+		#animRaf = 0;
+		// 渲染器被判定降级（帧率不足以呈现动画）的截止时间，期间切换直接瞬变
+		static #degradedUntil = 0;
+
 		constructor() {
 			super();
 			const button = this.querySelector<HTMLButtonElement>("button");
@@ -69,6 +126,7 @@
 				// button event
 				button.addEventListener("click", () => {
 					const nextTheme = rootInDarkMode() ? "light" : "dark";
+					const root = document.documentElement;
 
 					// dispatch event -> ThemeProvider.astro
 					const applyTheme = () => {
@@ -78,20 +136,14 @@
 					};
 
 					// 减少动态效果偏好：直接切换，不做任何动画
-					const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-					const root = document.documentElement;
-
-					if (reduceMotion) {
+					if (
+						window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+						performance.now() < ThemeToggle.#degradedUntil
+					) {
+						this.#resetToCascade(root);
 						applyTheme();
 					} else {
-						// 主题切换动画（2026-08 定稿）：全页颜色 350ms 原地渐变。
-						// 临时挂 .theme-transition 启用颜色过渡（见 global.css），避免页面加载时闪烁。
-						// 历史上的圆形扩散方案（View Transitions clip-path / DOM 覆盖层开孔）因
-						// Chrome 150 伪元素 clip-path 渲染坐标系回归（Element Plus #24589 /
-						// crbug 480074843）及视觉取舍废弃，回归此方案。
-						root.classList.add("theme-transition");
-						window.setTimeout(() => root.classList.remove("theme-transition"), 400);
-						applyTheme();
+						this.#animateToggle(root, applyTheme);
 					}
 
 					// set the aria-checked attribute
@@ -100,6 +152,92 @@
 			} else {
 				console.warn("Theme Toggle: No button found");
 			}
+		}
+
+		// 直接瞬翻前的清理：撤销可能仍在飞行中的上一轮动画（固定值/过渡类残留）
+		#resetToCascade(root: HTMLElement) {
+			cancelAnimationFrame(this.#animRaf);
+			for (const v of THEME_VARS) root.style.removeProperty(v);
+			root.classList.remove("theme-transition");
+		}
+
+		#animateToggle(root: HTMLElement, applyTheme: () => void) {
+			cancelAnimationFrame(this.#animRaf);
+
+			// 探针帧：先测渲染器是否健康。降级（长寿命标签页帧率个位数）或后台标签页时，
+			// 逐帧动画只会呈现为"卡旧色再瞬跳"——直接瞬翻，并在 60s 内不再尝试动画；
+			// 健康标签页只多等一帧（<20ms），无感知。
+			const probeStart = performance.now();
+			this.#animRaf = requestAnimationFrame(() => {
+				if (performance.now() - probeStart > 100) {
+					ThemeToggle.#degradedUntil = performance.now() + 60_000;
+					this.#resetToCascade(root);
+					applyTheme();
+					return;
+				}
+				this.#runVarAnimation(root, applyTheme);
+			});
+		}
+
+		#runVarAnimation(root: HTMLElement, applyTheme: () => void) {
+			// 起点：当前实际显示的颜色（连点时为上一轮动画的 inline 中间值）
+			const cs0 = getComputedStyle(root);
+			const fromRaw = THEME_VARS.map((v) => cs0.getPropertyValue(v).trim());
+			const from = fromRaw.map(parseToOklab);
+
+			// 以下全部在同一个同步任务里完成，中间的"裸翻转"状态不会被绘制：
+			// 1. 清掉上一轮的 inline 固定值；2. 挂类（启用 EC 等选择器驱动颜色的过渡，
+			//    也是 HeroCanvas 每帧重读颜色的信号）；3. 翻转 data-theme；
+			// 4. 强制样式重算（只算不画），读出新主题的级联目标值；
+			// 5. 立刻把起点颜色固定为 inline，页面首帧仍显示旧主题，随后逐帧插值。
+			for (const v of THEME_VARS) root.style.removeProperty(v);
+			root.classList.add("theme-transition");
+			applyTheme();
+			const cs1 = getComputedStyle(root);
+			const to = THEME_VARS.map((v) => parseToOklab(cs1.getPropertyValue(v).trim()));
+
+			if (from.some((c) => !c) || to.some((c) => !c)) {
+				// 解析失败（极端情况）：保持瞬翻，摘类结束
+				root.classList.remove("theme-transition");
+				return;
+			}
+			for (let i = 0; i < THEME_VARS.length; i++) {
+				root.style.setProperty(THEME_VARS[i]!, fromRaw[i]!);
+			}
+
+			const t0 = performance.now();
+			let lastTick = t0;
+			const finish = () => {
+				// 收尾：移除 inline 覆盖，回落到级联值（与终点一致，无跳变）
+				for (const v of THEME_VARS) root.style.removeProperty(v);
+				root.classList.remove("theme-transition");
+			};
+			const tick = (now: number) => {
+				// 动画途中渲染器突然降级（帧间隔超 150ms）：立即落到终态，
+				// 换取干净的单步切换，并在 60s 内不再尝试动画
+				if (now - lastTick > 150) {
+					ThemeToggle.#degradedUntil = now + 60_000;
+					finish();
+					return;
+				}
+				lastTick = now;
+				const t = Math.min((now - t0) / TRANSITION_MS, 1);
+				const e = easeOutDamp(t);
+				for (let i = 0; i < THEME_VARS.length; i++) {
+					const f = from[i]!;
+					const g = to[i]!;
+					root.style.setProperty(
+						THEME_VARS[i]!,
+						`oklab(${f[0] + (g[0] - f[0]) * e} ${f[1] + (g[1] - f[1]) * e} ${f[2] + (g[2] - f[2]) * e})`,
+					);
+				}
+				if (t < 1) {
+					this.#animRaf = requestAnimationFrame(tick);
+				} else {
+					finish();
+				}
+			};
+			this.#animRaf = requestAnimationFrame(tick);
 		}
 	}
 

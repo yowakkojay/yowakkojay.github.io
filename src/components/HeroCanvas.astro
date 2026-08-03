@@ -1,6 +1,9 @@
 <div class="hero-canvas-wrap" aria-hidden="true">
 	<canvas id="hero-canvas"></canvas>
 	<div class="hero-canvas-fade"></div>
+	{/* 主题色代理：color/background-color 引用主题变量；切换动画期间 ThemeToggle 用 JS
+	   把变量逐帧插值为 <html> inline style，画布每帧读此代理的计算色（rgb），与整页同拍变色 */}
+	<span id="hero-theme-proxy"></span>
 </div>
 
 <style>
@@ -16,6 +19,16 @@
 		display: block;
 		width: 100%;
 		height: 100%;
+	}
+
+	/* 主题色代理：不占布局、不可见（visibility:hidden 仍会参与 CSS 过渡，display:none 不会） */
+	#hero-theme-proxy {
+		position: absolute;
+		width: 0;
+		height: 0;
+		visibility: hidden;
+		color: var(--color-global-text);
+		background-color: var(--color-accent);
 	}
 
 	/* 上下边缘渐隐，融入页面背景 */
@@ -93,9 +106,12 @@
 
 		const readColors = () => {
 			themeKey = document.documentElement.getAttribute("data-theme") ?? "";
-			const styles = getComputedStyle(document.documentElement);
-			colorGrid = styles.getPropertyValue("--color-global-text").trim() || colorGrid;
-			colorAccent = styles.getPropertyValue("--color-accent").trim() || colorAccent;
+			// 从代理元素读计算色：主题切换窗口期内变量被 JS 逐帧插值，它的计算色随之渐变
+			const proxy = document.getElementById("hero-theme-proxy");
+			if (!proxy) return;
+			const styles = getComputedStyle(proxy);
+			colorGrid = styles.color || colorGrid;
+			colorAccent = styles.backgroundColor || colorAccent;
 		};
 		readColors();
 
@@ -220,8 +236,15 @@
 		const frame = (now: number) => {
 			if (!running) return;
 			raf = requestAnimationFrame(frame);
-			// 主题切换后重新取色（无需重启动画）
-			if ((document.documentElement.getAttribute("data-theme") ?? "") !== themeKey) readColors();
+			// 主题切换后重新取色（无需重启动画）。渐变窗口期（html 挂 .theme-transition）
+			// 每帧重读代理元素的计算色，让画布随整页一起渐变
+			const root = document.documentElement;
+			if (
+				root.classList.contains("theme-transition") ||
+				(root.getAttribute("data-theme") ?? "") !== themeKey
+			) {
+				readColors();
+			}
 			draw(now);
 		};
 
@@ -250,6 +273,8 @@
 		const onThemeChange = () => {
 			readColors();
 			if (!running) draw(performance.now()); // 静态模式（减少动态效果）下也同步换色
+			// 兜底：动画完成/中止（降级路径会提前摘类）后再读一次，确保收敛到最终主题色
+			window.setTimeout(readColors, 500);
 		};
 
 		const io = new IntersectionObserver((entries) => {

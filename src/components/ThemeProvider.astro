@@ -31,12 +31,35 @@
 	// initial setup
 	setTheme(getUserPref());
 
+	// 主题切换动画（ThemeToggle.astro）通过 inline style 逐帧插值主题变量；
+	// 若动画被页面切换/bfcache/系统主题变化打断，固定值与过渡类可能残留，
+	// 这些路径负责清理（变量清单与 ThemeToggle.astro 的 THEME_VARS 保持一致）
+	function cleanupThemeTransitionArtifacts() {
+		const root = document.documentElement;
+		for (const v of [
+			"--color-global-bg",
+			"--color-global-text",
+			"--color-muted",
+			"--color-link",
+			"--color-accent",
+			"--color-accent-2",
+			"--color-quote",
+		]) {
+			root.style.removeProperty(v);
+		}
+		root.classList.remove("theme-transition");
+	}
+
 	// ClientRouter 页面切换会重置 <html> 属性（含 data-theme），切换后重新应用主题
-	document.addEventListener("astro:after-swap", () => setTheme(getUserPref()));
+	document.addEventListener("astro:after-swap", () => {
+		cleanupThemeTransitionArtifacts();
+		setTheme(getUserPref());
+	});
 
 	// listen for pageshow event, browser restored page from bfcache
 	window.addEventListener("pageshow", (e) => {
 		if (e.persisted) {
+			cleanupThemeTransitionArtifacts();
 			setTheme(getUserPref());
 		}
 	});
@@ -47,5 +70,8 @@
 	});
 
 	// listen for prefers-color-scheme change.
-	lightModePref.addEventListener("change", (e) => setTheme(e.matches ? "light" : "dark"));
+	lightModePref.addEventListener("change", (e) => {
+		cleanupThemeTransitionArtifacts();
+		setTheme(e.matches ? "light" : "dark");
+	});
 </script>
