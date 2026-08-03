@@ -84,13 +84,13 @@
 					if (reduceMotion) {
 						applyTheme();
 					} else {
-						// 主题切换动画（2026-08 定稿）：全页颜色 300ms 原地渐变。
+						// 主题切换动画（2026-08 定稿）：全页颜色 350ms 原地渐变。
 						// 临时挂 .theme-transition 启用颜色过渡（见 global.css），避免页面加载时闪烁。
 						// 历史上的圆形扩散方案（View Transitions clip-path / DOM 覆盖层开孔）因
 						// Chrome 150 伪元素 clip-path 渲染坐标系回归（Element Plus #24589 /
 						// crbug 480074843）及视觉取舍废弃，回归此方案。
 						root.classList.add("theme-transition");
-						window.setTimeout(() => root.classList.remove("theme-transition"), 350);
+						window.setTimeout(() => root.classList.remove("theme-transition"), 400);
 						applyTheme();
 					}
 
