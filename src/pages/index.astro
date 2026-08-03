@@ -1,9 +1,9 @@
 ---
 import { type CollectionEntry, getCollection } from "astro:content";
 import PostPreview from "@/components/blog/PostPreview.astro";
+import HeroCanvas from "@/components/HeroCanvas.astro";
 import Note from "@/components/note/Note.astro";
 import SocialList from "@/components/SocialList.astro";
-import HeroCanvas from "@/components/HeroCanvas.astro";
 import { getAllPosts } from "@/data/post";
 import PageLayout from "@/layouts/Base.astro";
 import { collectionDateSort } from "@/utils/date";
@@ -45,9 +45,9 @@ const latestNotes = allNotes
 		pinnedPosts.length > 0 && (
 			<section class="mt-16">
 				<h2 class="title mb-6 text-xl">置顶文章</h2>
-				<ul class="space-y-4" role="list">
+				<ul class="space-y-8" role="list">
 					{pinnedPosts.map((p) => (
-						<li class="grid gap-1 sm:grid-cols-[auto_1fr] sm:[&_q]:col-start-2">
+						<li>
 							<PostPreview post={p} withDesc />
 						</li>
 					))}
@@ -57,10 +57,10 @@ const latestNotes = allNotes
 	}
 	<section class="mt-16">
 		<h2 class="title text-accent mb-6 text-xl"><a href="/posts/">最新文章</a></h2>
-		<ul class="space-y-4" role="list">
+		<ul class="space-y-8" role="list">
 			{
 				latestPosts.map((p) => (
-					<li class="grid gap-1 sm:grid-cols-[auto_1fr] sm:[&_q]:col-start-2">
+					<li>
 						<PostPreview post={p} withDesc />
 					</li>
 				))

@@ -26,6 +26,8 @@ const post = defineCollection({
 			draft: z.boolean().default(false),
 			ogImage: z.string().optional(),
 			tags: z.array(z.string()).default([]).transform(removeDupsAndLowerCase),
+			// 领域分类（tags 之上的一级粗粒度维度，如 深度学习 / 数学基础 / 工程实践）
+			category: z.string().optional(),
 			publishDate: z
 				.string()
 				.or(z.date())

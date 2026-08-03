@@ -9,13 +9,41 @@ type Props<Tag extends HTMLTag> = Polymorphic<{ as: Tag }> & {
 };
 
 const { as: Tag = "div", post, withDesc = false } = Astro.props;
+const { category, tags } = post.data;
 ---
 
-<FormattedDate class="text-muted min-w-30 font-mono font-semibold" date={post.data.publishDate} />
-<Tag>
+{/* 三层信息层级：标题（最大最重）→ 摘要（常规字、muted）→ 元数据行（等宽小字、muted）。
+   分类与标签用前缀区分：分类无前缀、标签带 #，均链向各自聚合页。 */}
+<Tag class="text-lg font-semibold">
 	{post.data.draft && <span class="text-red-500">(Draft) </span>}
 	<a class="cactus-link" href={`/posts/${post.id}/`}>
 		{post.data.title}
 	</a>
 </Tag>
-{withDesc && <q class="line-clamp-3 italic">{post.data.description}</q>}
+{withDesc && <p class="text-muted mt-1 line-clamp-3">{post.data.description}</p>}
+<div class="text-muted mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-sm">
+	<FormattedDate date={post.data.publishDate} />
+	{
+		category && (
+			<a class="hover:text-accent" href={`/categories/${category}/`}>
+				<span class="sr-only">分类：</span>
+				{category}
+			</a>
+		)
+	}
+	{
+		tags.length > 0 && (
+			<span>
+				{tags.map((tag: string, i: number) => (
+					<>
+						<a class="hover:text-accent before:content-['#']" href={`/tags/${tag}/`}>
+							<span class="sr-only">标签：</span>
+							{tag}
+						</a>
+						{i < tags.length - 1 && " "}
+					</>
+				))}
+			</span>
+		)
+	}
+</div>

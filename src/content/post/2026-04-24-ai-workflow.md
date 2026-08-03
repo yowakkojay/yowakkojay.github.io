@@ -2,6 +2,7 @@
 title: 自动化AI工作流实践与探索：Golutra + OpenClaw + Feishu
 publishDate: 2026-04-24T08:00:00+08:00
 description: 探索一套基于 Golutra + OpenClaw + Feishu 的自动化 AI 工作流系统，经一周实战测试验证其有效性，分享设计理念、测试成果与未来改进方向。
+category: 工程实践
 tags:
   - ai-workflow
   - golutra
