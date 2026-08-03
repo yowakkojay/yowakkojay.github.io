@@ -10,14 +10,16 @@ import BaseLayout from "./Base.astro";
 
 interface Props {
 	post: CollectionEntry<"post">;
+	newerPost?: CollectionEntry<"post"> | null;
+	olderPost?: CollectionEntry<"post"> | null;
 }
 
-const { post } = Astro.props;
+const { post, newerPost = null, olderPost = null } = Astro.props;
 const { ogImage, title, description, updatedDate, publishDate } = post.data;
 const socialImage = ogImage ?? `/og-image/${post.id}.png`;
 const articleDate = updatedDate?.toISOString() ?? publishDate.toISOString();
 const { headings, remarkPluginFrontmatter } = await render(post);
-const readingTime: string = remarkPluginFrontmatter.readingTime;
+const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number} 分钟`;
 ---
 
 <BaseLayout
@@ -41,6 +43,27 @@ const readingTime: string = remarkPluginFrontmatter.readingTime;
 					<Giscus />
 			</div>
 		</div>
+		{
+			/* 上一篇/下一篇：列表位置更靠上的为"上一篇"（更新），靠下的为"下一篇"（更早） */
+			(newerPost || olderPost) && (
+				<nav class="border-muted/25 mt-16 grid gap-6 border-t pt-8 sm:grid-cols-2" aria-label="文章导航">
+					{newerPost ? (
+						<a class="group" href={`/posts/${newerPost.id}/`}>
+							<span class="text-muted font-mono text-sm">← 上一篇</span>
+							<span class="cactus-link mt-1 inline-block font-semibold">{newerPost.data.title}</span>
+						</a>
+					) : (
+						<span />
+					)}
+					{olderPost && (
+						<a class="group text-end sm:col-start-2" href={`/posts/${olderPost.id}/`}>
+							<span class="text-muted font-mono text-sm">下一篇 →</span>
+							<span class="cactus-link mt-1 inline-block font-semibold">{olderPost.data.title}</span>
+						</a>
+					)}
+				</nav>
+			)
+		}
 	</article>
 	<!-- 图片灯箱：点击正文图片放大查看，点击图片外 / X / ESC 关闭 -->
 	<div

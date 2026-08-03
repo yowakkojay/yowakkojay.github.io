@@ -42,20 +42,20 @@ interface Props {
 const { page, uniqueTags, categoriesWithCount, pinnedPosts } = Astro.props;
 
 const meta = {
-	description: "Read my collection of posts and the things that interest me",
-	title: "Posts",
+	description: "全部文章",
+	title: "文章",
 };
 
 const paginationProps = {
 	...(page.url.prev && {
 		prevUrl: {
-			text: "← Previous Page",
+			text: "← 上一页",
 			url: page.url.prev,
 		},
 	}),
 	...(page.url.next && {
 		nextUrl: {
-			text: "Next Page →",
+			text: "下一页 →",
 			url: page.url.next,
 		},
 	}),
@@ -67,7 +67,7 @@ const descYearKeys = Object.keys(groupedByYear).sort((a, b) => +b - +a);
 
 <PageLayout meta={meta}>
 	<div class="mb-12 flex items-center gap-3">
-		<h1 class="title">Posts</h1>
+		<h1 class="title">文章</h1>
 		<a class="text-accent" href="/rss.xml" target="_blank">
 			<span class="sr-only">RSS feed</span>
 			<Icon aria-hidden="true" class="h-6 w-6" focusable="false" name="mdi:rss" />
@@ -78,7 +78,7 @@ const descYearKeys = Object.keys(groupedByYear).sort((a, b) => +b - +a);
 			{
 				pinnedPosts.length > 0 && (
 					<section class="mb-16">
-						<h2 class="title mb-6 text-xl">Pinned Posts</h2>
+						<h2 class="title mb-6 text-xl">置顶文章</h2>
 						<ul class="space-y-6" role="list">
 							{pinnedPosts.map((p) => (
 								<li>
@@ -145,7 +145,7 @@ const descYearKeys = Object.keys(groupedByYear).sort((a, b) => +b - +a);
 								</ul>
 								<span class="mt-4 mb-8 block sm:text-end">
 									<a class="hover:text-link" href="/categories/">
-										View all <span aria-hidden="true">→</span>
+										查看全部 <span aria-hidden="true">→</span>
 										<span class="sr-only">categories</span>
 									</a>
 								</span>
@@ -184,7 +184,7 @@ const descYearKeys = Object.keys(groupedByYear).sort((a, b) => +b - +a);
 					</ul>
 					<span class="mt-4 block sm:text-end">
 						<a class="hover:text-link" href="/tags/">
-							View all <span aria-hidden="true">→</span>
+							查看全部 <span aria-hidden="true">→</span>
 							<span class="sr-only">blog tags</span>
 						</a>
 					</span>

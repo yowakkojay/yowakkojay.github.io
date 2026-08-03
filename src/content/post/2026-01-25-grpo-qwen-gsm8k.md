@@ -4,7 +4,6 @@ publishDate: 2026-01-25T08:00:00+08:00
 description: 用 Qwen2.5-0.5B/3B/7B 在 GSM8K 上做 GRPO 强化学习的完整实践记录，深入排查奖励陷阱（Reward Trap）、loss 归零、复读机等问题及 reward engineering。
 category: deep-learning
 tags:
-  - 深度学习
   - grpo
   - qwen
   - gsm8k

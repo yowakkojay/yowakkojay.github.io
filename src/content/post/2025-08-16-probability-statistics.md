@@ -4,7 +4,6 @@ publishDate: 2025-08-16T08:00:00+08:00
 description: 从微积分基础到中心极限定理，系统梳理概率论与数理统计的核心概念：极限、导数、贝叶斯公式、随机变量与分布、期望方差协方差、CLT。
 category: math
 tags:
-  - 数学基础
   - probability
   - statistics
 ---

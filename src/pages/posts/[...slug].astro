@@ -3,22 +3,28 @@ import { render } from "astro:content";
 import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
 import { getAllPosts } from "@/data/post";
 import PostLayout from "@/layouts/BlogPost.astro";
+import { collectionDateSort } from "@/utils/date";
 
 // if you're using an adaptor in SSR mode, getStaticPaths wont work -> https://docs.astro.build/en/guides/routing/#modifying-the-slug-example-for-ssr
 export const getStaticPaths = (async () => {
-	const blogEntries = await getAllPosts();
-	return blogEntries.map((post) => ({
+	// collectionDateSort：新的在前。列表中位置更靠上的为"上一篇"（更新），靠下的为"下一篇"（更早）
+	const blogEntries = (await getAllPosts()).sort(collectionDateSort);
+	return blogEntries.map((post, i) => ({
 		params: { slug: post.id },
-		props: { post },
+		props: {
+			post,
+			newerPost: i > 0 ? (blogEntries[i - 1] ?? null) : null,
+			olderPost: i < blogEntries.length - 1 ? (blogEntries[i + 1] ?? null) : null,
+		},
 	}));
 }) satisfies GetStaticPaths;
 
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
-const { post } = Astro.props;
+const { post, newerPost, olderPost } = Astro.props;
 const { Content } = await render(post);
 ---
 
-<PostLayout post={post}>
+<PostLayout post={post} newerPost={newerPost} olderPost={olderPost}>
 	<Content />
 </PostLayout>
