@@ -4,7 +4,12 @@ import type { GetStaticPaths, Page } from "astro";
 import { Icon } from "astro-icon/components";
 import PostPreview from "@/components/blog/PostPreview.astro";
 import Pagination from "@/components/Paginator.astro";
-import { getAllPosts, getUniqueTags, groupPostsByYear } from "@/data/post";
+import {
+	getAllPosts,
+	getUniqueCategoriesWithCount,
+	getUniqueTags,
+	groupPostsByYear,
+} from "@/data/post";
 import PageLayout from "@/layouts/Base.astro";
 import { collectionDateSort } from "@/utils/date";
 
@@ -15,6 +20,7 @@ export const getStaticPaths = (async ({ paginate }) => {
 	const allPosts = await getAllPosts();
 	const allPostsByDate = allPosts.sort(collectionDateSort);
 	const uniqueTags = getUniqueTags(allPosts).slice(0, MAX_TAGS);
+	const categoriesWithCount = getUniqueCategoriesWithCount(allPosts);
 	const pinnedPosts = allPostsByDate
 		.values()
 		.filter((p) => p.data.pinned)
@@ -22,17 +28,18 @@ export const getStaticPaths = (async ({ paginate }) => {
 		.toArray();
 	return paginate(allPostsByDate, {
 		pageSize: MAX_POSTS_PER_PAGE,
-		props: { uniqueTags, pinnedPosts },
+		props: { uniqueTags, categoriesWithCount, pinnedPosts },
 	});
 }) satisfies GetStaticPaths;
 
 interface Props {
 	page: Page<CollectionEntry<"post">>;
 	uniqueTags: string[];
+	categoriesWithCount: [string, number][];
 	pinnedPosts: CollectionEntry<"post">[];
 }
 
-const { page, uniqueTags, pinnedPosts } = Astro.props;
+const { page, uniqueTags, categoriesWithCount, pinnedPosts } = Astro.props;
 
 const meta = {
 	description: "Read my collection of posts and the things that interest me",
@@ -104,6 +111,47 @@ const descYearKeys = Object.keys(groupedByYear).sort((a, b) => +b - +a);
 		{
 			!!uniqueTags.length && (
 				<aside>
+					{
+						!!categoriesWithCount.length && (
+							<>
+								<h2 class="title mb-4 flex items-center gap-1 text-lg">
+									<svg
+										aria-hidden="true"
+										class="h-6 w-6"
+										fill="none"
+										stroke="var(--color-muted)"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="1.5"
+										viewBox="0 0 24 24"
+										xmlns="http://www.w3.org/2000/svg"
+									>
+										<path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" />
+									</svg>
+									分类
+								</h2>
+								<ul class="flex flex-wrap gap-2">
+									{categoriesWithCount.map(([category, count]) => (
+										<li>
+											<a class="cactus-link flex items-center justify-center" href={`/categories/${category}/`}>
+												<span class="sr-only">查看分类</span>
+												{category}
+												<span aria-hidden="true" class="text-muted ms-1 text-sm">
+													({count})
+												</span>
+											</a>
+										</li>
+									))}
+								</ul>
+								<span class="mt-4 mb-8 block sm:text-end">
+									<a class="hover:text-link" href="/categories/">
+										View all <span aria-hidden="true">→</span>
+										<span class="sr-only">categories</span>
+									</a>
+								</span>
+							</>
+						)
+					}
 					<h2 class="title mb-4 flex items-center gap-1 text-lg">
 						<svg
 							aria-hidden="true"

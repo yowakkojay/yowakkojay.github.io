@@ -41,6 +41,10 @@ export const menuLinks: { path: string; title: string }[] = [
 		title: "博客",
 	},
 	{
+		path: "/categories/",
+		title: "分类",
+	},
+	{
 		path: "/about/",
 		title: "关于",
 	},
