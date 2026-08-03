@@ -36,14 +36,48 @@ const dateTimeOptions: Intl.DateTimeFormatOptions = {
 <h1 class="title">
 	{data.title}
 </h1>
-<div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-	<p class="font-mono font-semibold">
-		<FormattedDate date={data.publishDate} dateTimeOptions={dateTimeOptions} /> /{" "}
+<div class="text-muted flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-sm">
+	<span class="inline-flex items-center gap-1.5">
+		<svg
+			aria-hidden="true"
+			class="h-4 w-4"
+			fill="none"
+			focusable="false"
+			stroke="currentColor"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			stroke-width="1.5"
+			viewBox="0 0 24 24"
+			xmlns="http://www.w3.org/2000/svg"
+		>
+			<path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z" />
+			<path d="M16 3v4" />
+			<path d="M8 3v4" />
+			<path d="M4 11h16" />
+		</svg>
+		<FormattedDate date={data.publishDate} dateTimeOptions={dateTimeOptions} />
+	</span>
+	<span class="inline-flex items-center gap-1.5">
+		<svg
+			aria-hidden="true"
+			class="h-4 w-4"
+			fill="none"
+			focusable="false"
+			stroke="currentColor"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			stroke-width="1.5"
+			viewBox="0 0 24 24"
+			xmlns="http://www.w3.org/2000/svg"
+		>
+			<path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+			<path d="M12 7v5l3 3" />
+		</svg>
 		{readingTime}
-	</p>
+	</span>
 	{
 		data.updatedDate && (
-			<span class="bg-quote/5 text-quote rounded-lg px-2 py-1">
+			<span class="bg-quote/5 text-quote inline-flex items-center rounded-lg px-2 py-1">
 				Updated:
 				<FormattedDate class="ms-1" date={data.updatedDate} dateTimeOptions={dateTimeOptions} />
 			</span>

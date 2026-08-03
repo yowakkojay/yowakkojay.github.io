@@ -23,12 +23,44 @@ const toc = generateToc(headings);
 
 <script>
 	// astro:page-load 在首次加载和 ClientRouter 每次页面切换后都会触发，
-	// 保证客户端导航进入文章页时也能正确折叠
+	// 保证客户端导航进入文章页时也能正确折叠与重新绑定 scroll-spy
+	let tocObserver: IntersectionObserver | null = null;
 	document.addEventListener("astro:page-load", () => {
-		// 移动端默认折叠目录，避免长目录把正文顶出首屏；桌面端保持展开
+		// 清理上一篇文章页的观察器，避免 ClientRouter 导航后累积
+		tocObserver?.disconnect();
+		tocObserver = null;
+
 		const tocEl = document.getElementById("post-toc");
-		if (tocEl && window.matchMedia("(width < 64rem)").matches) {
+		if (!tocEl) return;
+		// 移动端默认折叠目录，避免长目录把正文顶出首屏；桌面端保持展开
+		if (window.matchMedia("(width < 64rem)").matches) {
 			tocEl.removeAttribute("open");
 		}
+
+		// scroll-spy：高亮当前阅读位置对应的目录项
+		const links = Array.from(tocEl.querySelectorAll<HTMLAnchorElement>('nav a[href^="#"]'));
+		const bySlug = new Map(links.map((l) => [decodeURIComponent(l.hash.slice(1)), l]));
+		const headings = document.querySelectorAll(".prose h2[id], .prose h3[id], .prose h4[id]");
+		let activeSlug: string | null = null;
+		const setActive = (slug: string) => {
+			if (slug === activeSlug) return;
+			activeSlug = slug;
+			for (const [s, link] of bySlug) {
+				const on = s === slug;
+				link.classList.toggle("is-toc-active", on);
+				if (on) link.setAttribute("aria-current", "true");
+				else link.removeAttribute("aria-current");
+			}
+		};
+		// 标题进入视口上部 30% 区域时视为当前节
+		tocObserver = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (entry.isIntersecting) setActive(entry.target.id);
+				}
+			},
+			{ rootMargin: "0px 0px -70% 0px" },
+		);
+		headings.forEach((h) => tocObserver!.observe(h));
 	});
 </script>

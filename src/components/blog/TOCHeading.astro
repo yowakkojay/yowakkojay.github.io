@@ -12,7 +12,7 @@ const {
 
 <li class={`${depth > 2 ? "ms-2" : ""}`}>
 	<a
-		class={`line-clamp-2 hover:text-accent ${depth <= 2 ? "mt-3" : "mt-2 text-xs"}`}
+		class={`line-clamp-2 text-muted hover:text-accent ${depth <= 2 ? "mt-3" : "mt-2 text-xs"}`}
 		href={`#${slug}`}><span aria-hidden="true" class="me-0.5">#</span>{text}</a
 	>
 	{
@@ -25,3 +25,11 @@ const {
 		)
 	}
 </li>
+
+<style>
+	/* scroll-spy 当前节：accent 色 + 加粗（压过链接默认的 text-muted） */
+	a.is-toc-active {
+		color: var(--color-accent);
+		font-weight: 600;
+	}
+</style>
