@@ -133,7 +133,7 @@ const descYearKeys = Object.keys(groupedByYear).sort((a, b) => +b - +a);
 								<ul class="flex flex-wrap gap-2">
 									{categoriesWithCount.map(([category, count]) => (
 										<li>
-											<a class="cactus-link flex items-center justify-center" href={`/categories/${category}/`}>
+											<a class="cactus-link -my-1 flex items-center justify-center py-1" href={`/categories/${category}/`}>
 												<span class="sr-only">View category&nbsp;</span>
 												{category}
 												<span aria-hidden="true" class="text-muted ms-1 text-sm">
@@ -174,7 +174,7 @@ const descYearKeys = Object.keys(groupedByYear).sort((a, b) => +b - +a);
 					<ul class="flex flex-wrap gap-2">
 						{uniqueTags.map((tag) => (
 							<li>
-								<a class="cactus-link flex items-center justify-center" href={`/tags/${tag}/`}>
+								<a class="cactus-link -my-1 flex items-center justify-center py-1" href={`/tags/${tag}/`}>
 									<span aria-hidden="true">#</span>
 									<span class="sr-only">View all posts with the tag</span>
 									{tag}

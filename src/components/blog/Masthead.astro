@@ -78,7 +78,7 @@ const dateTimeOptions: Intl.DateTimeFormatOptions = {
 	{
 		data.category && (
 			<a
-				class="hover:text-accent inline-flex items-center gap-1.5"
+				class="hover:text-accent -my-1 inline-flex items-center gap-1.5 py-1"
 				href={`/categories/${data.category}/`}
 			>
 				<svg
@@ -133,7 +133,7 @@ const dateTimeOptions: Intl.DateTimeFormatOptions = {
 				<>
 					{/* prettier-ignore */}
 					<span class="contents">
-						<a class="cactus-link inline-block before:content-['#']" data-pagefind-filter={`tag:${tag}`} href={`/tags/${tag}/`}><span class="sr-only">View more blogs with the tag&nbsp;</span>{tag}
+						<a class="cactus-link -my-1 inline-block py-1 before:content-['#']" data-pagefind-filter={`tag:${tag}`} href={`/tags/${tag}/`}><span class="sr-only">View more blogs with the tag&nbsp;</span>{tag}
 						</a>{i < data.tags.length - 1 && ", "}
 					</span>
 				</>

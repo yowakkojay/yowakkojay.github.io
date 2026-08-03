@@ -23,6 +23,15 @@ const toc = generateToc(headings);
 	</nav>
 </details>
 
+{/* 首帧前同步折叠移动端目录：服务端渲染的 <details open> 在慢网下会先绘制展开态，
+   等模块脚本再折叠会造成整页上移的 CLS（Lighthouse 移动节流环境实测 0.21）。
+   inline 脚本在解析到此处时同步执行，早于首次绘制，无可见位移。 */}
+<script is:inline>
+	if (window.matchMedia("(width < 64rem)").matches) {
+		document.getElementById("post-toc")?.removeAttribute("open");
+	}
+</script>
+
 <script>
 	// astro:page-load 在首次加载和 ClientRouter 每次页面切换后都会触发，
 	// 保证客户端导航进入文章页时也能正确折叠与重新绑定 scroll-spy

@@ -25,7 +25,7 @@ const { category, tags } = post.data;
 	<FormattedDate date={post.data.publishDate} />
 	{
 		category && (
-			<a class="hover:text-accent" href={`/categories/${category}/`}>
+			<a class="hover:text-accent -my-1 inline-block py-1" href={`/categories/${category}/`}>
 				<span class="sr-only">Category: </span>
 				{category}
 			</a>
@@ -36,7 +36,7 @@ const { category, tags } = post.data;
 			<span>
 				{tags.map((tag: string, i: number) => (
 					<>
-						<a class="hover:text-accent before:content-['#']" href={`/tags/${tag}/`}>
+						<a class="hover:text-accent -my-1 inline-block py-1 before:content-['#']" href={`/tags/${tag}/`}>
 							<span class="sr-only">标签：</span>
 							{tag}
 						</a>
