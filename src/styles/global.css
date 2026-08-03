@@ -128,12 +128,13 @@
    规则必须放在任何 @layer 之外：EC 的样式重置（含 transition: revert）是无
    层级的，无层级样式在层叠中压过所有 @layer 规则。 */
 
-/* Expressive Code：token 颜色由行内 --0/--1 双主题变量随 [data-theme] 选择器
-   瞬时翻转（不经站点变量），需专项规则做 color 插值；框体背景/边框同理。
-   transition: revert 重置选择器优先级高，这里用更高优先级压过。 */
-html.theme-transition .expressive-code .ec-line span[style^="--"]:not([class]) {
-	transition: color var(--color-mode-transition-duration) var(--color-mode-transition-easing);
-}
+/* Expressive Code：框体背景/边框是选择器驱动的静态值（不经站点变量），元素
+   数量少，补过渡随整页同拍渐变。transition: revert 重置选择器优先级高，
+   这里用更高优先级压过。
+   ⚠️ 不要给 .ec-line 的 token span 挂 color 过渡：代码多的文章 token 数可达
+   1800+，并发动画会卡出 200ms+ 长帧并触发 ThemeToggle 的渲染器降级（之后
+   60s 内切换全部瞬变）。语法高亮随切换瞬翻是可接受的（与其他 shiki 站点一致，
+   历史上加过又因此回滚）。 */
 html.theme-transition .expressive-code :is(.frame, .header, pre, .gutter, .copy button) {
 	transition:
 		color var(--color-mode-transition-duration) var(--color-mode-transition-easing),

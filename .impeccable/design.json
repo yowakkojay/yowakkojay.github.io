@@ -237,7 +237,7 @@
 		"motion": [
 			{
 				"name": "theme-color-crossfade",
-				"value": "350ms cubic-bezier(0.41, 0.1, 0.13, 1), .theme-transition 类 + JS rAF 将 7 个颜色 token 以 oklab 逐帧插值为 <html> inline style（Expressive Code 由无层级规则同步过渡）",
+				"value": "350ms cubic-bezier(0.41, 0.1, 0.13, 1), .theme-transition 类 + JS rAF 将 7 个颜色 token 以 oklab 逐帧插值为 <html> inline style（Expressive Code 仅框体结构元素同步过渡，token 瞬翻）",
 				"purpose": "手动切换主题时的全页颜色渐变；仅点击时挂类启用，页面加载不挂过渡避免 FOUC。曾用 View Transitions 圆形扩散，因 Chrome 150 回归废弃。"
 			},
 			{

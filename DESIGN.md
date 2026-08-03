@@ -258,7 +258,7 @@ components:
 
 ### 主题切换（Theme Toggle）—— 签名组件
 
-36px 图标按钮，日/月 SVG 在缩放与透明度间互换，hover 变 accent。点击触发全页颜色 350ms 原地渐变（cubic-bezier(0.41, 0.1, 0.13, 1)，慢启动快收尾）：临时挂 `.theme-transition` 类，由 JS 在 rAF 循环里把七个颜色 token 以 oklab 空间逐帧插值写为 `<html>` inline style，内容原地保留、颜色同拍变换（不用 CSS `@property` 变量过渡——该路径在 Chrome 150 Linux 上间歇性卡死在进度 0）；代码块语法高亮等选择器驱动的颜色由无层级同步规则纳入同一拍过渡（token 仅 color、框体结构元素含背景/边框，范围刻意收窄，勿扩回全后代三属性版本）；Hero 画布在渐变期间每帧重读颜色同步变换。历史上曾用 View Transitions 圆形扩散与覆盖层开孔方案，因 Chrome 150 伪元素 clip-path 渲染坐标系回归（Element Plus #24589 / crbug 480074843）及视觉取舍废弃。`prefers-reduced-motion` 下直接切换，无动画。
+36px 图标按钮，日/月 SVG 在缩放与透明度间互换，hover 变 accent。点击触发全页颜色 350ms 原地渐变（cubic-bezier(0.41, 0.1, 0.13, 1)，慢启动快收尾）：临时挂 `.theme-transition` 类，由 JS 在 rAF 循环里把七个颜色 token 以 oklab 空间逐帧插值写为 `<html>` inline style，内容原地保留、颜色同拍变换（不用 CSS `@property` 变量过渡——该路径在 Chrome 150 Linux 上间歇性卡死在进度 0）；代码块的框体结构元素（背景/边框）由无层级同步规则纳入同一拍过渡，语法高亮 token 随切换瞬翻——不要给 token span 挂过渡，代码多的文章 token 可达 1800+，并发动画会卡出长帧触发渲染器降级（60s 内切换全部瞬变），历史上加过又因此回滚；Hero 画布在渐变期间每帧重读颜色同步变换。历史上曾用 View Transitions 圆形扩散与覆盖层开孔方案，因 Chrome 150 伪元素 clip-path 渲染坐标系回归（Element Plus #24589 / crbug 480074843）及视觉取舍废弃。`prefers-reduced-motion` 下直接切换，无动画。
 
 ### Hero 画布（Hero Canvas）—— 签名组件
 
