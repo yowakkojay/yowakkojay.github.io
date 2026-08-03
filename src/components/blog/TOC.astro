@@ -14,7 +14,9 @@ const toc = generateToc(headings);
 
 <details open class="lg:sticky lg:top-12 lg:order-2 lg:-me-[min(8rem,max(0px,calc((100vw-66rem)/2)))] lg:basis-64" id="post-toc">
 	<summary class="title hover:marker:text-accent cursor-pointer text-lg">目录</summary>
-	<nav class="ms-4 lg:w-full">
+	{/* 桌面端 sticky 时限制高度并允许目录内部滚动，避免长目录被视口截断；
+	   overscroll-contain 防止目录滚到底后带动整页 */}
+	<nav class="ms-4 lg:max-h-[calc(100vh-9rem)] lg:w-full lg:overflow-y-auto lg:overscroll-contain">
 		<ol class="mt-4">
 			{toc.map((heading) => <TOCHeading heading={heading} />)}
 		</ol>

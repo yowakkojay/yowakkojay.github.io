@@ -10,6 +10,31 @@ import "@/styles/blocks/search.css";
 			await import("@pagefind/component-ui");
 		});
 	})();
+
+	// @pagefind/component-ui 的实例注册表（components / componentsByType）没有注销
+	// 机制：ClientRouter 客户端导航换页后，旧页面的 trigger/modal 元素已脱离文档但仍
+	// 留在注册表首位，trigger 的 openModal 会拿到旧 modal（对已脱离文档的 <dialog>
+	// 调 showModal 直接抛错），表现为搜索按钮点击无反应。每次换页后清理已断开的组件。
+	type PagefindInstance = {
+		components?: unknown[];
+		componentsByType?: Record<string, unknown[]>;
+	};
+	document.addEventListener("astro:page-load", () => {
+		const trigger = document.querySelector("pagefind-modal-trigger") as
+			| (HTMLElement & { instance?: PagefindInstance })
+			| null;
+		const instance = trigger?.instance;
+		if (!instance) return;
+		const alive = (c: unknown) => c instanceof HTMLElement && c.isConnected;
+		if (Array.isArray(instance.components)) {
+			instance.components = instance.components.filter(alive);
+		}
+		if (instance.componentsByType) {
+			for (const [key, list] of Object.entries(instance.componentsByType)) {
+				instance.componentsByType[key] = list.filter(alive);
+			}
+		}
+	});
 </script>
 
 <pagefind-config
