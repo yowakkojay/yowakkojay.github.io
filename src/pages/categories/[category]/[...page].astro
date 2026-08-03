@@ -27,8 +27,8 @@ const { page } = Astro.props as Props;
 const { category } = Astro.params;
 
 const meta = {
-	description: `分类「${category}」下的全部文章`,
-	title: `分类：${category}`,
+	description: `View all posts in the category - ${category}`,
+	title: `Posts in ${category}`,
 };
 
 const paginationProps = {
@@ -51,7 +51,7 @@ const paginationProps = {
 	<nav class="mb-8" aria-label="Breadcrumbs">
 		<ul class="flex items-center">
 			<li class="flex items-center">
-				<a class="text-accent" href="/categories/">分类</a>
+				<a class="text-accent" href="/categories/">Categories</a>
 				<Icon aria-hidden="true" name="mdi:chevron-right" class="mx-1.5" />
 			</li>
 			<li aria-current="page">{category}</li>

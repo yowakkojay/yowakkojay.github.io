@@ -128,13 +128,13 @@ const descYearKeys = Object.keys(groupedByYear).sort((a, b) => +b - +a);
 									>
 										<path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" />
 									</svg>
-									分类
+									Categories
 								</h2>
 								<ul class="flex flex-wrap gap-2">
 									{categoriesWithCount.map(([category, count]) => (
 										<li>
 											<a class="cactus-link flex items-center justify-center" href={`/categories/${category}/`}>
-												<span class="sr-only">查看分类</span>
+												<span class="sr-only">View category&nbsp;</span>
 												{category}
 												<span aria-hidden="true" class="text-muted ms-1 text-sm">
 													({count})
