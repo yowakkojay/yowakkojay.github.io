@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="430" viewBox="0 0 800 430" font-family="ui-sans-serif, system-ui, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif">
+  <!-- 卡片背景 -->
+  <rect x="0" y="0" width="800" height="430" rx="12" fill="#ffffff"/>
+  <rect x="0" y="0" width="800" height="430" rx="12" fill="none" stroke="#e5e7eb" stroke-width="1"/>
+
+  <!-- 三个数据来源 -->
+  <g>
+    <rect x="40" y="30" width="220" height="86" rx="8" fill="#f3f4f6" stroke="#d1d5db"/>
+    <text x="150" y="58" text-anchor="middle" font-size="14" font-weight="600" fill="#111827">R2R / R2R-EnvDrop / RxR</text>
+    <text x="150" y="80" text-anchor="middle" font-size="12" fill="#6b7280">60 个 MP3D 场景轨迹</text>
+    <text x="150" y="100" text-anchor="middle" font-size="12" fill="#6b7280">45 万视频片段</text>
+  </g>
+  <g>
+    <rect x="290" y="30" width="220" height="86" rx="8" fill="#f3f4f6" stroke="#d1d5db"/>
+    <text x="400" y="58" text-anchor="middle" font-size="14" font-weight="600" fill="#111827">ScaleVLN 子集</text>
+    <text x="400" y="80" text-anchor="middle" font-size="12" fill="#6b7280">场景多样性扩充</text>
+    <text x="400" y="100" text-anchor="middle" font-size="12" fill="#6b7280">30 万样本</text>
+  </g>
+  <g>
+    <rect x="540" y="30" width="220" height="86" rx="8" fill="#f3f4f6" stroke="#d1d5db"/>
+    <text x="650" y="58" text-anchor="middle" font-size="14" font-weight="600" fill="#111827">多轮 DAgger</text>
+    <text x="650" y="80" text-anchor="middle" font-size="12" fill="#6b7280">偏离航线后的纠错数据</text>
+    <text x="650" y="100" text-anchor="middle" font-size="12" fill="#6b7280">提升部署鲁棒性</text>
+  </g>
+
+  <!-- 汇聚箭头 -->
+  <g stroke="#9ca3af" stroke-width="1.5" fill="none">
+    <path d="M150 116 L150 140 L400 140 L400 158" marker-end="url(#arrow)"/>
+    <path d="M400 116 L400 158" marker-end="url(#arrow)"/>
+    <path d="M650 116 L650 140 L400 140 L400 158" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- 数据集 -->
+  <g>
+    <rect x="180" y="166" width="440" height="64" rx="8" fill="#ede9fe" stroke="#c4b5fd"/>
+    <text x="400" y="192" text-anchor="middle" font-size="14" font-weight="600" fill="#4c1d95">图文交错的 VLN 训练数据集</text>
+    <text x="400" y="214" text-anchor="middle" font-size="12" fill="#6d28d9">Habitat 仿真器 + 真值动作生成</text>
+  </g>
+
+  <path d="M400 230 L400 252" stroke="#9ca3af" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- 多轮对话格式 -->
+  <g>
+    <rect x="180" y="260" width="440" height="64" rx="8" fill="#ede9fe" stroke="#c4b5fd"/>
+    <text x="400" y="286" text-anchor="middle" font-size="14" font-weight="600" fill="#4c1d95">组织为多轮对话：{ o&#8320;, a&#8320;, o&#8321;, a&#8321;, &#8230;, o&#8345;, a&#8345; }</text>
+    <text x="400" y="308" text-anchor="middle" font-size="12" fill="#6d28d9">给定当前观测与对话历史，预测下一动作 a&#7522;</text>
+  </g>
+
+  <path d="M400 324 L400 346" stroke="#9ca3af" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- SFT -->
+  <g>
+    <rect x="180" y="354" width="440" height="56" rx="8" fill="#7c3aed" stroke="#6d28d9"/>
+    <text x="400" y="378" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">在 RynnBrain 基座（2B / 8B）上全参数 SFT</text>
+    <text x="400" y="398" text-anchor="middle" font-size="12" fill="#ede9fe">1 epoch · 全局 batch 256 · 2 FPS 采样 · 上下文 16384</text>
+  </g>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#9ca3af"/>
+    </marker>
+  </defs>
+</svg>
