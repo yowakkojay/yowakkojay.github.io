@@ -90,13 +90,13 @@ $$
 
 RynnBrain-Nav 不是从头训的，是在 RynnBrain 基座上微调出来的。所以得先看看这个基座做了什么，导航上的提升基本都来自这里。
 
-![RynnBrain 总体能力概览：自我中心认知、时空定位、物理接地推理与物理感知规划（图片来源：RynnBrain 论文 Figure 1）](/images/2026-08-03-rynnbrain-nav/rynnbrain-overview.png)
+![RynnBrain 总体能力概览：自我中心认知、时空定位、物理接地推理与物理感知规划（图片来源：RynnBrain 论文 Figure 1）](/images/2026-08-03-rynnbrain-nav/rynnbrain-overview.webp)
 
 ### 1. 架构
 
 架构上没有做新的设计，走的是 [Qwen3-VL](https://arxiv.org/abs/2511.21631) 那套仅解码器的视觉-语言架构：视觉编码器、视觉-语言投影器、LLM 主干，直接从 Qwen3-VL-2B / 8B / 30B-A3B-Instruct 初始化，另外用了 DeepStack 和 Interleaved MRoPE 来融合多模态信息。一共三个规模：2B、8B（Dense）和 30B-A3B（MoE）。
 
-![RynnBrain 架构：单视角图、多视角图、视频等视觉输入与文本指令分别经 Vision Encoder / Tokenizer 进入统一的 Dense / MoE 解码器，输出区域、轨迹、指向与文本（图片来源：RynnBrain 论文 Figure 2）](/images/2026-08-03-rynnbrain-nav/rynnbrain-architecture.png)
+![RynnBrain 架构：单视角图、多视角图、视频等视觉输入与文本指令分别经 Vision Encoder / Tokenizer 进入统一的 Dense / MoE 解码器，输出区域、轨迹、指向与文本（图片来源：RynnBrain 论文 Figure 2）](/images/2026-08-03-rynnbrain-nav/rynnbrain-architecture.webp)
 
 ### 2. 两个关键设计
 
@@ -139,7 +139,7 @@ $$
 
 从上面的演示视频里抽三帧出来，"观测-动作"交错推进的过程就很直观了：
 
-![从演示视频第一人称画面中抽取的观测-动作序列：模型每看到一帧画面（观测 o）就输出一段动作（a），随后看到下一帧，如此往复直到输出 STOP](/images/2026-08-03-rynnbrain-nav/vln-obs-action-strip.png)
+![从演示视频第一人称画面中抽取的观测-动作序列：模型每看到一帧画面（观测 o）就输出一段动作（a），随后看到下一帧，如此往复直到输出 STOP](/images/2026-08-03-rynnbrain-nav/vln-obs-action-strip.webp)
 
 对话模板具体长什么样？我去翻了 StreamVLN 的开源代码（[vln_action_dataset.py](https://github.com/InternRobotics/StreamVLN/blob/main/streamvln/dataset/vln_action_dataset.py)），一个训练样本大致是下面这个样子（指令就用演示视频里那条，动作序列是我随手写的示意）：
 
@@ -194,7 +194,7 @@ gpt:   STOP
 
 RynnBrain-Nav 在 R2R-CE 和 RxR-CE 的 val-unseen 上做到了 SOTA。对比对象有：同样基于 VLM 的 [NaVILA](https://arxiv.org/abs/2412.04453) 和 [Uni-NaVid](https://arxiv.org/abs/2412.06224)、用强化学习微调的 [VLN-R1](https://arxiv.org/abs/2506.17221)、之前的 SOTA StreamVLN，以及"直接微调 Qwen3-VL"这个消融对照。官方项目页给的完整结果如下（RynnBrain-Nav 是 8B 版本）：
 
-![RynnBrain-Nav 与其他模型在 R2R / RxR（Val-Unseen）上的完整对比（图片来源：RynnBrain 项目页）](/images/2026-08-03-rynnbrain-nav/nav_results.png)
+![RynnBrain-Nav 与其他模型在 R2R / RxR（Val-Unseen）上的完整对比（图片来源：RynnBrain 项目页）](/images/2026-08-03-rynnbrain-nav/nav_results.webp)
 
 我把数字抄成表格，方便看。
 
