@@ -65,7 +65,7 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 			)
 		}
 	</article>
-	<!-- 图片灯箱：点击正文图片放大查看，点击图片外 / X / ESC 关闭 -->
+	<!-- 图片灯箱：点击正文图片放大查看；滚轮缩放、拖拽平移、双击复位，点击图片外 / X / ESC 关闭 -->
 	<div
 		aria-modal="true"
 		class="fixed inset-0 z-100 flex cursor-zoom-out items-center justify-center bg-black/80 p-4"
@@ -128,6 +128,9 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 	#lightbox img {
 		transform: scale(0.96);
 		transition: transform 0.2s ease;
+		/* 拖拽平移 / 双指捏合由 JS 接管，禁止浏览器的选中与默认触摸手势 */
+		user-select: none;
+		touch-action: none;
 	}
 	#lightbox.open img {
 		transform: scale(1);
@@ -182,15 +185,61 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 		document.addEventListener("scroll", onScroll, { passive: true });
 		updateProgress();
 
-		// 图片灯箱：点击正文图片放大，点击图片外 / X / ESC 关闭
+		// 图片灯箱：点击正文图片放大，点击图片外 / X / ESC 关闭；
+		// 打开后支持滚轮缩放（以光标为中心）、拖拽平移、双击切换放大/复位，移动端支持双指捏合
+		let scale = 1;
+		let tx = 0;
+		let ty = 0;
+		const MIN_SCALE = 0.5;
+		const MAX_SCALE = 8;
+
+		function applyTransform() {
+			// 用户交互驱动的缩放要即时响应，关掉 CSS 的入场过渡
+			lightboxImg.style.transition = "none";
+			lightboxImg.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+			lightboxImg.style.cursor = scale > 1 ? "grab" : "";
+		}
+
+		function resetZoom() {
+			scale = 1;
+			tx = 0;
+			ty = 0;
+			// 清掉内联样式，交还给 CSS 的入场过渡
+			lightboxImg.style.transition = "";
+			lightboxImg.style.transform = "";
+			lightboxImg.style.cursor = "";
+		}
+
+		function zoomAt(clientX: number, clientY: number, nextScale: number) {
+			nextScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, nextScale));
+			// 接近原始尺寸时吸附复位，避免浮点误差导致回不去
+			if (Math.abs(nextScale - 1) < 0.05) nextScale = 1;
+			// 光标相对图片中心的位置（getBoundingClientRect 已包含当前 transform）
+			const rect = lightboxImg.getBoundingClientRect();
+			const px = clientX - (rect.left + rect.width / 2);
+			const py = clientY - (rect.top + rect.height / 2);
+			// transform-origin 是图片中心，反推平移量让缩放锚定光标
+			const ratio = nextScale / scale;
+			tx = px - ratio * (px - tx);
+			ty = py - ratio * (py - ty);
+			scale = nextScale;
+			if (scale === 1) {
+				tx = 0;
+				ty = 0;
+			}
+			applyTransform();
+		}
+
 		function closeLightbox() {
 			lightbox.classList.remove("open");
 			document.body.style.overflow = "";
+			resetZoom();
 		}
 		document.querySelectorAll<HTMLImageElement>(".prose img").forEach((img) => {
 			if (img.closest("a")) return; // 跳过链接里的图（如 wandb 徽章），保留跳转行为
 			img.style.cursor = "zoom-in";
 			img.addEventListener("click", () => {
+				resetZoom();
 				lightboxImg.src = img.currentSrc || img.src;
 				lightboxImg.alt = img.alt;
 				lightbox.classList.add("open");
@@ -201,6 +250,83 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 		lightbox.addEventListener("click", (e) => {
 			if (e.target !== lightboxImg) closeLightbox();
 		});
+
+		// 滚轮缩放（光标在遮罩任意位置都生效）
+		lightbox.addEventListener(
+			"wheel",
+			(e) => {
+				if (!lightbox.classList.contains("open")) return;
+				e.preventDefault();
+				zoomAt(e.clientX, e.clientY, scale * (e.deltaY < 0 ? 1.2 : 1 / 1.2));
+			},
+			{ passive: false },
+		);
+
+		// 双击在放大 2.5 倍和复位之间切换
+		lightboxImg.addEventListener("dblclick", (e) => {
+			e.preventDefault();
+			if (scale > 1) resetZoom();
+			else zoomAt(e.clientX, e.clientY, 2.5);
+		});
+
+		// 拖拽平移 + 双指捏合缩放（统一走 Pointer Events）
+		const activePointers = new Map<number, { x: number; y: number }>();
+		let dragStart: { x: number; y: number; tx: number; ty: number } | null = null;
+		let pinchAnchor: { dist: number; scale: number } | null = null;
+		let lastMid: { x: number; y: number } | null = null;
+
+		lightboxImg.addEventListener("dragstart", (e) => e.preventDefault());
+		lightboxImg.addEventListener("pointerdown", (e) => {
+			lightboxImg.setPointerCapture(e.pointerId);
+			activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+			if (activePointers.size === 1) {
+				dragStart = { x: e.clientX, y: e.clientY, tx, ty };
+				pinchAnchor = null;
+				lastMid = null;
+			} else if (activePointers.size === 2) {
+				const points = [...activePointers.values()];
+				const a = points[0]!;
+				const b = points[1]!;
+				pinchAnchor = { dist: Math.hypot(a.x - b.x, a.y - b.y), scale };
+				lastMid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+				dragStart = null;
+			}
+		});
+		lightboxImg.addEventListener("pointermove", (e) => {
+			if (!activePointers.has(e.pointerId)) return;
+			activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+			if (pinchAnchor && lastMid && activePointers.size === 2) {
+				// 双指：先跟随中点平移，再按间距比例以中点为中心缩放
+				const points = [...activePointers.values()];
+				const a = points[0]!;
+				const b = points[1]!;
+				const dist = Math.hypot(a.x - b.x, a.y - b.y);
+				const midX = (a.x + b.x) / 2;
+				const midY = (a.y + b.y) / 2;
+				tx += midX - lastMid.x;
+				ty += midY - lastMid.y;
+				lastMid = { x: midX, y: midY };
+				zoomAt(midX, midY, pinchAnchor.scale * (dist / pinchAnchor.dist));
+			} else if (dragStart && scale > 1) {
+				tx = dragStart.tx + (e.clientX - dragStart.x);
+				ty = dragStart.ty + (e.clientY - dragStart.y);
+				applyTransform();
+			}
+		});
+		function endPointer(e: PointerEvent) {
+			activePointers.delete(e.pointerId);
+			pinchAnchor = null;
+			lastMid = null;
+			if (activePointers.size === 0) {
+				dragStart = null;
+			} else if (activePointers.size === 1) {
+				// 双指抬起其一后回到单指拖动，以当前位置重新起算，避免跳动
+				const p = [...activePointers.values()][0]!;
+				dragStart = { x: p.x, y: p.y, tx, ty };
+			}
+		}
+		lightboxImg.addEventListener("pointerup", endPointer);
+		lightboxImg.addEventListener("pointercancel", endPointer);
 		onKeydown = (e) => {
 			if (e.key === "Escape" && lightbox.classList.contains("open")) closeLightbox();
 		};
