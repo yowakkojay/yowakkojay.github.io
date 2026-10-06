@@ -128,13 +128,13 @@ const descYearKeys = Object.keys(groupedByYear).sort((a, b) => +b - +a);
 									>
 										<path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" />
 									</svg>
-									Categories
+									分类
 								</h2>
 								<ul class="flex flex-wrap gap-2">
 									{categoriesWithCount.map(([category, count]) => (
 										<li>
 											<a class="cactus-link -my-1 flex items-center justify-center py-1" href={`/categories/${category}/`}>
-												<span class="sr-only">View category&nbsp;</span>
+												<span class="sr-only">查看分类&nbsp;</span>
 												{category}
 												<span aria-hidden="true" class="text-muted ms-1 text-sm">
 													({count})
@@ -146,7 +146,7 @@ const descYearKeys = Object.keys(groupedByYear).sort((a, b) => +b - +a);
 								<span class="mt-4 mb-8 block sm:text-end">
 									<a class="hover:text-link" href="/categories/">
 										查看全部 <span aria-hidden="true">→</span>
-										<span class="sr-only">categories</span>
+										<span class="sr-only">分类</span>
 									</a>
 								</span>
 							</>
@@ -169,14 +169,14 @@ const descYearKeys = Object.keys(groupedByYear).sort((a, b) => +b - +a);
 							<path d="M17.573 18.407l2.834 -2.834a2.025 2.025 0 0 0 0 -2.864l-7.117 -7.116" />
 							<path d="M6 9h-.01" />
 						</svg>
-						Tags
+						标签
 					</h2>
 					<ul class="flex flex-wrap gap-2">
 						{uniqueTags.map((tag) => (
 							<li>
 								<a class="cactus-link -my-1 flex items-center justify-center py-1" href={`/tags/${tag}/`}>
 									<span aria-hidden="true">#</span>
-									<span class="sr-only">View all posts with the tag</span>
+									<span class="sr-only">查看该标签的全部文章</span>
 									{tag}
 								</a>
 							</li>
@@ -185,7 +185,7 @@ const descYearKeys = Object.keys(groupedByYear).sort((a, b) => +b - +a);
 					<span class="mt-4 block sm:text-end">
 						<a class="hover:text-link" href="/tags/">
 							查看全部 <span aria-hidden="true">→</span>
-							<span class="sr-only">blog tags</span>
+							<span class="sr-only">标签</span>
 						</a>
 					</span>
 				</aside>
