@@ -99,7 +99,7 @@
 	}
 
 	:target {
-		scroll-margin-block: 5ex;
+		scroll-margin-block: 7rem;
 	}
 
 	/* Astro image responsive styles, modified from -> https://docs.astro.build/en/guides/images/#responsive-image-styles */

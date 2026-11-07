@@ -1,107 +1,348 @@
 ---
 import Search from "@/components/Search.astro";
 import ThemeToggle from "@/components/ThemeToggle.astro";
-import { menuLinks } from "@/site.config";
-import { siteConfig } from "../../site.config";
+import { menuLinks, siteConfig } from "@/site.config";
 ---
 
-<header class="group relative mb-16 flex items-center sm:mb-28 sm:ps-18" id="main-header">
-	<div class="flex sm:flex-col">
-		<a
-			aria-current={Astro.url.pathname === "/" ? "page" : false}
-			class="inline-flex items-center sm:relative sm:inline-block"
-			href="/"
-		>
-			<img
-				alt=""
-				class="me-3 h-10 w-10 rounded-full border-2 border-[--color-accent] object-cover sm:absolute sm:-start-18 sm:me-0 sm:h-16 sm:w-16"
-				height="64"
-				src="/killua.webp"
-				width="64"
-			/>
-			<span class="text-xl font-bold sm:text-2xl">{siteConfig.title}</span>
-		</a>
-		<nav
-			aria-label="主导航"
-			class="bg-global-bg fixed inset-x-4 top-16 hidden flex-col divide-y rounded-md px-2 py-2 shadow-lg ring-1 ring-black/10 group-[.menu-open]:z-50 group-[.menu-open]:flex sm:static sm:z-auto sm:-ms-4 sm:mt-1 sm:flex sm:flex-row sm:divide-x sm:divide-y-0 sm:rounded-none sm:bg-transparent sm:p-0 sm:shadow-none sm:ring-0 dark:ring-white/15 sm:dark:ring-0"
-			id="navigation-menu"
-		>
-			{
-				menuLinks.map((link) => (
-					<a
-						aria-current={(link.path === "/" ? Astro.url.pathname === "/" : Astro.url.pathname.startsWith(link.path)) ? "page" : false}
-						class="text-accent px-2 py-3 font-semibold aria-[current=page]:underline aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-4 sm:px-4 sm:py-0 sm:underline-offset-2 sm:hover:underline"
-						href={link.path}
-					>
-						{link.title}
-					</a>
-				))
-			}
-		</nav>
-	</div>
-	<div
-		class="fixed end-4 top-4 z-40 flex items-center gap-1 rounded-full bg-global-bg p-1 shadow-sm ring-1 ring-black/10 sm:end-8 sm:top-6 dark:ring-white/15"
-	>
+<header class="glass-header glass-surface" id="main-header">
+	<a class="glass-brand" href="/" aria-label={`${siteConfig.title} · 首页`}>
+		<img alt="" src="/killua.webp" width="38" height="38" />
+		<span>{siteConfig.title}</span>
+	</a>
+	<nav class="glass-nav glass-surface" aria-label="主导航" id="navigation-menu">
+		<glass-navigation>
+			<span class="glass-indicator" aria-hidden="true"></span>
+			{menuLinks.map((link) => (
+				<a
+					aria-current={(link.path === "/" ? Astro.url.pathname === "/" : Astro.url.pathname.startsWith(link.path)) ? "page" : undefined}
+					href={link.path}
+				>{link.title}</a>
+			))}
+		</glass-navigation>
+	</nav>
+	<div class="glass-actions">
 		<Search />
 		<ThemeToggle />
-		<mobile-button>
-			<button
-				aria-expanded="false"
-				aria-controls="navigation-menu"
-				class="group relative h-9 w-9 p-1 sm:hidden"
-				id="toggle-navigation-menu"
-				type="button"
-			>
-				<span class="sr-only">主导航菜单</span>
-				<svg
-					aria-hidden="true"
-					class="absolute start-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 transition-all group-aria-expanded:scale-0 group-aria-expanded:opacity-0"
-					fill="none"
-					focusable="false"
-					id="line-svg"
-					stroke="currentColor"
-					stroke-width="1.5"
-					viewBox="0 0 24 24"
-					xmlns="http://www.w3.org/2000/svg"
-				>
-					<path d="M3.75 9h16.5m-16.5 6.75h16.5" stroke-linecap="round" stroke-linejoin="round"
-					></path>
-				</svg>
-				<svg
-					aria-hidden="true"
-					class="text-accent absolute start-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 scale-0 opacity-0 transition-all group-aria-expanded:scale-100 group-aria-expanded:opacity-100"
-					fill="none"
-					focusable="false"
-					id="cross-svg"
-					stroke="currentColor"
-					stroke-width="1.5"
-					viewBox="0 0 24 24"
-					xmlns="http://www.w3.org/2000/svg"
-				>
-					<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
-				</svg>
-			</button>
-		</mobile-button>
+		<button
+			aria-expanded="false"
+			aria-controls="navigation-menu"
+			aria-label="打开导航菜单"
+			class="glass-menu-button"
+			id="toggle-navigation-menu"
+			type="button"
+		>
+			<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+				<path class="menu-line" d="M5 8h14M5 16h14" />
+				<path class="menu-cross" d="m7 7 10 10M7 17 17 7" />
+			</svg>
+		</button>
 	</div>
 </header>
 
-<script>
-	import { toggleClass } from "@/utils/domElement";
-
-	class MobileNavBtn extends HTMLElement {
-		#menuOpen: boolean = false;
-
-		connectedCallback() {
-			const headerEl = document.getElementById("main-header")!;
-			const mobileButtonEl = this.querySelector<HTMLButtonElement>("button");
-
-			mobileButtonEl?.addEventListener("click", () => {
-				if (headerEl) toggleClass(headerEl, "menu-open");
-				this.#menuOpen = !this.#menuOpen;
-				mobileButtonEl.setAttribute("aria-expanded", this.#menuOpen.toString());
-			});
+<style>
+	/* 玻璃放在伪元素上，避免 header 自身成为 backdrop root，影响移动端浮层。 */
+	.glass-surface {
+		--glass-tint: color-mix(in srgb, var(--color-global-bg) 68%, transparent);
+		--glass-rim: rgb(255 255 255 / 72%);
+		--glass-glow: rgb(255 255 255 / 62%);
+		--glass-shadow: rgb(26 36 48 / 9%);
+		isolation: isolate;
+	}
+	:global([data-theme="dark"]) .glass-surface {
+		--glass-tint: color-mix(in srgb, var(--color-global-bg) 66%, transparent);
+		--glass-rim: rgb(255 255 255 / 19%);
+		--glass-glow: rgb(255 255 255 / 12%);
+		--glass-shadow: rgb(0 0 0 / 28%);
+	}
+	.glass-surface::before,
+	.glass-surface::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		border-radius: inherit;
+		pointer-events: none;
+	}
+	.glass-surface::before {
+		/* 不支持 backdrop-filter 时使用实色，保证文字可读。 */
+		background: var(--color-global-bg);
+		box-shadow:
+			0 8px 32px -12px var(--glass-shadow),
+			0 2px 8px -4px var(--glass-shadow);
+	}
+	@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+		.glass-surface::before {
+			background: var(--glass-tint);
+			-webkit-backdrop-filter: blur(22px) saturate(180%);
+			backdrop-filter: blur(22px) saturate(180%);
 		}
 	}
+	.glass-surface::after {
+		border: 1px solid var(--glass-rim);
+		background:
+			radial-gradient(240px 100px at var(--glass-x, 30%) 0%, var(--glass-glow), transparent 80%),
+			linear-gradient(155deg, rgb(255 255 255 / 14%), transparent 45%, rgb(255 255 255 / 4%));
+		box-shadow:
+			inset 0 1px 1px rgb(255 255 255 / 22%),
+			inset 0 -1px 1px color-mix(in srgb, var(--color-global-text) 6%, transparent);
+	}
+	.glass-header {
+		position: sticky;
+		top: max(1rem, env(safe-area-inset-top));
+		z-index: 60;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		min-height: 4rem;
+		margin-bottom: 4rem;
+		padding: 0.5rem 0.625rem 0.5rem 0.75rem;
+		border-radius: 2.5rem;
+	}
+	.glass-brand {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.625rem;
+		min-width: 0;
+		color: var(--color-accent-2);
+		font-size: 1rem;
+		font-weight: 650;
+		letter-spacing: -0.035em;
+		white-space: nowrap;
+		border-radius: 999px;
+	}
+	.glass-brand img {
+		flex-shrink: 0;
+		width: 2.375rem;
+		height: 2.375rem;
+		border-radius: 50%;
+		object-fit: cover;
+		box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-global-text) 10%, transparent);
+	}
+	.glass-nav {
+		position: absolute;
+		inset: calc(100% + 0.625rem) 0 auto;
+		display: none;
+		padding: 0.5rem;
+		border-radius: 1.75rem;
+	}
+	.glass-header[data-menu-open] .glass-nav {
+		display: block;
+		animation: glass-menu-in 180ms ease-out;
+	}
+	glass-navigation {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+	}
+	glass-navigation a {
+		position: relative;
+		padding: 0.625rem 1rem;
+		border-radius: 999px;
+		color: var(--color-global-text);
+		font-size: 0.9375rem;
+		font-weight: 550;
+		line-height: 1.5rem;
+		white-space: nowrap;
+		transition: color 180ms ease;
+	}
+	glass-navigation a[aria-current="page"] {
+		color: var(--color-accent);
+		font-weight: 650;
+	}
+	glass-navigation:not([data-ready]) a[aria-current="page"] {
+		background: color-mix(in srgb, var(--color-global-text) 7%, transparent);
+	}
+	.glass-indicator {
+		position: absolute;
+		inset: 0 auto auto 0;
+		width: 0;
+		height: 0;
+		border-radius: 999px;
+		opacity: 0;
+		background: color-mix(in srgb, var(--color-global-text) 7%, transparent);
+		box-shadow: inset 0 1px 1px color-mix(in srgb, var(--color-global-bg) 70%, transparent), 0 1px 3px rgb(0 0 0 / 4%);
+		transition:
+			transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+			width 360ms cubic-bezier(0.22, 1, 0.36, 1),
+			height 360ms cubic-bezier(0.22, 1, 0.36, 1),
+			opacity 180ms ease;
+	}
+	.glass-actions {
+		display: flex;
+		align-items: center;
+		flex-shrink: 0;
+		gap: 0.125rem;
+	}
+	.glass-actions :global(theme-toggle),
+	.glass-actions :global(pagefind-modal-trigger) {
+		display: block;
+	}
+	.glass-actions :global(theme-toggle button),
+	.glass-actions :global(.pf-trigger-btn),
+	.glass-menu-button {
+		display: grid;
+		place-items: center;
+		width: 2.625rem;
+		height: 2.625rem;
+		border-radius: 50%;
+		cursor: pointer;
+		transition: background-color 180ms ease, transform 180ms ease;
+	}
+	@media (hover: hover) {
+		.glass-actions :global(theme-toggle button:hover),
+		.glass-actions :global(.pf-trigger-btn:hover),
+		.glass-menu-button:hover {
+			background-color: color-mix(in srgb, var(--color-global-text) 6%, transparent);
+		}
+	}
+	.glass-actions :global(theme-toggle button:active),
+	.glass-actions :global(.pf-trigger-btn:active),
+	.glass-menu-button:active {
+		transform: scale(0.94);
+	}
+	.glass-header :global(a:focus-visible),
+	.glass-header :global(button:focus-visible) {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 3px;
+	}
+	.glass-menu-button svg {
+		width: 1.5rem;
+		height: 1.5rem;
+	}
+	.menu-cross,
+	.glass-menu-button[aria-expanded="true"] .menu-line {
+		opacity: 0;
+	}
+	.glass-menu-button[aria-expanded="true"] .menu-cross {
+		opacity: 1;
+	}
+	@keyframes glass-menu-in {
+		from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+		to { opacity: 1; transform: translateY(0) scale(1); }
+	}
+	@media (min-width: 48rem) {
+		.glass-header { padding-inline: 0.875rem 0.625rem; }
+		.glass-brand { font-size: 1.125rem; }
+		.glass-nav,
+		.glass-header[data-menu-open] .glass-nav {
+			position: relative;
+			inset: auto;
+			display: block;
+			padding: 0;
+			animation: none;
+		}
+		.glass-nav::before,
+		.glass-nav::after { display: none; }
+		glass-navigation { flex-direction: row; }
+		glass-navigation a { padding-inline: 0.875rem; }
+		.glass-menu-button { display: none; }
+	}
+	@media (max-width: 23rem) {
+		.glass-brand { gap: 0.375rem; font-size: 0.875rem; }
+		.glass-brand img { width: 1.875rem; height: 1.875rem; }
+		.glass-actions :global(theme-toggle button),
+		.glass-actions :global(.pf-trigger-btn),
+		.glass-menu-button { width: 2.25rem; height: 2.25rem; }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.glass-indicator,
+		glass-navigation a,
+		.glass-actions :global(button) { transition: none; }
+		.glass-header[data-menu-open] .glass-nav { animation: none; }
+	}
+	@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+		.glass-surface::before {
+			background: var(--color-global-bg);
+			-webkit-backdrop-filter: none;
+			backdrop-filter: none;
+		}
+		.glass-surface::after { background: none; border-color: var(--color-muted); }
+	}
+</style>
 
-	customElements.define("mobile-button", MobileNavBtn);
+<script>
+	class GlassNavigation extends HTMLElement {
+		#controller: AbortController | undefined;
+		#resize: ResizeObserver | undefined;
+		#frame = 0;
+
+		connectedCallback() {
+			this.#controller?.abort();
+			this.#resize?.disconnect();
+			this.#controller = new AbortController();
+			const { signal } = this.#controller;
+			const header = this.closest<HTMLElement>("header");
+			const indicator = this.querySelector<HTMLElement>(".glass-indicator");
+			const button = header?.querySelector<HTMLButtonElement>(".glass-menu-button");
+			if (!header || !indicator || !button) return;
+			const desktop = window.matchMedia("(min-width: 48rem)");
+			const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+			const current = this.querySelector<HTMLAnchorElement>('[aria-current="page"]');
+			const moveTo = (link: HTMLAnchorElement | null) => {
+				if (!link || !this.offsetWidth) {
+					indicator.style.opacity = "0";
+					return;
+				}
+				indicator.style.width = `${link.offsetWidth}px`;
+				indicator.style.height = `${link.offsetHeight}px`;
+				indicator.style.transform = `translate(${link.offsetLeft}px, ${link.offsetTop}px)`;
+				indicator.style.opacity = "1";
+				this.dataset.ready = "";
+			};
+			const reset = () => {
+				const focused = this.contains(document.activeElement) && document.activeElement instanceof HTMLAnchorElement ? document.activeElement : current;
+				moveTo(focused);
+			};
+			const setOpen = (open: boolean) => {
+				header.toggleAttribute("data-menu-open", open);
+				button.setAttribute("aria-expanded", String(open));
+				button.setAttribute("aria-label", open ? "关闭导航菜单" : "打开导航菜单");
+				if (open && !desktop.matches) this.querySelector("a")?.focus({ preventScroll: true });
+				reset();
+			};
+			button.addEventListener("click", () => setOpen(!header.hasAttribute("data-menu-open")), { signal });
+			this.querySelectorAll<HTMLAnchorElement>("a").forEach((link) => {
+				link.addEventListener("pointerenter", (event) => {
+					if (event.pointerType === "mouse") moveTo(link);
+				}, { signal });
+				link.addEventListener("focus", () => moveTo(link), { signal });
+				link.addEventListener("click", () => setOpen(false), { signal });
+			});
+			this.addEventListener("pointerleave", reset, { signal });
+			this.addEventListener("focusout", () => queueMicrotask(reset), { signal });
+			document.addEventListener("pointerdown", (event) => {
+				if (event.target instanceof Node && !header.contains(event.target)) setOpen(false);
+			}, { signal });
+			document.addEventListener("keydown", (event) => {
+				if (event.key === "Escape" && header.hasAttribute("data-menu-open")) {
+					setOpen(false);
+					button.focus();
+				}
+			}, { signal });
+			desktop.addEventListener("change", () => setOpen(false), { signal });
+			header.addEventListener("pointermove", (event) => {
+				if (event.pointerType !== "mouse" || reducedMotion.matches) return;
+				cancelAnimationFrame(this.#frame);
+				this.#frame = requestAnimationFrame(() => {
+					header.style.setProperty("--glass-x", `${event.clientX - header.getBoundingClientRect().left}px`);
+				});
+			}, { signal, passive: true });
+			header.addEventListener("pointerleave", () => {
+				cancelAnimationFrame(this.#frame);
+				header.style.removeProperty("--glass-x");
+			}, { signal });
+			this.#resize = new ResizeObserver(reset);
+			this.#resize.observe(this);
+			reset();
+		}
+
+		disconnectedCallback() {
+			this.#controller?.abort();
+			this.#resize?.disconnect();
+			cancelAnimationFrame(this.#frame);
+		}
+	}
+	customElements.define("glass-navigation", GlassNavigation);
 </script>
