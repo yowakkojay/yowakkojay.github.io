@@ -42,17 +42,17 @@ import { menuLinks, siteConfig } from "@/site.config";
 <style>
 	/* 玻璃放在伪元素上，避免 header 自身成为 backdrop root，影响移动端浮层。 */
 	.glass-surface {
-		--glass-tint: color-mix(in srgb, var(--color-global-bg) 68%, transparent);
-		--glass-rim: rgb(255 255 255 / 72%);
-		--glass-glow: rgb(255 255 255 / 62%);
-		--glass-shadow: rgb(26 36 48 / 9%);
+		--glass-tint: color-mix(in srgb, var(--color-global-bg) 4%, transparent);
+		--glass-rim: rgb(255 255 255 / 38%);
+		--glass-glow: rgb(255 255 255 / 30%);
+		--glass-shadow: rgb(26 36 48 / 7%);
 		isolation: isolate;
 	}
 	:global([data-theme="dark"]) .glass-surface {
-		--glass-tint: color-mix(in srgb, var(--color-global-bg) 66%, transparent);
-		--glass-rim: rgb(255 255 255 / 19%);
-		--glass-glow: rgb(255 255 255 / 12%);
-		--glass-shadow: rgb(0 0 0 / 28%);
+		--glass-tint: color-mix(in srgb, var(--color-global-bg) 6%, transparent);
+		--glass-rim: rgb(255 255 255 / 16%);
+		--glass-glow: rgb(255 255 255 / 14%);
+		--glass-shadow: rgb(0 0 0 / 18%);
 	}
 	.glass-surface::before,
 	.glass-surface::after {
@@ -73,18 +73,18 @@ import { menuLinks, siteConfig } from "@/site.config";
 	@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
 		.glass-surface::before {
 			background: var(--glass-tint);
-			-webkit-backdrop-filter: blur(22px) saturate(180%);
-			backdrop-filter: blur(22px) saturate(180%);
+			-webkit-backdrop-filter: blur(2.5px) saturate(135%);
+			backdrop-filter: blur(2.5px) saturate(135%);
 		}
 	}
 	.glass-surface::after {
 		border: 1px solid var(--glass-rim);
 		background:
-			radial-gradient(240px 100px at var(--glass-x, 30%) 0%, var(--glass-glow), transparent 80%),
-			linear-gradient(155deg, rgb(255 255 255 / 14%), transparent 45%, rgb(255 255 255 / 4%));
+			radial-gradient(180px 18px at var(--glass-x, 30%) 0%, var(--glass-glow), transparent 80%),
+			linear-gradient(155deg, rgb(255 255 255 / 2.5%), transparent 40%, rgb(255 255 255 / 0.8%));
 		box-shadow:
-			inset 0 1px 1px rgb(255 255 255 / 22%),
-			inset 0 -1px 1px color-mix(in srgb, var(--color-global-text) 6%, transparent);
+			inset 0 1px 1px rgb(255 255 255 / 12%),
+			inset 0 -1px 1px color-mix(in srgb, var(--color-global-text) 3%, transparent);
 	}
 	.glass-header {
 		position: sticky;
@@ -135,6 +135,12 @@ import { menuLinks, siteConfig } from "@/site.config";
 		display: flex;
 		flex-direction: column;
 		gap: 0.125rem;
+		/* 横屏和放大文字时仍能滚动到最后一项，不让菜单伸出可视区域。 */
+		max-height: max(2.75rem, calc(100vh - 9rem));
+		max-height: max(2.75rem, calc(100dvh - 9rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		scrollbar-width: thin;
 	}
 	glass-navigation a {
 		position: relative;
@@ -146,23 +152,23 @@ import { menuLinks, siteConfig } from "@/site.config";
 		line-height: 1.5rem;
 		white-space: nowrap;
 		transition: color 180ms ease;
+		text-shadow: 0 1px 6px color-mix(in srgb, var(--color-global-bg) 80%, transparent);
 	}
 	glass-navigation a[aria-current="page"] {
 		color: var(--color-accent);
 		font-weight: 650;
-	}
-	glass-navigation:not([data-ready]) a[aria-current="page"] {
-		background: color-mix(in srgb, var(--color-global-text) 7%, transparent);
+		background: color-mix(in srgb, var(--color-global-text) 5%, transparent);
 	}
 	.glass-indicator {
+		display: none;
 		position: absolute;
 		inset: 0 auto auto 0;
 		width: 0;
 		height: 0;
 		border-radius: 999px;
 		opacity: 0;
-		background: color-mix(in srgb, var(--color-global-text) 7%, transparent);
-		box-shadow: inset 0 1px 1px color-mix(in srgb, var(--color-global-bg) 70%, transparent), 0 1px 3px rgb(0 0 0 / 4%);
+		background: color-mix(in srgb, var(--color-global-text) 5%, transparent);
+		box-shadow: inset 0 1px 1px color-mix(in srgb, var(--color-global-bg) 20%, transparent), 0 1px 3px rgb(0 0 0 / 3%);
 		transition:
 			transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
 			width 360ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -235,8 +241,10 @@ import { menuLinks, siteConfig } from "@/site.config";
 		}
 		.glass-nav::before,
 		.glass-nav::after { display: none; }
-		glass-navigation { flex-direction: row; }
+		glass-navigation { flex-direction: row; max-height: none; overflow: visible; }
 		glass-navigation a { padding-inline: 0.875rem; }
+		glass-navigation[data-ready] a[aria-current="page"] { background: transparent; }
+		.glass-indicator { display: block; }
 		.glass-menu-button { display: none; }
 	}
 	@media (max-width: 23rem) {
@@ -281,7 +289,8 @@ import { menuLinks, siteConfig } from "@/site.config";
 			const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 			const current = this.querySelector<HTMLAnchorElement>('[aria-current="page"]');
 			const moveTo = (link: HTMLAnchorElement | null) => {
-				if (!link || !this.offsetWidth) {
+				// 手机端只用 aria-current 标记所在页，不能把触摸/焦点当成选中态。
+				if (!desktop.matches || !link || !this.offsetWidth) {
 					indicator.style.opacity = "0";
 					return;
 				}
@@ -299,7 +308,16 @@ import { menuLinks, siteConfig } from "@/site.config";
 				header.toggleAttribute("data-menu-open", open);
 				button.setAttribute("aria-expanded", String(open));
 				button.setAttribute("aria-label", open ? "关闭导航菜单" : "打开导航菜单");
-				if (open && !desktop.matches) this.querySelector("a")?.focus({ preventScroll: true });
+				if (!desktop.matches) {
+					if (open) {
+						const target = current ?? this.querySelector("a");
+						if (target) {
+							target.focus({ preventScroll: true });
+							this.scrollTop = target.offsetTop - (this.clientHeight - target.offsetHeight) / 2;
+						}
+					}
+					else if (this.contains(document.activeElement)) button.focus({ preventScroll: true });
+				}
 				reset();
 			};
 			button.addEventListener("click", () => setOpen(!header.hasAttribute("data-menu-open")), { signal });
@@ -312,6 +330,15 @@ import { menuLinks, siteConfig } from "@/site.config";
 			});
 			this.addEventListener("pointerleave", reset, { signal });
 			this.addEventListener("focusout", () => queueMicrotask(reset), { signal });
+			header.addEventListener("focusout", (event) => {
+				// Safari 点按按钮可能先把焦点交给 body（relatedTarget=null）。
+				// 这种情况交由 click 处理，否则会先关闭、再被同一次 click 重新打开。
+				const next = event.relatedTarget;
+				if (next instanceof Node && next !== document.body && !header.contains(next)) setOpen(false);
+			}, { signal });
+			header.addEventListener("click", (event) => {
+				if (event.target instanceof Element && event.target.closest("theme-toggle, pagefind-modal-trigger")) setOpen(false);
+			}, { signal });
 			document.addEventListener("pointerdown", (event) => {
 				if (event.target instanceof Node && !header.contains(event.target)) setOpen(false);
 			}, { signal });
