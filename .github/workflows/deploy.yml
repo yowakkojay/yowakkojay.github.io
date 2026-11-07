@@ -6,6 +6,9 @@ on:
     branches: [main]
   # 允许手动触发
   workflow_dispatch:
+  # 预约文章在下一次构建发布；GitHub 定时任务可能有延迟。
+  schedule:
+    - cron: "17 * * * *"
 
 # 允许仓库执行 deployment（Pages 所需）
 permissions:
@@ -28,11 +31,17 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Check types and lint
+        run: npm run check
+
+      - name: Test publication rules and link checker
+        run: npm test
 
       # Cactus 的 build 脚本会自动触发 postbuild（pagefind --site dist）生成搜索索引
       - name: Build with Astro

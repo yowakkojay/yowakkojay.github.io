@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-Astro 6.3（静态输出）+ Tailwind CSS 4 + TypeScript，基于 Astro Cactus 主题。Node 22。GitHub Pages 静态部署，自定义域名 yowakkojay.com。
+Astro 7（静态输出）+ Tailwind CSS 4 + TypeScript，基于 Astro Cactus 主题。Node 版本见 `.nvmrc`。GitHub Pages 静态部署，自定义域名 yowakkojay.com。
 
 ## Users
 
@@ -27,7 +27,7 @@ Astro 6.3（静态输出）+ Tailwind CSS 4 + TypeScript，基于 Astro Cactus �
 - 内容以 Markdown / MDX 写在 `src/content/post` 与 `src/content/note`，文件名即 URL slug；Astro Content Collections 校验 frontmatter。
 - 数学公式用 KaTeX，代码用 Expressive Code（dracula / github-light 双主题），自带阅读时长、admonition、GitHub card 等 remark 插件。
 - 部署：改完直接提交并 push 到远程默认分支即上线（见 AGENTS.md 约定），不走 PR / 评审。作者在 live 网页查看效果。
-- 主开发机为 Windows，当前 Linux 环境（`~/jay_workspace/yowakkojay.github.io`）为从 GitHub 克隆的工作副本。
+- 本地开发与 CI 使用 `.nvmrc` 中的 Node 版本，日期按北京时间显示。
 - 配套图床仓库 `blogImages`。
 
 ## Capabilities and Constraints
@@ -36,16 +36,16 @@ Astro 6.3（静态输出）+ Tailwind CSS 4 + TypeScript，基于 Astro Cactus �
 - Satori 自动生成 OG 图；支持 Webmentions。
 - 暗 / 亮双模式切换。
 - 约束：站点语言 zh-CN；HTML lang 与 ogLocale 为 zh-CN / zh_CN；自定义域名 yowakkojay.com。
-- 开放未决：本次 Impeccable 的改造方向（整体重做视觉 / 增量改进 / 先出设计系统）尚未确定；视觉与内容结构的可改动范围完全开放（作者表示“都可以谈”）。
+- 当前采用增量优化：保留设计系统，完善阅读交互、专题入口、短笔记和写作发布工具。
 
 ## Brand Commitments
 
 - 站点标题 "Yowakko Jay"，描述 "郁二杰的博客 · AI / 深度学习"，作者名 Yowakko Jay / 郁二杰。
-- 当前视觉沿用 Astro Cactus 主题（绿色主题色、等宽正文字体、dracula / github-light 代码主题）；作者已确认现有主题色与风格不是硬约束，可在后续工作中重新讨论。
+- 当前视觉遵循 `DESIGN.md`：中文系统无衬线正文、亮色朱砂/暗色薄荷主题、dracula / github-light 代码主题。
 
 ## Evidence on Hand
 
-- 5 篇已发布文章（2025-07 至 2026-04）：PyTorch on Windows、概率统计、GRPO+Qwen+GSM8K、归一化、AI workflow。
+- 6 篇已发布文章（2025-07 至 2026-08）：PyTorch on Windows、概率统计、GRPO+Qwen+GSM8K、归一化、AI workflow、RynnBrain-Nav。
 - 无客户证言 / 数据看板 / 第三方评测（个人博客性质，属正常缺失，后续工作不得虚构此类内容）。
 
 ## Product Principles

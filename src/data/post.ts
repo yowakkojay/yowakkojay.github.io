@@ -1,9 +1,10 @@
 import { type CollectionEntry, getCollection } from "astro:content";
+import { isPublished } from "@/utils/publication";
 
 /** filter out draft posts based on the environment */
 export async function getAllPosts(): Promise<CollectionEntry<"post">[]> {
 	return await getCollection("post", ({ data }) => {
-		return import.meta.env.PROD ? !data.draft : true;
+		return import.meta.env.PROD ? isPublished(data) : true;
 	});
 }
 

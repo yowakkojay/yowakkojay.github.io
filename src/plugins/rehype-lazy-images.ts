@@ -14,7 +14,7 @@ import { visit } from "unist-util-visit";
 const dimsCache = new Map<string, { width: number; height: number } | null>();
 
 async function getLocalImageDims(src: string): Promise<{ width: number; height: number } | null> {
-	if (dimsCache.has(src)) return dimsCache.get(src)!;
+	if (dimsCache.has(src)) return dimsCache.get(src) ?? null;
 	let dims: { width: number; height: number } | null = null;
 	try {
 		// markdown 里的 src 是 percent-encoded（如 %2B、%20），需解码后映射到 public/
@@ -41,7 +41,7 @@ export function rehypeLazyImages() {
 			// 仅处理未显式指定宽高的站内本地图片（/images/... 等 public 资源）
 			if (src.startsWith("/") && node.properties.width == null && node.properties.height == null) {
 				tasks.push(
-					getLocalImageDims(src.split("?")[0]!).then((dims) => {
+					getLocalImageDims(src.split("?")[0] ?? src).then((dims) => {
 						if (dims) {
 							node.properties.width = dims.width;
 							node.properties.height = dims.height;

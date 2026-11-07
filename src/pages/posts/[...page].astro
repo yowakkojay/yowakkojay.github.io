@@ -4,6 +4,7 @@ import type { GetStaticPaths, Page } from "astro";
 import { Icon } from "astro-icon/components";
 import PostPreview from "@/components/blog/PostPreview.astro";
 import Pagination from "@/components/Paginator.astro";
+import { getCategoryInfo } from "@/data/categories";
 import {
 	getAllPosts,
 	getUniqueCategoriesWithCount,
@@ -109,7 +110,7 @@ const descYearKeys = Object.keys(groupedByYear).sort((a, b) => +b - +a);
 			<Pagination {...paginationProps} />
 		</div>
 		{
-			!!uniqueTags.length && (
+			(!!uniqueTags.length || !!categoriesWithCount.length) && (
 				<aside>
 					{
 						!!categoriesWithCount.length && (
@@ -135,7 +136,7 @@ const descYearKeys = Object.keys(groupedByYear).sort((a, b) => +b - +a);
 										<li>
 											<a class="cactus-link -my-1 flex items-center justify-center py-1" href={`/categories/${category}/`}>
 												<span class="sr-only">查看分类&nbsp;</span>
-												{category}
+											{getCategoryInfo(category).name}
 												<span aria-hidden="true" class="text-muted ms-1 text-sm">
 													({count})
 												</span>

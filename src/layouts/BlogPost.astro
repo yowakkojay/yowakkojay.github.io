@@ -17,7 +17,7 @@ interface Props {
 const { post, newerPost = null, olderPost = null } = Astro.props;
 const { ogImage, title, description, updatedDate, publishDate } = post.data;
 const socialImage = ogImage ?? `/og-image/${post.id}.png`;
-const articleDate = updatedDate?.toISOString() ?? publishDate.toISOString();
+const articleDate = publishDate.toISOString();
 const { headings, remarkPluginFrontmatter } = await render(post);
 const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number} 分钟`;
 ---
@@ -25,6 +25,7 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 <BaseLayout
 	meta={{
 		articleDate,
+		modifiedDate: updatedDate?.toISOString(),
 		description,
 		ogImage: socialImage,
 		title,
@@ -66,11 +67,10 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 		}
 	</article>
 	<!-- 图片灯箱：点击正文图片放大查看；滚轮缩放、拖拽平移、双击复位，点击图片外 / X / ESC 关闭 -->
-	<div
-		aria-modal="true"
-		class="fixed inset-0 z-100 flex cursor-zoom-out items-center justify-center bg-black/80 p-4"
+	<dialog
+		aria-label="图片预览"
+		class="fixed inset-0 m-0 h-full max-h-none w-full max-w-none cursor-zoom-out items-center justify-center border-0 bg-transparent p-4"
 		id="lightbox"
-		role="dialog"
 	>
 		<button
 			aria-label="关闭大图"
@@ -90,8 +90,8 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 				<path d="M6 6l12 12M18 6L6 18" />
 			</svg>
 		</button>
-		<img alt="" class="max-h-[90vh] max-w-full cursor-default object-contain" id="lightbox-img" src="" />
-	</div>
+		<img alt="" class="max-h-[90vh] max-w-full cursor-default object-contain" id="lightbox-img" />
+	</dialog>
 	<button
 		class="hover:border-link fixed end-4 bottom-8 z-90 flex h-10 w-10 translate-y-28 cursor-pointer items-center justify-center rounded-full border-2 border-transparent bg-zinc-200 text-3xl opacity-0 transition-all transition-discrete duration-300 data-[show=true]:translate-y-0 data-[show=true]:opacity-100 sm:end-8 sm:h-12 sm:w-12 dark:bg-zinc-700"
 		data-show="false"
@@ -114,26 +114,17 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 </BaseLayout>
 
 <style>
-	#lightbox {
-		opacity: 0;
-		visibility: hidden;
-		transition:
-			opacity 0.2s ease,
-			visibility 0.2s;
+	#lightbox[open] {
+		display: flex;
+		overflow: hidden;
 	}
-	#lightbox.open {
-		opacity: 1;
-		visibility: visible;
+	#lightbox::backdrop {
+		background: rgb(0 0 0 / 80%);
 	}
 	#lightbox img {
-		transform: scale(0.96);
-		transition: transform 0.2s ease;
 		/* 拖拽平移 / 双指捏合由 JS 接管，禁止浏览器的选中与默认触摸手势 */
 		user-select: none;
 		touch-action: none;
-	}
-	#lightbox.open img {
-		transform: scale(1);
 	}
 </style>
 
@@ -142,21 +133,21 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 	// 每次进入文章页重新绑定；并在重新绑定前清理上一页的 document 级监听器，避免累积。
 	let headerObserver: IntersectionObserver | null = null;
 	let onScroll: (() => void) | null = null;
-	let onKeydown: ((e: KeyboardEvent) => void) | null = null;
+	let cleanupLightbox: (() => void) | null = null;
+	document.addEventListener("astro:before-swap", () => cleanupLightbox?.());
 
 	document.addEventListener("astro:page-load", () => {
 		// 清理上一篇文章页注册的 document 级监听器与观察器
 		headerObserver?.disconnect();
 		if (onScroll) document.removeEventListener("scroll", onScroll);
-		if (onKeydown) document.removeEventListener("keydown", onKeydown);
 		headerObserver = null;
 		onScroll = null;
-		onKeydown = null;
+		cleanupLightbox = null;
 
 		const scrollBtn = document.getElementById("to-top-btn") as HTMLButtonElement;
 		const targetHeader = document.getElementById("blog-hero") as HTMLDivElement;
 		const progressBar = document.getElementById("reading-progress") as HTMLDivElement;
-		const lightbox = document.getElementById("lightbox") as HTMLDivElement;
+		const lightbox = document.getElementById("lightbox") as HTMLDialogElement;
 		const lightboxImg = document.getElementById("lightbox-img") as HTMLImageElement;
 		// 非文章页没有这些元素，直接跳过
 		if (!scrollBtn || !targetHeader || !progressBar || !lightbox || !lightboxImg) return;
@@ -169,7 +160,10 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 		}
 
 		scrollBtn.addEventListener("click", () => {
-			document.documentElement.scrollTo({ behavior: "smooth", top: 0 });
+			document.documentElement.scrollTo({
+				behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+				top: 0,
+			});
 		});
 
 		headerObserver = new IntersectionObserver(callback);
@@ -220,30 +214,55 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 			const py = clientY - (rect.top + rect.height / 2);
 			// transform-origin 是图片中心，反推平移量让缩放锚定光标
 			const ratio = nextScale / scale;
-			tx = px - ratio * (px - tx);
-			ty = py - ratio * (py - ty);
+			tx += (1 - ratio) * px;
+			ty += (1 - ratio) * py;
 			scale = nextScale;
-			if (scale === 1) {
-				tx = 0;
-				ty = 0;
-			}
 			applyTransform();
 		}
 
-		function closeLightbox() {
-			lightbox.classList.remove("open");
-			document.body.style.overflow = "";
+		let opener: HTMLImageElement | null = null;
+		let previousOverflow = "";
+		function restoreLightbox() {
+			document.body.style.overflow = previousOverflow;
 			resetZoom();
+			activePointers.clear();
+			dragStart = null;
+			pinchAnchor = null;
+			lastMid = null;
+			opener?.focus({ preventScroll: true });
 		}
+		function closeLightbox() {
+			if (lightbox.open) lightbox.close();
+		}
+		lightbox.addEventListener("close", restoreLightbox);
+		cleanupLightbox = () => {
+			if (!lightbox.open) return;
+			lightbox.removeEventListener("close", restoreLightbox);
+			lightbox.close();
+			restoreLightbox();
+		};
 		document.querySelectorAll<HTMLImageElement>(".prose img").forEach((img) => {
 			if (img.closest("a")) return; // 跳过链接里的图（如 wandb 徽章），保留跳转行为
 			img.style.cursor = "zoom-in";
+			img.tabIndex = 0;
+			img.setAttribute("role", "button");
+			img.setAttribute("aria-haspopup", "dialog");
+			img.setAttribute("aria-label", `放大查看：${img.alt || "文章图片"}`);
+			img.addEventListener("keydown", (e) => {
+				if (e.key !== "Enter" && e.key !== " ") return;
+				e.preventDefault();
+				img.click();
+			});
 			img.addEventListener("click", () => {
+				if (lightbox.open) return;
 				resetZoom();
+				opener = img;
 				lightboxImg.src = img.currentSrc || img.src;
 				lightboxImg.alt = img.alt;
-				lightbox.classList.add("open");
+				previousOverflow = document.body.style.overflow;
+				lightbox.showModal();
 				document.body.style.overflow = "hidden";
+				document.getElementById("lightbox-close")?.focus();
 			});
 		});
 		// X 按钮也在遮罩内，点击图片之外的任何位置都会触发关闭
@@ -255,7 +274,7 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 		lightbox.addEventListener(
 			"wheel",
 			(e) => {
-				if (!lightbox.classList.contains("open")) return;
+				if (!lightbox.open) return;
 				e.preventDefault();
 				zoomAt(e.clientX, e.clientY, scale * (e.deltaY < 0 ? 1.2 : 1 / 1.2));
 			},
@@ -306,6 +325,7 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 				tx += midX - lastMid.x;
 				ty += midY - lastMid.y;
 				lastMid = { x: midX, y: midY };
+				applyTransform();
 				zoomAt(midX, midY, pinchAnchor.scale * (dist / pinchAnchor.dist));
 			} else if (dragStart && scale > 1) {
 				tx = dragStart.tx + (e.clientX - dragStart.x);
@@ -327,9 +347,5 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 		}
 		lightboxImg.addEventListener("pointerup", endPointer);
 		lightboxImg.addEventListener("pointercancel", endPointer);
-		onKeydown = (e) => {
-			if (e.key === "Escape" && lightbox.classList.contains("open")) closeLightbox();
-		};
-		document.addEventListener("keydown", onKeydown);
 	});
 </script>

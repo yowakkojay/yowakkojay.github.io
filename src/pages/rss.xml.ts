@@ -1,9 +1,10 @@
 import rss from "@astrojs/rss";
 import { getAllPosts } from "@/data/post";
 import { siteConfig } from "@/site.config";
+import { collectionDateSort } from "@/utils/date";
 
 export const GET = async () => {
-	const posts = await getAllPosts();
+	const posts = (await getAllPosts()).sort(collectionDateSort);
 
 	return rss({
 		title: siteConfig.title,

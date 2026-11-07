@@ -3,6 +3,7 @@ import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
 import { Icon } from "astro-icon/components";
 import PostPreview from "@/components/blog/PostPreview.astro";
 import Pagination from "@/components/Paginator.astro";
+import { getCategoryInfo } from "@/data/categories";
 import { getAllPosts, getUniqueCategories } from "@/data/post";
 import PageLayout from "@/layouts/Base.astro";
 import { collectionDateSort } from "@/utils/date";
@@ -14,21 +15,27 @@ export const getStaticPaths = (async ({ paginate }) => {
 
 	return uniqueCategories.flatMap((category) => {
 		const postsWithCategory = sortedPosts.filter((post) => post.data.category === category);
+		const readingOrder = getCategoryInfo(category).readingOrder;
+		const recommendedPosts = readingOrder.flatMap((id) =>
+			postsWithCategory.filter((post) => post.id === id),
+		);
 		return paginate(postsWithCategory, {
 			pageSize: 10,
 			params: { category },
+			props: { recommendedPosts },
 		});
 	});
 }) satisfies GetStaticPaths;
 
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
-const { page } = Astro.props as Props;
+const { page, recommendedPosts } = Astro.props as Props;
 const { category } = Astro.params;
+const info = getCategoryInfo(category);
 
 const meta = {
-	description: `分类「${category}」下的全部文章`,
-	title: `分类：${category}`,
+	description: info.description,
+	title: `专题：${info.name}`,
 };
 
 const paginationProps = {
@@ -48,16 +55,26 @@ const paginationProps = {
 ---
 
 <PageLayout meta={meta}>
-	<nav class="mb-8" aria-label="Breadcrumbs">
+	<nav class="mb-8" aria-label="当前位置">
 		<ul class="flex items-center">
 			<li class="flex items-center">
-				<a class="text-accent" href="/categories/">全部分类</a>
+				<a class="text-accent" href="/categories/">全部专题</a>
 				<Icon aria-hidden="true" name="mdi:chevron-right" class="mx-1.5" />
 			</li>
-			<li aria-current="page">{category}</li>
+			<li aria-current="page">{info.name}</li>
 		</ul>
 	</nav>
-	<h1 class="title">{category}</h1>
+	<h1 class="title">{info.name}</h1>
+	<p class="text-muted mt-4">{info.description}</p>
+	{page.currentPage === 1 && recommendedPosts.length > 0 && (
+		<section class="mt-10" aria-labelledby="reading-order">
+			<h2 class="title text-xl" id="reading-order">建议从这里读起</h2>
+			<ol class="mt-4 list-decimal space-y-3 ps-6">
+				{recommendedPosts.map((post) => <li><a class="cactus-link" href={`/posts/${post.id}/`}>{post.data.title}</a></li>)}
+			</ol>
+		</section>
+	)}
+	<h2 class="title mt-12 text-xl">全部文章 <span class="text-muted font-mono text-sm">{page.total} 篇</span></h2>
 	<ul class="mt-8 space-y-6">
 		{
 			page.data.map((p) => (

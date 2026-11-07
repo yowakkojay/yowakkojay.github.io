@@ -2,7 +2,7 @@
 
 ## 项目说明
 
-个人博客（GitHub Pages，`yowakkojay.github.io`），Astro 6 + Tailwind CSS 4。
+个人博客（GitHub Pages，`yowakkojay.github.io`），Astro 7 + Tailwind CSS 4。Node 版本见 `.nvmrc`。
 
 ## 部署约定
 
@@ -14,3 +14,6 @@
 - 开发：`npm run dev`
 - 校验：`npm run check`（astro check + biome check）
 - 构建：`npm run build`（astro build + pagefind 索引）
+- 测试：`npm test`（日期、发布规则和链接检查器）
+- 构建后自动执行站内链接与锚点检查；单独执行：`npm run check:links`
+- 创建草稿：`npm run new:post -- slug "标题"` / `npm run new:note -- slug "标题"`

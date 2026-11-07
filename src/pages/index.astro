@@ -1,16 +1,19 @@
 ---
-import { type CollectionEntry, getCollection } from "astro:content";
+import type { CollectionEntry } from "astro:content";
 import PostPreview from "@/components/blog/PostPreview.astro";
 import HeroCanvas from "@/components/HeroCanvas.astro";
 import Note from "@/components/note/Note.astro";
 import SocialList from "@/components/SocialList.astro";
-import { getAllPosts } from "@/data/post";
+import { getCategoryInfo } from "@/data/categories";
+import { getAllNotes } from "@/data/note";
+import { getAllPosts, getUniqueCategoriesWithCount } from "@/data/post";
 import PageLayout from "@/layouts/Base.astro";
 import { collectionDateSort } from "@/utils/date";
 
 // Posts
 const MAX_POSTS = 10;
 const allPosts = await getAllPosts();
+const categories = getUniqueCategoriesWithCount(allPosts);
 const allPostsByDate = allPosts.sort(collectionDateSort) as CollectionEntry<"post">[];
 const latestPosts = allPostsByDate.slice(0, MAX_POSTS);
 
@@ -24,7 +27,7 @@ const pinnedPosts = allPostsByDate
 
 // Notes, set to a max of 5
 const MAX_NOTES = 5;
-const allNotes = await getCollection("note");
+const allNotes = await getAllNotes();
 const latestNotes = allNotes
 	.sort(collectionDateSort)
 	.slice(0, MAX_NOTES) as CollectionEntry<"note">[];
@@ -41,6 +44,16 @@ const latestNotes = allNotes
 			<SocialList />
 		</div>
 	</section>
+	{categories.length > 0 && (
+		<section class="mt-12" aria-labelledby="topics-heading">
+			<h2 class="title text-xl" id="topics-heading"><a href="/categories/">按专题阅读</a></h2>
+			<ul class="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+				{categories.map(([slug, count]) => (
+					<li><a class="cactus-link" href={`/categories/${slug}/`}>{getCategoryInfo(slug).name}</a><span class="text-muted ms-2 font-mono text-sm">{count}</span></li>
+				))}
+			</ul>
+		</section>
+	)}
 	{
 		pinnedPosts.length > 0 && (
 			<section class="mt-16">
@@ -71,7 +84,7 @@ const latestNotes = allNotes
 		latestNotes.length > 0 && (
 			<section class="mt-16">
 				<h2 class="title text-accent mb-6 text-xl">
-					<a href="/notes/">Notes</a>
+					<a href="/notes/">短笔记</a>
 				</h2>
 				<ul class="space-y-6" role="list">
 					{latestNotes.map((note) => (

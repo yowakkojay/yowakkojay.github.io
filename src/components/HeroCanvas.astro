@@ -94,6 +94,8 @@
 		let raf = 0;
 		let running = false;
 		let inView = true;
+		const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+		let themeTimer: number | undefined;
 		let themeKey = "";
 		let colorGrid = "#888";
 		let colorAccent = "#c2402e";
@@ -249,7 +251,7 @@
 		};
 
 		const start = () => {
-			if (!running && inView && !document.hidden) {
+			if (!running && inView && !document.hidden && !reducedMotion.matches) {
 				running = true;
 				raf = requestAnimationFrame(frame);
 			}
@@ -274,7 +276,17 @@
 			readColors();
 			if (!running) draw(performance.now()); // 静态模式（减少动态效果）下也同步换色
 			// 兜底：动画完成/中止（降级路径会提前摘类）后再读一次，确保收敛到最终主题色
-			window.setTimeout(readColors, 500);
+			window.clearTimeout(themeTimer);
+			themeTimer = window.setTimeout(() => {
+				readColors();
+				if (!running) draw(performance.now());
+			}, 500);
+		};
+		const onMotionChange = () => {
+			if (reducedMotion.matches) {
+				stop();
+				draw(1200);
+			} else start();
 		};
 
 		const io = new IntersectionObserver((entries) => {
@@ -284,15 +296,19 @@
 		});
 		io.observe(canvas);
 
-		const ro = new ResizeObserver(resize);
+		const ro = new ResizeObserver(() => {
+			resize();
+			if (!running) draw(1200);
+		});
 		ro.observe(canvas);
 
 		window.addEventListener("mousemove", onMouseMove, { passive: true });
 		document.documentElement.addEventListener("mouseleave", onMouseLeave);
 		document.addEventListener("visibilitychange", onVisibility);
-		document.addEventListener("theme-change", onThemeChange);
+		document.addEventListener("theme-applied", onThemeChange);
+		reducedMotion.addEventListener("change", onMotionChange);
 
-		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+		if (reducedMotion.matches) {
 			draw(1200); // 静态一帧，不开启动画循环
 		} else {
 			start();
@@ -300,12 +316,14 @@
 
 		cleanup = () => {
 			stop();
+			window.clearTimeout(themeTimer);
 			io.disconnect();
 			ro.disconnect();
 			window.removeEventListener("mousemove", onMouseMove);
 			document.documentElement.removeEventListener("mouseleave", onMouseLeave);
 			document.removeEventListener("visibilitychange", onVisibility);
-			document.removeEventListener("theme-change", onThemeChange);
+			document.removeEventListener("theme-applied", onThemeChange);
+			reducedMotion.removeEventListener("change", onMotionChange);
 		};
 	}
 

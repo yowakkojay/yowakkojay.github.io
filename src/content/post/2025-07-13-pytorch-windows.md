@@ -158,7 +158,7 @@ conda activate lucidcrucible
 
 ![pytorch](/images/2025-07-13-pytorch-windows/pytorch-1.webp)
 
-在你确定好当前环境正确后，就可以通过命令下载安装了：（截至本文写时，由于pytorch支持的最新计算平台还只是CUDA12.8，所以这里下载的是cu128，只要你本地安装的CUDA版本高于pytorch要求的CUDA版本即可，本文中安装的CUDA12.9很明显高于CUDA12.8。多嘴一句，这里的12.9并非`nvidia-smi`显卡信息字段中的<a href="#2-NVIDIA显卡驱动" style="color:red; font-weight:bold">CUDA Version</a>，而是<a href="#31-CUDA Toolkit" style="color: red">CUDA Toolkit</a>处的12.9）
+在你确定好当前环境正确后，就可以通过命令下载安装了：（截至本文写时，由于pytorch支持的最新计算平台还只是CUDA12.8，所以这里下载的是cu128，只要你本地安装的CUDA版本高于pytorch要求的CUDA版本即可，本文中安装的CUDA12.9很明显高于CUDA12.8。多嘴一句，这里的12.9并非`nvidia-smi`显卡信息字段中的<a href="#2-nvidia显卡驱动" style="color:red; font-weight:bold">CUDA Version</a>，而是<a href="#31-cuda-toolkit" style="color: red">CUDA Toolkit</a>处的12.9）
 
 ```cmd
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128

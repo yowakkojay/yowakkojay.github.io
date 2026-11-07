@@ -190,6 +190,12 @@ html.theme-transition #to-top-btn {
 	color: var(--color-global-text);
 }
 
+@media (prefers-reduced-motion: reduce) {
+	html.scroll-smooth {
+		scroll-behavior: auto;
+	}
+}
+
 /* ==========================================================================
    Expressive Code 代码块窗口圆点
    ========================================================================== */

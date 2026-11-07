@@ -23,6 +23,7 @@ export const siteConfig: SiteConfig = {
 	date: {
 		locale: "zh-CN",
 		options: {
+			timeZone: "Asia/Shanghai",
 			day: "numeric",
 			month: "long",
 			year: "numeric",
@@ -39,6 +40,14 @@ export const menuLinks: { path: string; title: string }[] = [
 	{
 		path: "/posts/",
 		title: "博客",
+	},
+	{
+		path: "/categories/",
+		title: "专题",
+	},
+	{
+		path: "/notes/",
+		title: "短笔记",
 	},
 	{
 		path: "/about/",

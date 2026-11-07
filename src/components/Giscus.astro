@@ -4,7 +4,7 @@
 // 配置 ID 从仓库 GraphQL API 获取，详见 https://giscus.app
 ---
 
-<section class="mt-16">
+<section class="mt-16" data-pagefind-ignore>
 	<div class="mb-6 flex items-baseline justify-between">
 		<h2 class="title text-accent text-xl">评论</h2>
 		<a
@@ -15,12 +15,11 @@
 			>管理评论 →</a
 		>
 	</div>
-	<div class="giscus"></div>
+	<div class="giscus">
+		<button class="cactus-link cursor-pointer text-sm" type="button" data-load-comments>加载评论</button>
+		<p class="text-muted text-sm" role="status" data-comments-status>评论将在接近此处时加载，需要 GitHub 账号参与讨论。</p>
+	</div>
 </section>
-
-<script is:inline define:vars={{}}>
-	// 这些值在构建时硬编码（来自仓库配置），无需运行时变量
-</script>
 
 <script>
 	const giscusConfig = {
@@ -45,7 +44,11 @@
 
 	function loadGiscus() {
 		const container = document.querySelector(".giscus");
-		if (!container || container.querySelector("iframe.giscus-frame")) return;
+		if (!container || container.querySelector("iframe.giscus-frame, script")) return;
+		const button = container.querySelector<HTMLButtonElement>("[data-load-comments]");
+		const status = container.querySelector<HTMLElement>("[data-comments-status]");
+		if (button) button.disabled = true;
+		if (status) status.textContent = "正在连接评论服务…";
 
 		const script = document.createElement("script");
 		script.src = "https://giscus.app/client.js";
@@ -55,12 +58,32 @@
 			script.setAttribute(`data-${key}`, value);
 		}
 		script.setAttribute("data-theme", currentGiscusTheme());
+		script.addEventListener("load", () => {
+			button?.remove();
+			status?.remove();
+		});
+		script.addEventListener("error", () => {
+			script.remove();
+			if (button) button.disabled = false;
+			if (status) status.textContent = "评论暂时无法加载，可重试或前往 GitHub 讨论区。";
+		});
 		container.appendChild(script);
 	}
 
-	// astro:page-load 在首次加载和 ClientRouter 每次页面切换后都会触发；
-	// loadGiscus 内部有 iframe 存在性检查，重复触发不会重复注入
-	document.addEventListener("astro:page-load", loadGiscus);
+	let observer: IntersectionObserver | null = null;
+	document.addEventListener("astro:before-swap", () => observer?.disconnect());
+	document.addEventListener("astro:page-load", () => {
+		observer?.disconnect();
+		const container = document.querySelector(".giscus");
+		if (!container) return;
+		container.querySelector("[data-load-comments]")?.addEventListener("click", loadGiscus);
+		observer = new IntersectionObserver((entries) => {
+			if (!entries.some((entry) => entry.isIntersecting)) return;
+			observer?.disconnect();
+			loadGiscus();
+		}, { rootMargin: "240px" });
+		observer.observe(container);
+	});
 
 	// 监听站点主题切换，动态通知 Giscus iframe 切换明暗主题
 	function syncGiscusTheme() {
@@ -82,7 +105,7 @@
 	// iframe 重渲染评论是同步重活且与页面同线程，延后到整页渐变结束后再做，
 	// 避免在 350ms 动画窗口内阻塞主线程（评论区本身随 iframe 自行换肤即可）
 	let giscusSyncTimer: number | undefined;
-	document.addEventListener("theme-change", () => {
+	document.addEventListener("theme-applied", () => {
 		window.clearTimeout(giscusSyncTimer);
 		giscusSyncTimer = window.setTimeout(syncGiscusTheme, 450);
 	});

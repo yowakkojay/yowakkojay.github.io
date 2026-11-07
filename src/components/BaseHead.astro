@@ -8,12 +8,13 @@ import "katex/dist/katex.min.css";
 
 type Props = SiteMeta;
 
-const { articleDate, description, ogImage, title } = Astro.props;
+const { articleDate, modifiedDate, description, ogImage, title } = Astro.props;
 
 const titleSeparator = "•";
 const siteTitle = `${title} ${titleSeparator} ${siteConfig.title}`;
-const canonicalURL = new URL(Astro.url.pathname, Astro.site);
-const socialImageURL = new URL(ogImage ? ogImage : "/social-card.png", Astro.url).href;
+const isNotFound = /^\/404(?:\/|\.html)?$/.test(Astro.url.pathname);
+const canonicalURL = new URL(isNotFound ? "/404.html" : Astro.url.pathname, Astro.site);
+const socialImageURL = new URL(ogImage ? ogImage : "/social-card.png", Astro.site).href;
 ---
 
 <meta charset="utf-8" />
@@ -22,7 +23,7 @@ const socialImageURL = new URL(ogImage ? ogImage : "/social-card.png", Astro.url
 
 {/* Icons */}
 <link href="/killua_256.ico" rel="icon" />
-<link href="/killua.webp" rel="apple-touch-icon" />
+<link href="/icons/apple-touch-icon.png" rel="apple-touch-icon" />
 {
 	import.meta.env.PROD && (
 		<>
@@ -38,6 +39,7 @@ const socialImageURL = new URL(ogImage ? ogImage : "/social-card.png", Astro.url
 {/* Primary Meta Tags */}
 <meta content={siteTitle} name="title" />
 <meta content={description} name="description" />
+{isNotFound && <meta name="robots" content="noindex" />}
 <meta content={siteConfig.author} name="author" />
 
 {/* Open Graph / Facebook */}
@@ -55,6 +57,7 @@ const socialImageURL = new URL(ogImage ? ogImage : "/social-card.png", Astro.url
 		<>
 			<meta content={siteConfig.author} property="article:author" />
 			<meta content={articleDate} property="article:published_time" />
+			{modifiedDate && <meta content={modifiedDate} property="article:modified_time" />}
 		</>
 	)
 }

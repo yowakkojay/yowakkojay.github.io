@@ -1,6 +1,6 @@
 <theme-toggle>
 	<button class="hover:text-accent relative h-9 w-9 cursor-pointer p-2" type="button">
-		<span class="sr-only">Dark Theme</span>
+		<span class="sr-only">深色模式</span>
 		<svg
 			aria-hidden="true"
 			class="absolute inset-s-1/2 top-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 scale-100 opacity-100 transition-all dark:scale-0 dark:opacity-0"
@@ -53,7 +53,6 @@
 </theme-toggle>
 
 <script>
-	// Note that if you fire the theme-change event outside of this component, it will not be reflected in the button's aria-checked attribute. You will need to add an event listener if you want that.
 	import { rootInDarkMode } from "@/utils/domElement";
 
 	/* 主题切换动画（2026-08 定稿）：点击后由 JS 在 rAF 循环里逐帧插值 7 个主题
@@ -111,6 +110,19 @@
 
 	class ThemeToggle extends HTMLElement {
 		#animRaf = 0;
+		#syncState = () => {
+			this.querySelector("button")?.setAttribute("aria-checked", String(rootInDarkMode()));
+		};
+
+		connectedCallback() {
+			this.#syncState();
+			document.addEventListener("theme-applied", this.#syncState);
+		}
+
+		disconnectedCallback() {
+			cancelAnimationFrame(this.#animRaf);
+			document.removeEventListener("theme-applied", this.#syncState);
+		}
 		// 渲染器被判定降级（帧率不足以呈现动画）的截止时间，期间切换直接瞬变
 		static #degradedUntil = 0;
 
@@ -146,8 +158,6 @@
 						this.#animateToggle(root, applyTheme);
 					}
 
-					// set the aria-checked attribute
-					button.setAttribute("aria-checked", String(rootInDarkMode()));
 				});
 			} else {
 				console.warn("Theme Toggle: No button found");

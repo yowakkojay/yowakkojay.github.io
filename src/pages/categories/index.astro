@@ -1,4 +1,5 @@
 ---
+import { getCategoryInfo } from "@/data/categories";
 import { getAllPosts, getUniqueCategoriesWithCount } from "@/data/post";
 import PageLayout from "@/layouts/Base.astro";
 
@@ -6,25 +7,29 @@ const allPosts = await getAllPosts();
 const allCategories = getUniqueCategoriesWithCount(allPosts);
 
 const meta = {
-	description: "A list of all the categories of my posts",
-	title: "全部分类",
+	description: "按数学基础、深度学习与工程实践阅读博客，每个专题提供介绍与推荐阅读顺序。",
+	title: "专题",
 };
 ---
 
 <PageLayout meta={meta}>
-	<h1 class="title mb-6">全部分类</h1>
-	<ul class="space-y-4">
+	<h1 class="title mb-6">专题</h1>
+	<p class="text-muted mb-12">从一个问题出发，沿着一条线读下去。每个专题都整理了推荐阅读顺序。</p>
+	<ul class="space-y-10">
 		{
 			allCategories.map(([category, val]) => (
-				<li class="flex items-center gap-x-2">
+				<li>
+					<h2 class="text-lg font-semibold">
 					<a
 						class="cactus-link -my-1 inline-block py-1"
 						href={`/categories/${category}/`}
-						title={`View posts in the category: ${category}`}
+						title={`阅读专题：${getCategoryInfo(category).name}`}
 					>
-						{category}
+						{getCategoryInfo(category).name}
 					</a>
-					<span class="inline-block">- {val} 篇</span>
+					<span class="text-muted ms-3 font-mono text-sm">{val} 篇</span>
+					</h2>
+					<p class="text-muted mt-2">{getCategoryInfo(category).description}</p>
 				</li>
 			))
 		}

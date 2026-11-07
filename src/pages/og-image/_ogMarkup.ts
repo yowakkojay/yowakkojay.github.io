@@ -1,4 +1,7 @@
+import { readFileSync } from "node:fs";
+import satori, { type SatoriOptions } from "satori";
 import { html } from "satori-html";
+import sharp from "sharp";
 import { siteConfig } from "@/site.config";
 
 // OG image markup, use https://og-playground.vercel.app/ to design your own.
@@ -10,6 +13,33 @@ export const ogMarkup = (title: string, pubDate: string) =>
 		</div>
 		<div tw="flex items-center justify-between w-full p-10 border-t-2 border-[#2bbc89] text-white">
 			<p tw="text-2xl ml-3 font-semibold">${siteConfig.title}</p>
-			<p>by ${siteConfig.author}</p>
+			<p>yowakkojay.com</p>
 		</div>
 	</div>`;
+
+// 仅在构建期读取本地字体，页面不下载 webfont，也不依赖在线字体服务。
+const fonts: SatoriOptions["fonts"] = [
+	{
+		name: "Roboto Mono",
+		data: readFileSync("src/assets/roboto-mono-regular.ttf"),
+		weight: 400,
+		style: "normal",
+	},
+	{
+		name: "Roboto Mono",
+		data: readFileSync("src/assets/roboto-mono-700.ttf"),
+		weight: 700,
+		style: "normal",
+	},
+	{
+		name: "Noto Sans SC",
+		data: readFileSync("src/assets/noto-sans-sc-regular.otf"),
+		weight: 400,
+		style: "normal",
+	},
+];
+
+export async function renderOgImage(title: string, subtitle: string) {
+	const svg = await satori(ogMarkup(title, subtitle), { fonts, width: 1200, height: 630 });
+	return sharp(Buffer.from(svg)).png().toBuffer();
+}
