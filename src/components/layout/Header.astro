@@ -225,8 +225,10 @@ import { menuLinks, siteConfig } from "@/site.config";
 		opacity: 1;
 	}
 	@keyframes glass-menu-in {
-		from { opacity: 0; transform: translateY(-6px) scale(0.98); }
-		to { opacity: 1; transform: translateY(0) scale(1); }
+		/* 不能给玻璃的祖先做 opacity 动画：opacity < 1 会建立新的 backdrop root，
+		   子层采样不到页面，结束时才恢复模糊，形成透明→玻璃的闪烁。 */
+		from { transform: translateY(-6px); }
+		to { transform: translateY(0); }
 	}
 	@media (min-width: 48rem) {
 		.glass-header { padding-inline: 0.875rem 0.625rem; }
@@ -279,6 +281,8 @@ import { menuLinks, siteConfig } from "@/site.config";
 		connectedCallback() {
 			this.#controller?.abort();
 			this.#resize?.disconnect();
+			cancelAnimationFrame(this.#frame);
+			this.#frame = 0;
 			this.#controller = new AbortController();
 			const { signal } = this.#controller;
 			const header = this.closest<HTMLElement>("header");
@@ -349,17 +353,31 @@ import { menuLinks, siteConfig } from "@/site.config";
 				}
 			}, { signal });
 			desktop.addEventListener("change", () => setOpen(false), { signal });
+			// 用百分比保留高光位置，离开或调整窗口后都不会突然回到 CSS 默认位置。
+			const storedGlowPosition = Number.parseFloat(header.style.getPropertyValue("--glass-x"));
+			let glowPosition = Number.isFinite(storedGlowPosition) ? storedGlowPosition : 30;
+			let glowTarget = glowPosition;
+			let lastFrame = 0;
+			const followGlow = (now: number) => {
+				this.#frame = 0;
+				if (signal.aborted || reducedMotion.matches) return;
+				const elapsed = lastFrame ? Math.min(now - lastFrame, 64) : 16;
+				lastFrame = now;
+				glowPosition += (glowTarget - glowPosition) * (1 - Math.exp(-elapsed / 65));
+				if (Math.abs(glowTarget - glowPosition) < 0.02) glowPosition = glowTarget;
+				header.style.setProperty("--glass-x", `${glowPosition}%`);
+				if (glowPosition !== glowTarget) this.#frame = requestAnimationFrame(followGlow);
+			};
 			header.addEventListener("pointermove", (event) => {
 				if (event.pointerType !== "mouse" || reducedMotion.matches) return;
-				cancelAnimationFrame(this.#frame);
-				this.#frame = requestAnimationFrame(() => {
-					header.style.setProperty("--glass-x", `${event.clientX - header.getBoundingClientRect().left}px`);
-				});
+				const rect = header.getBoundingClientRect();
+				if (!rect.width) return;
+				glowTarget = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
+				if (!this.#frame) {
+					lastFrame = 0;
+					this.#frame = requestAnimationFrame(followGlow);
+				}
 			}, { signal, passive: true });
-			header.addEventListener("pointerleave", () => {
-				cancelAnimationFrame(this.#frame);
-				header.style.removeProperty("--glass-x");
-			}, { signal });
 			this.#resize = new ResizeObserver(reset);
 			this.#resize.observe(this);
 			reset();
@@ -369,6 +387,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 			this.#controller?.abort();
 			this.#resize?.disconnect();
 			cancelAnimationFrame(this.#frame);
+			this.#frame = 0;
 		}
 	}
 	customElements.define("glass-navigation", GlassNavigation);
