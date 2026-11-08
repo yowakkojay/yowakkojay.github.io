@@ -371,6 +371,10 @@ import { menuLinks, siteConfig } from "@/site.config";
 </style>
 
 <script>
+	// 上一次滑块的几何（模块级变量，ClientRouter 换页时存活）：
+	// 导航重建后滑块从上一页的位置滑到新页的当前项，而不是从 0 尺寸缩放弹出。
+	let lastChip: { x: number; y: number; width: number; height: number } | null = null;
+
 	class GlassNavigation extends HTMLElement {
 		#controller: AbortController | undefined;
 		#resize: ResizeObserver | undefined;
@@ -389,22 +393,36 @@ import { menuLinks, siteConfig } from "@/site.config";
 			if (!header || !indicator || !button) return;
 			const desktop = window.matchMedia("(min-width: 48rem)");
 			const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-			const current = this.querySelector<HTMLAnchorElement>('[aria-current="page"]');
-			const moveTo = (link: HTMLAnchorElement | null) => {
+			let current = this.querySelector<HTMLAnchorElement>('[aria-current="page"]');
+			const placeChip = (link: HTMLAnchorElement) => {
+				indicator.style.width = `${link.offsetWidth}px`;
+				indicator.style.height = `${link.offsetHeight}px`;
+				indicator.style.transform = `translate(${link.offsetLeft}px, ${link.offsetTop}px)`;
+				indicator.style.opacity = "1";
+				lastChip = { x: link.offsetLeft, y: link.offsetTop, width: link.offsetWidth, height: link.offsetHeight };
+			};
+			const moveTo = (link: HTMLAnchorElement | null, animate = true) => {
 				// 手机端只用 aria-current 标记所在页，不能把触摸/焦点当成选中态。
 				if (!desktop.matches || !link || !this.offsetWidth) {
 					indicator.style.opacity = "0";
 					return;
 				}
-				indicator.style.width = `${link.offsetWidth}px`;
-				indicator.style.height = `${link.offsetHeight}px`;
-				indicator.style.transform = `translate(${link.offsetLeft}px, ${link.offsetTop}px)`;
-				indicator.style.opacity = "1";
+				if (animate) {
+					placeChip(link);
+				}
+				else {
+					// 首次落位/尺寸变化：先关过渡直接就位并强制重算提交，再恢复过渡，
+					// 避免滑块从 0 尺寸初始态带动画定位（缩放弹出）。
+					indicator.style.transition = "none";
+					placeChip(link);
+					void indicator.offsetWidth;
+					indicator.style.transition = "";
+				}
 				this.dataset.ready = "";
 			};
-			const reset = () => {
+			const reset = (animate = true) => {
 				const focused = this.contains(document.activeElement) && document.activeElement instanceof HTMLAnchorElement ? document.activeElement : current;
-				moveTo(focused);
+				moveTo(focused, animate);
 			};
 			const setOpen = (open: boolean) => {
 				header.toggleAttribute("data-menu-open", open);
@@ -430,8 +448,8 @@ import { menuLinks, siteConfig } from "@/site.config";
 				link.addEventListener("focus", () => moveTo(link), { signal });
 				link.addEventListener("click", () => setOpen(false), { signal });
 			});
-			this.addEventListener("pointerleave", reset, { signal });
-			this.addEventListener("focusout", () => queueMicrotask(reset), { signal });
+			this.addEventListener("pointerleave", () => reset(), { signal });
+			this.addEventListener("focusout", () => queueMicrotask(() => reset()), { signal });
 			header.addEventListener("focusout", (event) => {
 				// Safari 点按按钮可能先把焦点交给 body（relatedTarget=null）。
 				// 这种情况交由 click 处理，否则会先关闭、再被同一次 click 重新打开。
@@ -490,9 +508,40 @@ import { menuLinks, siteConfig } from "@/site.config";
 					this.#frame = requestAnimationFrame(followLight);
 				}
 			}, { signal, passive: true });
-			this.#resize = new ResizeObserver(reset);
+			// observe() 会先发一次初始通知，跳过它，否则会打断首次落位的滑入动画。
+			let resizePrimed = false;
+			this.#resize = new ResizeObserver(() => {
+				if (!resizePrimed) {
+					resizePrimed = true;
+					return;
+				}
+				reset(false);
+			});
 			this.#resize.observe(this);
-			reset();
+			// 首次落位：客户端导航重建后从上一页的位置滑到新页当前项；首次访问直接就位。
+			const initial = current ?? this.querySelector<HTMLAnchorElement>("a");
+			if (desktop.matches && initial && this.offsetWidth && lastChip) {
+				indicator.style.transition = "none";
+				indicator.style.width = `${lastChip.width}px`;
+				indicator.style.height = `${lastChip.height}px`;
+				indicator.style.transform = `translate(${lastChip.x}px, ${lastChip.y}px)`;
+				indicator.style.opacity = "1";
+				void indicator.offsetWidth;
+				indicator.style.transition = "";
+				placeChip(initial);
+				this.dataset.ready = "";
+			}
+			else {
+				reset(false);
+			}
+			document.addEventListener("astro:page-load", () => {
+				// 保险：若组件在客户端导航中被保留（未重建），aria-current 已更新但引用过期，滑到新的当前项。
+				const latest = this.querySelector<HTMLAnchorElement>('[aria-current="page"]');
+				if (latest && latest !== current) {
+					current = latest;
+					reset();
+				}
+			}, { signal });
 		}
 
 		disconnectedCallback() {
