@@ -353,7 +353,8 @@ import { menuLinks, siteConfig } from "@/site.config";
 			animation: none;
 		}
 		.glass-nav .glass-layers,
-		.glass-nav .glass-tint { display: none; }
+		.glass-nav .glass-tint,
+		.glass-nav::after { display: none; }
 		glass-navigation { flex-direction: row; max-height: none; overflow: visible; }
 		glass-navigation a { padding-inline: 0.875rem; }
 		glass-navigation[data-ready] a[aria-current="page"] { background: transparent; }
