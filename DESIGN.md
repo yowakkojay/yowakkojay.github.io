@@ -214,7 +214,7 @@ components:
 
 ### 导航（Nav）
 
-- **材质:** iOS 26 液态玻璃复刻，五层堆叠：① 底色近乎全透明（亮 3% / 暗 5%）；② `blur(2px) saturate(180%) brightness(1.06)` 清玻璃高饱和提亮（暗色 brightness 1.38 做亮度提升），内容透出且有玻璃"发光感"；③ 折射层 `.glass-refraction` 子元素叠加 `backdrop-filter: url(#liquid-glass-lens)`（feImage 横纵双线性渐变位移贴图 scale 60，R/G 分轴编码，中心不变形、边缘弯折，再叠 scale 8 湍流微波纹），仅 Chromium 支持、其余引擎自动忽略；④ `::after` 用 xor mask 做 1.1px 边缘环，conic-gradient 主高光弧朝向光源 `--light-angle`，两侧带蓝/粉低透明色散；⑤ `::before` 顶部发丝内高光与底部受光亮缘 + 大半径柔投影。玻璃仅用于导航这一层浮动 UI。
+- **材质:** iOS 26 液态玻璃复刻，四层堆叠：① 底色近乎全透明（亮 3% / 暗 5%）；② `blur(2px) saturate(180%) brightness(1.06)` 清玻璃高饱和提亮（暗色 brightness 1.38 做亮度提升），内容透出且有玻璃"发光感"；③ `::after` 用 xor mask 做 1.1px 边缘环，conic-gradient 主高光弧朝向光源 `--light-angle`，两侧带蓝/粉低透明色散；④ `::before` 顶部发丝内高光与底部受光亮缘 + 大半径柔投影。玻璃仅用于导航这一层浮动 UI。⚠️ 不要在玻璃上叠加 backdrop 位移滤镜（feDisplacementMap 折射）：位移会从玻璃边界外采样未提亮的背景，在端头/圆角处拉出暗色斑块（"黑色星星"），已在 2026-11 验证并移除。
 - **桌面:** 整条 64px 高的胶囊导航距视口顶部 16px 吸顶。左侧头像与名称，中间导航，右侧搜索和主题按钮；当前页使用 accent 色，滑动胶囊带弹性回弹（520ms `cubic-bezier(.32,1.35,.42,1)`）。客户端导航重建后，滑块从模块级记录的上一页位置滑到新页当前项（首次访问直接就位，ResizeObserver 初始通知被跳过以免打断）；表面高光与镜边光源角 `--light-angle` 由指针位置驱动，rAF 阻尼最短弧跟随，离开后停在最后位置，不复位到固定坐标；收敛后结束动画循环。
 - **移动:** 同材质、28px 圆角下拉菜单；当前页背景始终由 `aria-current` 决定，与键盘焦点分离，不使用桌面的滑动胶囊。展开时聚焦当前项（无当前项时聚焦第一项）；点击外部、焦点离开或 Escape 关闭。小高度视口下菜单可内部滚动。所有监听器随客户端导航清理。
 - **菜单入场:** 460ms 弹性回弹（translateY -14px → 过冲 +2px → 0，配合 scale 0.94 → 1.012 → 1），transform-origin 顶部，玻璃材质从首帧保持一致。禁止在 backdrop-filter 的祖先上做 opacity 动画，以免改变 backdrop root，造成动画结束时背景采样突然恢复的闪烁。
