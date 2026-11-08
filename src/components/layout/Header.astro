@@ -120,14 +120,23 @@ import { menuLinks, siteConfig } from "@/site.config";
 		inset: -2rem;
 		pointer-events: none;
 	}
+	/* 默认（WebKit/Geko）：基础光学层承担模糊/饱和/提亮。 */
 	.glass-optical {
 		-webkit-backdrop-filter: blur(2px) saturate(180%) brightness(var(--glass-brightness));
 		backdrop-filter: blur(2px) saturate(180%) brightness(var(--glass-brightness));
 	}
 	.glass-warp {
-		/* 仅 Chromium 渲染 SVG 位移；Safari/Firefox 自动退化为无此层。 */
-		-webkit-backdrop-filter: var(--glass-lens);
-		backdrop-filter: var(--glass-lens);
+		display: none;
+	}
+	/* Chromium：单层同时承担位移+模糊+饱和+提亮，避免双层 backdrop 叠加的合成误差。
+	   Safari/Firefox 的声明虽合法但不渲染 SVG 位移，故用引擎嗅探切换。 */
+	.glass-surface[data-warp] .glass-optical {
+		display: none;
+	}
+	.glass-surface[data-warp] .glass-warp {
+		display: block;
+		-webkit-backdrop-filter: var(--glass-lens) blur(2px) saturate(180%) brightness(var(--glass-brightness));
+		backdrop-filter: var(--glass-lens) blur(2px) saturate(180%) brightness(var(--glass-brightness));
 	}
 	.glass-tint {
 		/* 不支持 backdrop-filter 时使用实色，保证文字可读。 */
@@ -375,10 +384,11 @@ import { menuLinks, siteConfig } from "@/site.config";
 		.glass-header[data-menu-open] .glass-nav { animation: none; }
 	}
 	@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
-		.glass-optical,
-		.glass-warp {
-			-webkit-backdrop-filter: none;
-			backdrop-filter: none;
+		.glass-surface .glass-optical,
+		.glass-surface .glass-warp,
+		.glass-surface[data-warp] .glass-optical,
+		.glass-surface[data-warp] .glass-warp {
+			display: none;
 		}
 		.glass-tint {
 			background-color: var(--color-global-bg);
@@ -415,6 +425,13 @@ import { menuLinks, siteConfig } from "@/site.config";
 			const indicator = this.querySelector<HTMLElement>(".glass-indicator");
 			const button = header?.querySelector<HTMLButtonElement>(".glass-menu-button");
 			if (!header || !indicator || !button) return;
+			// 引擎嗅探：仅 Chromium 的 backdrop-filter 能渲染 SVG 位移（Safari 声明合法但直接
+			// 不渲染、Firefox 完全不支持），给 header 打标记后 CSS 才启用位移层。
+			// iOS 上所有浏览器都是 WebKit，误判成 Chromium 也只会得到无位移的基础玻璃，无害。
+			const ua = navigator.userAgent;
+			const safariLike = /Safari/i.test(ua) && !/Chrom(e|ium)|Edg\//.test(ua);
+			const firefoxLike = /Firefox|FxiOS/i.test(ua);
+			if (!safariLike && !firefoxLike) header.dataset.warp = "";
 			const desktop = window.matchMedia("(min-width: 48rem)");
 			const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 			let current = this.querySelector<HTMLAnchorElement>('[aria-current="page"]');
