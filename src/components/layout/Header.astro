@@ -83,6 +83,9 @@ import { menuLinks, siteConfig } from "@/site.config";
 		--chip-fill: color-mix(in srgb, var(--color-global-text) 9%, transparent);
 		--chip-ring: color-mix(in srgb, var(--color-global-text) 12%, transparent);
 		--chip-shadow: rgb(0 0 0 / 9%);
+		--chip-highlight: rgb(255 255 255 / 75%);
+		--chip-drag-glow: rgb(255 255 255 / 45%);
+		--chip-lift-shadow: rgb(0 0 0 / 16%);
 		isolation: isolate;
 	}
 	:global([data-theme="dark"]) .glass-surface {
@@ -97,6 +100,9 @@ import { menuLinks, siteConfig } from "@/site.config";
 		--chip-fill: color-mix(in srgb, var(--color-global-text) 7%, transparent);
 		--chip-ring: rgb(255 255 255 / 14%);
 		--chip-shadow: rgb(0 0 0 / 28%);
+		--chip-highlight: rgb(255 255 255 / 35%);
+		--chip-drag-glow: rgb(255 255 255 / 22%);
+		--chip-lift-shadow: rgb(0 0 0 / 48%);
 	}
 	.glass-layers,
 	.glass-tint,
@@ -257,8 +263,10 @@ import { menuLinks, siteConfig } from "@/site.config";
 		white-space: nowrap;
 		transition:
 			color 180ms ease,
-			transform 360ms cubic-bezier(0.3, 1.3, 0.4, 1);
+			transform 260ms cubic-bezier(0.16, 1.35, 0.32, 1),
+			text-shadow 180ms ease;
 		text-shadow: 0 1px 6px color-mix(in srgb, var(--color-global-bg) 80%, transparent);
+		will-change: transform, color;
 	}
 	glass-navigation a:active {
 		transform: scale(0.96);
@@ -276,17 +284,47 @@ import { menuLinks, siteConfig } from "@/site.config";
 		height: 0;
 		border-radius: 999px;
 		opacity: 0;
-		/* 桌面端胶囊是一枚小玻璃片：顶部受光、细描边定形、底部投影，随选中项液态滑动。 */
-		background: var(--chip-fill);
+		/* 桌面端胶囊：iOS 液态透光玻璃，多层微折射高光与立体环境光 */
+		background:
+			linear-gradient(
+				168deg,
+				rgb(255 255 255 / 38%) 0%,
+				rgb(255 255 255 / 10%) 36%,
+				transparent 68%
+			),
+			var(--chip-fill);
+		-webkit-backdrop-filter: blur(8px) saturate(180%);
+		backdrop-filter: blur(8px) saturate(180%);
 		box-shadow:
-			inset 0 1px 0.5px rgb(255 255 255 / 30%),
+			inset 0 1.2px 0.8px var(--chip-highlight),
+			inset 0 -1px 0.6px rgb(0 0 0 / 7%),
 			inset 0 0 0 0.5px var(--chip-ring),
-			0 2px 8px var(--chip-shadow);
+			0 3px 10px -2px var(--chip-shadow),
+			0 1px 3px 0 var(--chip-shadow);
 		transition:
-			transform 520ms cubic-bezier(0.32, 1.35, 0.42, 1),
-			width 520ms cubic-bezier(0.32, 1.35, 0.42, 1),
-			height 520ms cubic-bezier(0.32, 1.35, 0.42, 1),
-			opacity 180ms ease;
+			transform 560ms cubic-bezier(0.16, 1.35, 0.32, 1),
+			width 480ms cubic-bezier(0.16, 1.2, 0.32, 1),
+			height 480ms cubic-bezier(0.16, 1.2, 0.32, 1),
+			box-shadow 260ms ease,
+			opacity 180ms ease,
+			filter 260ms ease;
+		will-change: transform, width, height;
+	}
+	:global([data-theme="dark"]) .glass-indicator {
+		background:
+			linear-gradient(
+				168deg,
+				rgb(255 255 255 / 20%) 0%,
+				rgb(255 255 255 / 4%) 42%,
+				rgb(0 0 0 / 22%) 100%
+			),
+			var(--chip-fill);
+		box-shadow:
+			inset 0 1.2px 0.8px var(--chip-highlight),
+			inset 0 -1px 0.6px rgb(0 0 0 / 38%),
+			inset 0 0 0 0.5px var(--chip-ring),
+			0 4px 14px -2px var(--chip-shadow),
+			0 1px 4px 0 rgb(0 0 0 / 35%);
 	}
 	.glass-actions {
 		display: flex;
@@ -392,16 +430,21 @@ import { menuLinks, siteConfig } from "@/site.config";
 		}
 		glass-navigation[data-dragging] a {
 			cursor: grabbing !important;
-			transform: none !important;
+			user-select: none !important;
 		}
 		glass-navigation[data-dragging] .glass-indicator {
 			transition: none !important;
 			cursor: grabbing !important;
-			filter: brightness(1.08);
+			filter: brightness(1.15) contrast(1.05);
+			-webkit-backdrop-filter: blur(14px) saturate(210%);
+			backdrop-filter: blur(14px) saturate(210%);
 			box-shadow:
-				inset 0 1px 1px rgb(255 255 255 / 45%),
-				inset 0 0 0 0.5px var(--chip-ring),
-				0 3px 12px var(--chip-shadow);
+				inset 0 1.5px 1.2px rgb(255 255 255 / 80%),
+				inset 0 -1.5px 1.2px rgb(0 0 0 / 14%),
+				inset 0 0 0 1px var(--chip-ring),
+				0 16px 32px -6px var(--chip-lift-shadow),
+				0 6px 14px -3px var(--chip-shadow),
+				0 0 20px -2px var(--chip-drag-glow) !important;
 		}
 	}
 	@media (max-width: 23rem) {
@@ -481,6 +524,9 @@ import { menuLinks, siteConfig } from "@/site.config";
 			let grabRatio = 0.5;
 			let pendingClientX = 0;
 			let ignoreNextClick = false;
+			let lastMoveX = 0;
+			let lastMoveTime = 0;
+			let currentVelocity = 0;
 
 			const placeChip = (link: HTMLAnchorElement) => {
 				indicator.style.width = `${link.offsetWidth}px`;
@@ -522,6 +568,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 					const left = link.offsetLeft;
 					const width = link.offsetWidth;
 					return {
+						link,
 						left,
 						width,
 						center: left + width / 2,
@@ -563,18 +610,56 @@ import { menuLinks, siteConfig } from "@/site.config";
 				const minLeft = first.left;
 				const maxLeft = last.left + last.width - targetWidth;
 
-				// 边缘橡皮筋阻尼
+				// 速度拉伸（Squash & Stretch）与动态倾角
+				const stretchFactor = Math.min(0.2, Math.abs(currentVelocity) * 0.08);
+				let scaleX = 1 + stretchFactor;
+				let scaleY = 1 / Math.sqrt(scaleX);
+				const tilt = Math.max(-2.5, Math.min(2.5, currentVelocity * 1.2));
+
+				// 边缘橡皮筋与边界撞击挤压
 				if (targetLeft < minLeft) {
-					targetLeft = minLeft - (minLeft - targetLeft) * 0.22;
+					const over = minLeft - targetLeft;
+					targetLeft = minLeft - over * 0.22;
+					const squash = Math.min(0.22, over * 0.005);
+					scaleX = Math.max(0.78, 1 - squash);
+					scaleY = 1 / Math.sqrt(scaleX);
 				}
 				else if (targetLeft > maxLeft) {
-					targetLeft = maxLeft + (targetLeft - maxLeft) * 0.22;
+					const over = targetLeft - maxLeft;
+					targetLeft = maxLeft + over * 0.22;
+					const squash = Math.min(0.22, over * 0.005);
+					scaleX = Math.max(0.78, 1 - squash);
+					scaleY = 1 / Math.sqrt(scaleX);
 				}
 
 				indicator.style.width = `${targetWidth}px`;
 				indicator.style.height = `${targetHeight}px`;
-				indicator.style.transform = `translate(${targetLeft}px, ${first.top}px)`;
+				indicator.style.transform = `translate(${targetLeft}px, ${first.top}px) scale(${scaleX * 1.02}, ${scaleY * 1.02}) skewX(${tilt}deg)`;
 				lastChip = { x: targetLeft, y: first.top, width: targetWidth, height: targetHeight };
+
+				// 文字邻近激活透镜反馈（Proximity Glow & Lift）
+				const chipCenter = targetLeft + targetWidth / 2;
+				for (const g of geoms) {
+					const dist = Math.abs(chipCenter - g.center);
+					const reach = g.width * 0.8;
+					if (dist < reach) {
+						const factor = 1 - dist / reach;
+						const curve = factor * factor * (3 - 2 * factor); // smoothstep
+						g.link.style.transform = `scale(${1 + 0.08 * curve}) translateY(${-2 * curve}px)`;
+						g.link.style.color = "var(--color-accent)";
+					}
+					else {
+						g.link.style.transform = "";
+						g.link.style.color = "";
+					}
+				}
+
+				// 全局光斑联动：顶部液态玻璃光斑随滑块同步流动
+				const headerRect = header.getBoundingClientRect();
+				if (headerRect.width > 0) {
+					const lightPercent = Math.max(0, Math.min(100, ((clientX - headerRect.left) / headerRect.width) * 100));
+					header.style.setProperty("--glass-x", `${lightPercent}%`);
+				}
 			};
 			const onPointerDown = (event: PointerEvent) => {
 				if (!desktop.matches || event.button !== 0) return;
@@ -587,6 +672,9 @@ import { menuLinks, siteConfig } from "@/site.config";
 				activePointerId = event.pointerId;
 				startPointerX = event.clientX;
 				startPointerY = event.clientY;
+				lastMoveX = event.clientX;
+				lastMoveTime = performance.now();
+				currentVelocity = 0;
 
 				const navRect = this.getBoundingClientRect();
 				const mouseNavX = event.clientX - navRect.left;
@@ -631,6 +719,13 @@ import { menuLinks, siteConfig } from "@/site.config";
 				}
 
 				event.preventDefault();
+				const now = performance.now();
+				const dt = Math.max(8, Math.min(now - lastMoveTime, 50));
+				const vx = (event.clientX - lastMoveX) / dt; // px/ms
+				lastMoveX = event.clientX;
+				lastMoveTime = now;
+				currentVelocity += (vx - currentVelocity) * 0.45;
+
 				pendingClientX = event.clientX;
 				if (!this.#dragFrame) {
 					this.#dragFrame = requestAnimationFrame(() => {
@@ -661,6 +756,12 @@ import { menuLinks, siteConfig } from "@/site.config";
 				this.removeAttribute("data-dragging");
 				document.body.style.cursor = "";
 
+				// 清空所有链接的行内样式，平滑交还给 CSS
+				this.querySelectorAll<HTMLAnchorElement>("a").forEach((link) => {
+					link.style.transform = "";
+					link.style.color = "";
+				});
+
 				if (!wasDragging && !didMove) {
 					return;
 				}
@@ -685,6 +786,16 @@ import { menuLinks, siteConfig } from "@/site.config";
 				}
 
 				moveTo(bestLink, true);
+
+				// 目标文字触发 iOS 标志性的果冻 Pop 弹性回弹
+				bestLink.animate([
+					{ transform: "scale(1.14) translateY(-2px)" },
+					{ transform: "scale(0.95) translateY(1px)" },
+					{ transform: "scale(1) translateY(0)" }
+				], {
+					duration: 360,
+					easing: "cubic-bezier(0.16, 1.4, 0.32, 1)"
+				});
 
 				if (bestLink !== current) {
 					current = bestLink;
