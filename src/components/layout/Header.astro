@@ -743,7 +743,11 @@ import { menuLinks, siteConfig } from "@/site.config";
 				const didMove = dragMoved;
 
 				isPointerDown = false;
-				isDragging = false;
+				// isDragging 延后清除：releasePointerCapture() 会同步派发
+				// pointerleave，若此时 isDragging 已为 false，pointerleave
+				// 处理器的守卫放行 → reset() 把滑块瞬移回 current，松手后
+				// 出现"先闪回再滑过去"的视觉跳变。保持 isDragging=true 直到
+				// 捕获释放完成，确保该 pointerleave 被正确拦截。
 				dragMoved = false;
 
 				if (activePointerId !== -1 && this.hasPointerCapture(activePointerId)) {
@@ -752,6 +756,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 					}
 					catch {}
 				}
+				isDragging = false;
 				activePointerId = -1;
 				this.removeAttribute("data-dragging");
 				document.body.style.cursor = "";
