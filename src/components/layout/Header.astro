@@ -42,6 +42,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 				<a
 					aria-current={(link.path === "/" ? Astro.url.pathname === "/" : Astro.url.pathname.startsWith(link.path)) ? "page" : undefined}
 					href={link.path}
+					draggable="false"
 				>{link.title}</a>
 			))}
 		</glass-navigation>
@@ -364,11 +365,44 @@ import { menuLinks, siteConfig } from "@/site.config";
 		.glass-nav .glass-layers,
 		.glass-nav .glass-tint,
 		.glass-nav::after { display: none; }
-		glass-navigation { flex-direction: row; max-height: none; overflow: visible; }
-		glass-navigation a { padding-inline: 0.875rem; }
+		glass-navigation {
+			flex-direction: row;
+			max-height: none;
+			overflow: visible;
+			user-select: none;
+			-webkit-user-select: none;
+			touch-action: pan-y;
+		}
+		glass-navigation a {
+			padding-inline: 0.875rem;
+			user-select: none;
+			-webkit-user-select: none;
+			-webkit-user-drag: none;
+			cursor: grab;
+		}
 		glass-navigation[data-ready] a[aria-current="page"] { background: transparent; }
-		.glass-indicator { display: block; }
+		.glass-indicator {
+			display: block;
+			cursor: grab;
+			pointer-events: none;
+		}
 		.glass-menu-button { display: none; }
+		glass-navigation[data-dragging] {
+			cursor: grabbing !important;
+		}
+		glass-navigation[data-dragging] a {
+			cursor: grabbing !important;
+			transform: none !important;
+		}
+		glass-navigation[data-dragging] .glass-indicator {
+			transition: none !important;
+			cursor: grabbing !important;
+			filter: brightness(1.08);
+			box-shadow:
+				inset 0 1px 1px rgb(255 255 255 / 45%),
+				inset 0 0 0 0.5px var(--chip-ring),
+				0 3px 12px var(--chip-shadow);
+		}
 	}
 	@media (max-width: 23rem) {
 		.glass-brand { gap: 0.375rem; font-size: 0.875rem; }
@@ -413,12 +447,15 @@ import { menuLinks, siteConfig } from "@/site.config";
 		#controller: AbortController | undefined;
 		#resize: ResizeObserver | undefined;
 		#frame = 0;
+		#dragFrame = 0;
 
 		connectedCallback() {
 			this.#controller?.abort();
 			this.#resize?.disconnect();
 			cancelAnimationFrame(this.#frame);
+			cancelAnimationFrame(this.#dragFrame);
 			this.#frame = 0;
+			this.#dragFrame = 0;
 			this.#controller = new AbortController();
 			const { signal } = this.#controller;
 			const header = this.closest<HTMLElement>("header");
@@ -435,6 +472,16 @@ import { menuLinks, siteConfig } from "@/site.config";
 			const desktop = window.matchMedia("(min-width: 48rem)");
 			const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 			let current = this.querySelector<HTMLAnchorElement>('[aria-current="page"]');
+			let isPointerDown = false;
+			let isDragging = false;
+			let dragMoved = false;
+			let activePointerId = -1;
+			let startPointerX = 0;
+			let startPointerY = 0;
+			let grabRatio = 0.5;
+			let pendingClientX = 0;
+			let ignoreNextClick = false;
+
 			const placeChip = (link: HTMLAnchorElement) => {
 				indicator.style.width = `${link.offsetWidth}px`;
 				indicator.style.height = `${link.offsetHeight}px`;
@@ -465,6 +512,193 @@ import { menuLinks, siteConfig } from "@/site.config";
 				const focused = this.contains(document.activeElement) && document.activeElement instanceof HTMLAnchorElement ? document.activeElement : current;
 				moveTo(focused, animate);
 			};
+			const updateDragPosition = (clientX: number) => {
+				const links = Array.from(this.querySelectorAll<HTMLAnchorElement>("a"));
+				if (!links.length) return;
+				const navRect = this.getBoundingClientRect();
+				const mouseNavX = clientX - navRect.left;
+
+				const geoms = links.map((link) => {
+					const left = link.offsetLeft;
+					const width = link.offsetWidth;
+					return {
+						left,
+						width,
+						center: left + width / 2,
+						top: link.offsetTop,
+						height: link.offsetHeight,
+					};
+				});
+
+				const first = geoms[0];
+				const last = geoms[geoms.length - 1];
+				if (!first || !last) return;
+
+				let targetWidth = first.width;
+				let targetHeight = first.height;
+
+				if (mouseNavX <= first.center) {
+					targetWidth = first.width;
+					targetHeight = first.height;
+				}
+				else if (mouseNavX >= last.center) {
+					targetWidth = last.width;
+					targetHeight = last.height;
+				}
+				else {
+					for (let i = 0; i < geoms.length - 1; i++) {
+						const g1 = geoms[i];
+						const g2 = geoms[i + 1];
+						if (g1 && g2 && mouseNavX >= g1.center && mouseNavX <= g2.center) {
+							const span = g2.center - g1.center;
+							const t = span > 0 ? (mouseNavX - g1.center) / span : 0;
+							targetWidth = g1.width + (g2.width - g1.width) * t;
+							targetHeight = g1.height + (g2.height - g1.height) * t;
+							break;
+						}
+					}
+				}
+
+				let targetLeft = mouseNavX - grabRatio * targetWidth;
+				const minLeft = first.left;
+				const maxLeft = last.left + last.width - targetWidth;
+
+				// 边缘橡皮筋阻尼
+				if (targetLeft < minLeft) {
+					targetLeft = minLeft - (minLeft - targetLeft) * 0.22;
+				}
+				else if (targetLeft > maxLeft) {
+					targetLeft = maxLeft + (targetLeft - maxLeft) * 0.22;
+				}
+
+				indicator.style.width = `${targetWidth}px`;
+				indicator.style.height = `${targetHeight}px`;
+				indicator.style.transform = `translate(${targetLeft}px, ${first.top}px)`;
+				lastChip = { x: targetLeft, y: first.top, width: targetWidth, height: targetHeight };
+			};
+			const onPointerDown = (event: PointerEvent) => {
+				if (!desktop.matches || event.button !== 0) return;
+				const links = Array.from(this.querySelectorAll<HTMLAnchorElement>("a"));
+				if (!links.length) return;
+
+				isPointerDown = true;
+				isDragging = false;
+				dragMoved = false;
+				activePointerId = event.pointerId;
+				startPointerX = event.clientX;
+				startPointerY = event.clientY;
+
+				const navRect = this.getBoundingClientRect();
+				const mouseNavX = event.clientX - navRect.left;
+
+				let hoveredLink: HTMLAnchorElement | null = null;
+				for (const link of links) {
+					if (mouseNavX >= link.offsetLeft && mouseNavX <= link.offsetLeft + link.offsetWidth) {
+						hoveredLink = link;
+						break;
+					}
+				}
+				if (hoveredLink && hoveredLink.offsetWidth > 0) {
+					grabRatio = (mouseNavX - hoveredLink.offsetLeft) / hoveredLink.offsetWidth;
+					grabRatio = Math.max(0.1, Math.min(0.9, grabRatio));
+				}
+				else {
+					grabRatio = 0.5;
+				}
+			};
+			const onPointerMove = (event: PointerEvent) => {
+				if (!isPointerDown || event.pointerId !== activePointerId) return;
+				if (event.buttons === 0) {
+					onPointerUp(event);
+					return;
+				}
+
+				const deltaX = event.clientX - startPointerX;
+				const deltaY = event.clientY - startPointerY;
+				const dist = Math.hypot(deltaX, deltaY);
+
+				if (!isDragging) {
+					if (dist < 4) return;
+					isDragging = true;
+					dragMoved = true;
+					this.setAttribute("data-dragging", "");
+					document.body.style.cursor = "grabbing";
+					indicator.style.transition = "none";
+					try {
+						this.setPointerCapture(activePointerId);
+					}
+					catch {}
+				}
+
+				event.preventDefault();
+				pendingClientX = event.clientX;
+				if (!this.#dragFrame) {
+					this.#dragFrame = requestAnimationFrame(() => {
+						this.#dragFrame = 0;
+						if (isDragging) updateDragPosition(pendingClientX);
+					});
+				}
+			};
+			const onPointerUp = (event: PointerEvent) => {
+				if (!isPointerDown || (activePointerId !== -1 && event.pointerId !== activePointerId)) return;
+				cancelAnimationFrame(this.#dragFrame);
+				this.#dragFrame = 0;
+
+				const wasDragging = isDragging;
+				const didMove = dragMoved;
+
+				isPointerDown = false;
+				isDragging = false;
+				dragMoved = false;
+
+				if (activePointerId !== -1 && this.hasPointerCapture(activePointerId)) {
+					try {
+						this.releasePointerCapture(activePointerId);
+					}
+					catch {}
+				}
+				activePointerId = -1;
+				this.removeAttribute("data-dragging");
+				document.body.style.cursor = "";
+
+				if (!wasDragging && !didMove) {
+					return;
+				}
+
+				ignoreNextClick = true;
+				indicator.style.transition = "";
+
+				const links = Array.from(this.querySelectorAll<HTMLAnchorElement>("a"));
+				const firstLink = links[0];
+				if (!firstLink) return;
+
+				const currentCenter = (lastChip?.x ?? 0) + (lastChip?.width ?? 0) / 2;
+				let bestLink = firstLink;
+				let minDiff = Infinity;
+				for (const link of links) {
+					const center = link.offsetLeft + link.offsetWidth / 2;
+					const diff = Math.abs(currentCenter - center);
+					if (diff < minDiff) {
+						minDiff = diff;
+						bestLink = link;
+					}
+				}
+
+				moveTo(bestLink, true);
+
+				if (bestLink !== current) {
+					current = bestLink;
+					setTimeout(() => {
+						ignoreNextClick = false;
+						bestLink.click();
+					}, 20);
+				}
+				else {
+					setTimeout(() => {
+						ignoreNextClick = false;
+					}, 120);
+				}
+			};
 			const setOpen = (open: boolean) => {
 				header.toggleAttribute("data-menu-open", open);
 				button.setAttribute("aria-expanded", String(open));
@@ -484,12 +718,31 @@ import { menuLinks, siteConfig } from "@/site.config";
 			button.addEventListener("click", () => setOpen(!header.hasAttribute("data-menu-open")), { signal });
 			this.querySelectorAll<HTMLAnchorElement>("a").forEach((link) => {
 				link.addEventListener("pointerenter", (event) => {
+					if (isDragging || isPointerDown) return;
 					if (event.pointerType === "mouse") moveTo(link);
 				}, { signal });
-				link.addEventListener("focus", () => moveTo(link), { signal });
+				link.addEventListener("focus", () => {
+					if (isDragging) return;
+					moveTo(link);
+				}, { signal });
 				link.addEventListener("click", () => setOpen(false), { signal });
 			});
-			this.addEventListener("pointerleave", () => reset(), { signal });
+			this.addEventListener("pointerdown", onPointerDown, { signal });
+			this.addEventListener("pointermove", onPointerMove, { signal });
+			this.addEventListener("pointerup", onPointerUp, { signal });
+			this.addEventListener("pointercancel", onPointerUp, { signal });
+			this.addEventListener("dragstart", (e) => e.preventDefault(), { signal });
+			this.addEventListener("click", (event) => {
+				if (ignoreNextClick) {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					ignoreNextClick = false;
+				}
+			}, { capture: true, signal });
+			this.addEventListener("pointerleave", () => {
+				if (isDragging || isPointerDown) return;
+				reset();
+			}, { signal });
 			this.addEventListener("focusout", () => queueMicrotask(() => reset()), { signal });
 			header.addEventListener("focusout", (event) => {
 				// Safari 点按按钮可能先把焦点交给 body（relatedTarget=null）。
@@ -509,7 +762,17 @@ import { menuLinks, siteConfig } from "@/site.config";
 					button.focus();
 				}
 			}, { signal });
-			desktop.addEventListener("change", () => setOpen(false), { signal });
+			desktop.addEventListener("change", () => {
+				if (isDragging || isPointerDown) {
+					isPointerDown = false;
+					isDragging = false;
+					dragMoved = false;
+					this.removeAttribute("data-dragging");
+					document.body.style.cursor = "";
+					indicator.style.transition = "";
+				}
+				setOpen(false);
+			}, { signal });
 			// 高光位置与光源角度都用百分比/角度保留，离开后停在最后状态，不再复位到固定坐标。
 			const startGlow = Number.parseFloat(header.style.getPropertyValue("--glass-x"));
 			const startAngle = Number.parseFloat(getComputedStyle(header).getPropertyValue("--light-angle"));
@@ -589,7 +852,10 @@ import { menuLinks, siteConfig } from "@/site.config";
 			this.#controller?.abort();
 			this.#resize?.disconnect();
 			cancelAnimationFrame(this.#frame);
+			cancelAnimationFrame(this.#dragFrame);
 			this.#frame = 0;
+			this.#dragFrame = 0;
+			document.body.style.cursor = "";
 		}
 	}
 	customElements.define("glass-navigation", GlassNavigation);
