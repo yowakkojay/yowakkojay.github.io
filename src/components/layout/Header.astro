@@ -73,11 +73,14 @@ import { menuLinks, siteConfig } from "@/site.config";
 		--rim-pink: rgb(255 155 195 / 13%);
 		--glass-glow: rgb(255 255 255 / 24%);
 		--glass-shadow: rgb(26 36 48 / 9%);
-		/* 亮色下滑块胶囊：白底上要靠描边和投影才够明显。 */
-		--chip-fill: color-mix(in srgb, var(--color-global-text) 9%, transparent);
-		--chip-ring: color-mix(in srgb, var(--color-accent) 32%, transparent);
-		--chip-shadow: rgb(0 0 0 / 9%);
-		--chip-highlight: rgb(255 255 255 / 75%);
+		/* 浅底上用蓝灰玻璃和明暗清楚的边缘标出滑块。 */
+		--chip-fill: rgb(56 78 109 / 22%);
+		--chip-ring: rgb(49 65 90 / 62%);
+		--chip-ring-width: 1px;
+		--chip-shadow: rgb(36 56 85 / 16%);
+		--chip-highlight: rgb(255 255 255 / 90%);
+		--chip-accent: #1954a4;
+		--chip-drag-accent-weight: 100%;
 		--chip-drag-glow: rgb(255 255 255 / 45%);
 		--chip-lift-shadow: rgb(0 0 0 / 16%);
 		isolation: isolate;
@@ -94,8 +97,11 @@ import { menuLinks, siteConfig } from "@/site.config";
 		--glass-shadow: rgb(0 0 0 / 30%);
 		--chip-fill: color-mix(in srgb, var(--color-global-text) 7%, transparent);
 		--chip-ring: color-mix(in srgb, var(--color-accent) 28%, transparent);
+		--chip-ring-width: 0.5px;
 		--chip-shadow: rgb(0 0 0 / 28%);
 		--chip-highlight: rgb(255 255 255 / 35%);
+		--chip-accent: var(--color-accent);
+		--chip-drag-accent-weight: 50%;
 		--chip-drag-glow: rgb(255 255 255 / 22%);
 		--chip-lift-shadow: rgb(0 0 0 / 48%);
 	}
@@ -292,7 +298,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 		box-shadow:
 			inset 0 1.2px 0.8px var(--chip-highlight),
 			inset 0 -1px 0.6px rgb(0 0 0 / 7%),
-			inset 0 0 0 0.5px var(--chip-ring),
+			inset 0 0 0 var(--chip-ring-width) var(--chip-ring),
 			0 3px 10px -2px var(--chip-shadow),
 			0 1px 3px 0 var(--chip-shadow);
 		transition:
@@ -317,7 +323,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 		box-shadow:
 			inset 0 1.2px 0.8px var(--chip-highlight),
 			inset 0 -1px 0.6px rgb(0 0 0 / 38%),
-			inset 0 0 0 0.5px var(--chip-ring),
+			inset 0 0 0 var(--chip-ring-width) var(--chip-ring),
 			0 4px 14px -2px var(--chip-shadow),
 			0 1px 4px 0 rgb(0 0 0 / 35%);
 	}
@@ -439,7 +445,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 			box-shadow:
 				inset 0 1.15px 0.8px var(--chip-highlight),
 				inset 0 -2px 1.2px color-mix(in srgb, var(--chip-ring) 72%, var(--chip-shadow)),
-				inset 0 0 0 0.5px var(--chip-ring),
+				inset 0 0 0 var(--chip-ring-width) var(--chip-ring),
 				0 3px 12px -2px var(--chip-shadow);
 		}
 		glass-navigation a {
@@ -468,7 +474,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 			height: 1.375rem;
 		}
 		glass-navigation a[aria-current="page"] :global(.glass-nav-icon) {
-			color: var(--color-accent);
+			color: var(--chip-accent);
 		}
 		glass-navigation a:focus-visible { outline-offset: -2px; }
 	}
@@ -507,7 +513,6 @@ import { menuLinks, siteConfig } from "@/site.config";
 <script>
 	import type { TransitionBeforeSwapEvent } from "astro:transitions/client";
 
-	type ChipBox = { x: number; y: number; width: number; height: number };
 	type LinkGeometry = ReturnType<typeof measureLink>;
 	type Gesture = {
 		pointerId: number;
@@ -560,9 +565,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 		return { x, y: first.y, width, height, overshoot: left - x };
 	}
 
-	// 上一次滑块的几何（模块级变量，ClientRouter 换页时存活）：
-	// 导航重建后滑块从上一页的位置滑到新页的当前项，而不是从 0 尺寸缩放弹出。
-	let lastChip: ChipBox | null = null;
+	const chipPoseProperties = ["width", "height", "translate", "scale", "transform", "opacity", "box-shadow", "filter"];
 
 	class GlassNavigation extends HTMLElement {
 		#controller: AbortController | undefined;
@@ -602,13 +605,11 @@ import { menuLinks, siteConfig } from "@/site.config";
 				indicator.style.translate = `${x}px ${y}px`;
 				indicator.style.transform = "";
 				indicator.style.opacity = "1";
-				lastChip = { x, y, width, height };
 			};
 			const moveTo = (link: HTMLAnchorElement | null, animate = true) => {
 				if (!link || !this.offsetWidth) {
 					indicator.style.opacity = "0";
 					delete this.dataset.ready;
-					lastChip = null;
 					return;
 				}
 				if (animate && !reducedMotion.matches) {
@@ -661,7 +662,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 					const proximity = 1 - distance / reach;
 					const curve = proximity * proximity * (3 - 2 * proximity);
 					link.style.transform = `scale(${1 + 0.08 * curve}) translateY(${-2 * curve}px)`;
-					link.style.color = `color-mix(in srgb, var(--color-accent) ${50 * curve}%, var(--color-global-text))`;
+					link.style.color = `color-mix(in srgb, var(--chip-accent) calc(var(--chip-drag-accent-weight) * ${curve}), var(--color-global-text))`;
 				}
 			};
 
@@ -932,22 +933,14 @@ import { menuLinks, siteConfig } from "@/site.config";
 				else reset(false);
 			});
 			this.#resize.observe(this);
-			// 首次落位：客户端导航重建后从上一页的位置滑到新页当前项；首次访问直接就位。
-			if (current && this.offsetWidth && lastChip && !reducedMotion.matches) {
-				indicator.style.transition = "none";
-				indicator.style.width = `${lastChip.width}px`;
-				indicator.style.height = `${lastChip.height}px`;
-				indicator.style.translate = `${lastChip.x}px ${lastChip.y}px`;
-				indicator.style.transform = "";
-				indicator.style.opacity = "1";
+			const resumeChip = indicator.style.transition === "none";
+			if (resumeChip) {
+				// 先提交上一页正在显示的形状，再让它落向新页面的当前项。
 				void indicator.offsetWidth;
-				indicator.style.transition = "";
-				placeChip(current);
-				this.dataset.ready = "";
+				for (const property of chipPoseProperties) indicator.style.removeProperty(property);
+				indicator.style.removeProperty("transition");
 			}
-			else {
-				reset(false);
-			}
+			reset(resumeChip);
 			document.addEventListener("astro:before-swap", (event) => {
 				const { newDocument } = event as TransitionBeforeSwapEvent;
 				const nextHeader = newDocument.getElementById("main-header");
@@ -955,6 +948,14 @@ import { menuLinks, siteConfig } from "@/site.config";
 				nextHeader.toggleAttribute("data-warp", header.hasAttribute("data-warp"));
 				for (const property of ["--glass-x", "--light-angle"]) {
 					nextHeader.style.setProperty(property, header.style.getPropertyValue(property));
+				}
+				const nextIndicator = nextHeader.querySelector<HTMLElement>(".glass-indicator");
+				if (reducedMotion.matches || !this.hasAttribute("data-ready") || !nextIndicator) return;
+				// 松手后会先在旧页面回弹，换页时读到的是实际画出来的形状。
+				const renderedChip = getComputedStyle(indicator);
+				nextIndicator.style.transition = "none";
+				for (const property of chipPoseProperties) {
+					nextIndicator.style.setProperty(property, renderedChip.getPropertyValue(property));
 				}
 			}, { signal });
 			document.addEventListener("astro:page-load", () => {
