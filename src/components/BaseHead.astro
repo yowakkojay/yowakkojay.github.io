@@ -87,5 +87,5 @@ const socialImageURL = new URL(ogImage ? ogImage : "/social-card.png", Astro.sit
 
 <meta content={Astro.generator} name="generator" />
 
-{/* 页面切换过渡动画（View Transitions），客户端导航时淡入淡出 */}
-<ClientRouter />
+{/* 支持 View Transitions 的桌面浏览器保留页面过渡。 */}
+<ClientRouter fallback="swap" />

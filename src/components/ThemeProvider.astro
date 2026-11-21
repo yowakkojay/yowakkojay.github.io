@@ -62,10 +62,13 @@ import { navGlassBlur } from "@/site.config";
 		root.classList.remove("theme-transition");
 	}
 
-	// ClientRouter 页面切换会重置 <html> 属性（含 data-theme），切换后重新应用主题
+	// 把主题放到下一页的根元素上，交换文档时即可使用最终颜色。
+	document.addEventListener("astro:before-swap", (event) => {
+		event.newDocument.documentElement.dataset.theme = document.documentElement.dataset.theme || getUserPref();
+	});
 	document.addEventListener("astro:after-swap", () => {
 		cleanupThemeTransitionArtifacts();
-		setTheme(getUserPref());
+		setTheme(document.documentElement.dataset.theme || getUserPref());
 	});
 
 	// listen for pageshow event, browser restored page from bfcache

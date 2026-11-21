@@ -119,6 +119,8 @@
 			--mobile-nav-bottom: calc(0.625rem + env(safe-area-inset-bottom, 0px));
 			--mobile-nav-clearance: calc(var(--mobile-nav-height) + var(--mobile-nav-bottom) + 0.75rem);
 			scroll-padding-block-end: var(--mobile-nav-clearance);
+			/* 手机换页时保持两条玻璃栏实时采样，避开整页快照的混合。 */
+			view-transition-name: none;
 		}
 		.site-body {
 			padding-block-end: var(--mobile-nav-clearance);
