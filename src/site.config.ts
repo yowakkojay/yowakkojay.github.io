@@ -31,7 +31,7 @@ export const siteConfig: SiteConfig = {
 	},
 };
 
-// Used to generate links in both the Header & Footer.
+// Primary navigation links.
 export const menuLinks: { path: string; title: string; icon: string }[] = [
 	{
 		path: "/",

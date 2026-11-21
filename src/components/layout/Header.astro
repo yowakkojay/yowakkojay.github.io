@@ -25,7 +25,6 @@ import { menuLinks, siteConfig } from "@/site.config";
 			<feDisplacementMap in="lensed" in2="ripple" scale="8" xChannelSelector="R" yChannelSelector="G" />
 		</filter>
 	</defs>
-	<defs id="mobile-glass-filters"></defs>
 </svg>
 
 <header class="glass-header glass-surface" id="main-header">
@@ -37,10 +36,8 @@ import { menuLinks, siteConfig } from "@/site.config";
 	</a>
 	<nav class="glass-nav glass-surface" aria-label="主导航" id="navigation-menu">
 		<span class="glass-layers" aria-hidden="true"><span class="glass-optical"></span><span class="glass-warp"></span></span>
-		<div class="glass-refraction glass-dock-refraction" aria-hidden="true" inert hidden><div class="glass-refraction-sample"></div></div>
 		<span class="glass-tint" aria-hidden="true"></span>
 		<glass-navigation>
-			<div class="glass-refraction glass-chip-refraction" aria-hidden="true" inert hidden><div class="glass-refraction-sample"></div></div>
 			<span class="glass-indicator" aria-hidden="true"></span>
 			{menuLinks.map((link) => (
 				<a
@@ -237,7 +234,6 @@ import { menuLinks, siteConfig } from "@/site.config";
 	.glass-nav .glass-layers,
 	.glass-nav .glass-tint,
 	.glass-nav::after,
-	.glass-refraction,
 	glass-navigation :global(.glass-nav-icon) {
 		display: none;
 	}
@@ -435,31 +431,6 @@ import { menuLinks, siteConfig } from "@/site.config";
 		.glass-nav .glass-layers,
 		.glass-nav .glass-tint,
 		.glass-nav::after { display: block; }
-		.glass-refraction {
-			position: absolute;
-			overflow: hidden;
-			clip-path: inset(0 round 999px);
-			pointer-events: none;
-		}
-		.glass-dock-refraction {
-			inset: 0;
-			z-index: -1;
-		}
-		.glass-refraction-sample {
-			position: absolute;
-			inset: calc(-1 * var(--mobile-glass-padding));
-			contain: strict;
-			overflow: hidden;
-			background-color: var(--color-global-bg);
-			filter: var(--mobile-glass-lens) blur(var(--glass-blur)) saturate(135%) brightness(var(--glass-brightness));
-		}
-		.glass-dock-refraction:not([hidden]),
-		glass-navigation[data-dragging] > .glass-chip-refraction:not([hidden]) { display: block; }
-		.glass-nav:has(> .glass-dock-refraction:not([hidden])) > .glass-layers { display: none; }
-		glass-navigation[data-dragging]:has(> .glass-chip-refraction:not([hidden])) > .glass-indicator {
-			-webkit-backdrop-filter: none;
-			backdrop-filter: none;
-		}
 		.glass-nav .glass-indicator {
 			background:
 				radial-gradient(ellipse 58% 23% at 26% 0%, var(--chip-highlight), transparent 90%),
@@ -508,8 +479,6 @@ import { menuLinks, siteConfig } from "@/site.config";
 		.glass-actions :global(.appearance-settings-button) { transition: none; }
 	}
 	@media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
-		.glass-dock-refraction:not([hidden]),
-		glass-navigation[data-dragging] > .glass-chip-refraction:not([hidden]),
 		.glass-surface .glass-optical,
 		.glass-surface .glass-warp,
 		.glass-surface[data-warp] .glass-optical,
@@ -537,7 +506,6 @@ import { menuLinks, siteConfig } from "@/site.config";
 
 <script>
 	import type { TransitionBeforeSwapEvent } from "astro:transitions/client";
-	import { mountMobileGlass } from "./mobile-glass";
 
 	type ChipBox = { x: number; y: number; width: number; height: number };
 	type LinkGeometry = ReturnType<typeof measureLink>;
@@ -980,7 +948,6 @@ import { menuLinks, siteConfig } from "@/site.config";
 			else {
 				reset(false);
 			}
-			mountMobileGlass(navigation, this, indicator, solidGlass, signal);
 			document.addEventListener("astro:before-swap", (event) => {
 				const { newDocument } = event as TransitionBeforeSwapEvent;
 				const nextHeader = newDocument.getElementById("main-header");

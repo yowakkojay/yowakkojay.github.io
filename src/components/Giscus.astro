@@ -43,7 +43,7 @@
 	}
 
 	function loadGiscus() {
-		const container = document.querySelector("#main .giscus");
+		const container = document.querySelector(".giscus");
 		if (!container || container.querySelector("iframe.giscus-frame, script")) return;
 		const button = container.querySelector<HTMLButtonElement>("[data-load-comments]");
 		const status = container.querySelector<HTMLElement>("[data-comments-status]");
@@ -74,7 +74,7 @@
 	document.addEventListener("astro:before-swap", () => observer?.disconnect());
 	document.addEventListener("astro:page-load", () => {
 		observer?.disconnect();
-		const container = document.querySelector("#main .giscus");
+		const container = document.querySelector(".giscus");
 		if (!container) return;
 		container.querySelector("[data-load-comments]")?.addEventListener("click", loadGiscus);
 		observer = new IntersectionObserver((entries) => {
