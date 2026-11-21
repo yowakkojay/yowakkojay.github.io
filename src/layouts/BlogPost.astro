@@ -241,7 +241,7 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 			lightbox.close();
 			restoreLightbox();
 		};
-		document.querySelectorAll<HTMLImageElement>(".prose img").forEach((img) => {
+		document.querySelectorAll<HTMLImageElement>("#main .prose img").forEach((img) => {
 			if (img.closest("a")) return; // 跳过链接里的图（如 wandb 徽章），保留跳转行为
 			img.style.cursor = "zoom-in";
 			img.tabIndex = 0;
