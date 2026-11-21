@@ -155,6 +155,7 @@ export function mountMobileGlass(
 	let frame = 0;
 	let dirty = true;
 	let sources: HTMLElement[] = [];
+	let copiedRects: DOMRect[] = [];
 	let media: HTMLElement[] = [];
 	const enabled = () => mobile.matches && !solidGlass.matches && !signal.aborted;
 	const schedule = () => {
@@ -165,7 +166,7 @@ export function mountMobileGlass(
 		schedule();
 	};
 	const changes = new MutationObserver(invalidate);
-	const sizes = new ResizeObserver(invalidate);
+	const sizes = new ResizeObserver(schedule);
 	const dragState = new MutationObserver(schedule);
 
 	const paintLayer = (
@@ -221,7 +222,11 @@ export function mountMobileGlass(
 		const chipRect = dragging ? indicator.getBoundingClientRect() : null;
 		const chipOrigin = chipRect ? controls.getBoundingClientRect() : null;
 		const sourceRects = sources.map((source) => source.getBoundingClientRect());
-		if (dirty) {
+		const layoutChanged = sourceRects.some(({ width, height }, index) => {
+			const copied = copiedRects[index];
+			return width !== copied?.width || height !== copied?.height;
+		});
+		if (dirty || layoutChanged) {
 			media = [];
 			const copies = sources.map((source) => {
 				const sectionMedia = Array.from(source.querySelectorAll<HTMLElement>(liveContent));
@@ -230,6 +235,7 @@ export function mountMobileGlass(
 			});
 			dock.sample.replaceChildren(...copies);
 			chip.sample.replaceChildren();
+			copiedRects = sourceRects;
 			dirty = false;
 		}
 		const mediaRects = media.map((element) => element.getBoundingClientRect());
@@ -273,6 +279,7 @@ export function mountMobileGlass(
 			delete layer.map;
 		}
 		sources = [];
+		copiedRects = [];
 		media = [];
 		dirty = true;
 	}
