@@ -98,6 +98,33 @@
 		   仅在 .theme-transition（用户手动切换主题）时启用过渡。 */
 	}
 
+	.site-body {
+		--site-gutter: 1rem;
+		--site-top-space: 2rem;
+		padding-inline-start: max(var(--site-gutter), env(safe-area-inset-left, 0px));
+		padding-inline-end: max(var(--site-gutter), env(safe-area-inset-right, 0px));
+		padding-block-start: max(var(--site-top-space), calc(env(safe-area-inset-top, 0px) + 0.5rem));
+	}
+
+	@media (width >= 40rem) {
+		.site-body {
+			--site-gutter: 2rem;
+			--site-top-space: 2.5rem;
+		}
+	}
+
+	@media (width < 48rem), (hover: none) and (pointer: coarse) and (height < 30rem) {
+		html {
+			--mobile-nav-height: 3.875rem;
+			--mobile-nav-bottom: calc(0.625rem + env(safe-area-inset-bottom, 0px));
+			--mobile-nav-clearance: calc(var(--mobile-nav-height) + var(--mobile-nav-bottom) + 0.75rem);
+			scroll-padding-block-end: var(--mobile-nav-clearance);
+		}
+		.site-body {
+			padding-block-end: var(--mobile-nav-clearance);
+		}
+	}
+
 	:target {
 		scroll-margin-block: 7rem;
 	}

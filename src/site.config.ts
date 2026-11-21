@@ -32,26 +32,31 @@ export const siteConfig: SiteConfig = {
 };
 
 // Used to generate links in both the Header & Footer.
-export const menuLinks: { path: string; title: string }[] = [
+export const menuLinks: { path: string; title: string; icon: string }[] = [
 	{
 		path: "/",
 		title: "首页",
+		icon: "mdi:home-outline",
 	},
 	{
 		path: "/posts/",
 		title: "博客",
+		icon: "mdi:book-open-page-variant-outline",
 	},
 	{
 		path: "/categories/",
 		title: "专题",
+		icon: "mdi:view-grid-outline",
 	},
 	{
 		path: "/notes/",
 		title: "短笔记",
+		icon: "mdi:notebook-outline",
 	},
 	{
 		path: "/about/",
 		title: "关于",
+		icon: "mdi:account-circle-outline",
 	},
 ];
 

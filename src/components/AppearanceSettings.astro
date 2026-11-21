@@ -1,51 +1,57 @@
 ---
 import { Icon } from "astro-icon/components";
+import ThemeToggle from "@/components/ThemeToggle.astro";
 import { navGlassBlur } from "@/site.config";
 ---
 
-<glass-settings hidden>
+<appearance-settings hidden>
 	<button
-		aria-controls="glass-settings-panel"
+		aria-controls="appearance-settings-panel"
 		aria-expanded="false"
-		aria-label="玻璃设置"
-		class="glass-settings-button"
-		title="玻璃设置"
+		aria-label="外观设置"
+		class="appearance-settings-button"
+		title="外观设置"
 		type="button"
 	>
 		<Icon aria-hidden="true" name="mdi:tune-variant" />
 	</button>
-	<div class="glass-settings-panel" id="glass-settings-panel" hidden>
-		<div class="glass-settings-label">
-			<label for="glass-blur">玻璃模糊</label>
-			<output aria-hidden="true" for="glass-blur">{navGlassBlur.initial} px</output>
-		</div>
-		<input
-			id="glass-blur"
-			type="range"
-			min={navGlassBlur.min}
-			max={navGlassBlur.max}
-			value={navGlassBlur.initial}
-		/>
-		<div class="glass-settings-ends" aria-hidden="true">
-			<span>通透</span>
-			<span>磨砂</span>
+	<div class="appearance-settings-panel" id="appearance-settings-panel" hidden>
+		<ThemeToggle />
+		<div class="appearance-blur" hidden>
+			<div class="appearance-blur-label">
+				<label for="glass-blur">玻璃模糊</label>
+				<output aria-hidden="true" for="glass-blur">{navGlassBlur.initial} px</output>
+			</div>
+			<input
+				id="glass-blur"
+				type="range"
+				min={navGlassBlur.min}
+				max={navGlassBlur.max}
+				value={navGlassBlur.initial}
+			/>
+			<div class="appearance-blur-ends" aria-hidden="true">
+				<span>通透</span>
+				<span>磨砂</span>
+			</div>
 		</div>
 	</div>
-</glass-settings>
+</appearance-settings>
 
 <script>
-	class GlassSettings extends HTMLElement {
+	class AppearanceSettings extends HTMLElement {
 		#controller?: AbortController;
 
 		connectedCallback() {
 			this.#controller?.abort();
 			this.#controller = new AbortController();
 			const { signal } = this.#controller;
-			const button = this.querySelector("button");
-			const panel = this.querySelector<HTMLElement>(".glass-settings-panel");
+			const button = this.querySelector<HTMLButtonElement>(".appearance-settings-button");
+			const panel = this.querySelector<HTMLElement>(".appearance-settings-panel");
+			const themeButton = panel?.querySelector<HTMLButtonElement>("theme-toggle button");
+			const blurControls = this.querySelector<HTMLElement>(".appearance-blur");
 			const slider = this.querySelector("input");
 			const value = this.querySelector("output");
-			if (!button || !panel || !slider || !value) return;
+			if (!button || !panel || !themeButton || !blurControls || !slider || !value) return;
 
 			const solidGlass = matchMedia("(prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active)");
 			const canBlur = CSS.supports("backdrop-filter", "blur(1px)") || CSS.supports("-webkit-backdrop-filter", "blur(1px)");
@@ -54,11 +60,12 @@ import { navGlassBlur } from "@/site.config";
 			const setOpen = (open: boolean) => {
 				panel.hidden = !open;
 				button.setAttribute("aria-expanded", String(open));
-				if (open) slider.focus({ preventScroll: true });
+				if (open) themeButton.focus({ preventScroll: true });
 			};
 			const syncAvailability = () => {
-				this.hidden = !canBlur || !canMixTint || solidGlass.matches;
-				if (this.hidden) setOpen(false);
+				const hidden = !canBlur || !canMixTint || solidGlass.matches;
+				if (hidden && document.activeElement === slider) themeButton.focus({ preventScroll: true });
+				blurControls.hidden = hidden;
 			};
 			const renderValue = () => {
 				value.value = `${slider.value} px`;
@@ -75,6 +82,7 @@ import { navGlassBlur } from "@/site.config";
 
 			syncValue();
 			syncAvailability();
+			this.hidden = false;
 			button.addEventListener("click", () => setOpen(panel.hasAttribute("hidden")), { signal });
 			slider.addEventListener("input", () => applyValue(false), { signal });
 			slider.addEventListener("change", () => applyValue(true), { signal });
@@ -98,44 +106,49 @@ import { navGlassBlur } from "@/site.config";
 		}
 	}
 
-	customElements.define("glass-settings", GlassSettings);
+	customElements.define("appearance-settings", AppearanceSettings);
 </script>
 
 <style>
-	.glass-settings-button :global(svg) {
+	.appearance-settings-button :global(svg) {
 		width: 1.375rem;
 		height: 1.375rem;
 	}
-	.glass-settings-button[aria-expanded="true"] {
+	.appearance-settings-button[aria-expanded="true"] {
 		background-color: color-mix(in srgb, var(--color-global-text) 8%, transparent);
 	}
-	.glass-settings-panel {
+	.appearance-settings-panel {
 		position: absolute;
 		z-index: 2;
 		inset-block-start: calc(100% + 0.625rem);
 		inset-inline-end: 0;
 		width: min(17rem, 100%);
-		max-height: max(3rem, calc(100dvh - 8rem - env(safe-area-inset-bottom)));
+		max-height: max(3rem, calc(100dvh - 8rem - env(safe-area-inset-top) - var(--mobile-nav-clearance, 0px)));
 		overflow-y: auto;
-		padding: 0.75rem 1rem;
+		padding: 0.5rem 1rem 0.625rem;
 		border: 1px solid color-mix(in srgb, var(--color-global-text) 14%, transparent);
 		border-radius: 1.25rem;
 		background: var(--color-global-bg);
 		box-shadow: 0 12px 32px rgb(0 0 0 / 14%);
 	}
-	.glass-settings-label,
-	.glass-settings-ends {
+	.appearance-blur {
+		margin-top: 0.375rem;
+		padding-top: 0.5625rem;
+		border-top: 1px solid color-mix(in srgb, var(--color-global-text) 12%, transparent);
+	}
+	.appearance-blur-label,
+	.appearance-blur-ends {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.5rem;
 	}
-	.glass-settings-label label {
+	.appearance-blur-label label {
 		font-size: 0.9375rem;
 		font-weight: 650;
 	}
-	.glass-settings-label output,
-	.glass-settings-ends {
+	.appearance-blur-label output,
+	.appearance-blur-ends {
 		color: var(--color-muted);
 		font-size: 0.8125rem;
 		font-variant-numeric: tabular-nums;

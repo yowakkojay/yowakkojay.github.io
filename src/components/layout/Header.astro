@@ -1,7 +1,7 @@
 ---
-import GlassSettings from "@/components/GlassSettings.astro";
+import { Icon } from "astro-icon/components";
+import AppearanceSettings from "@/components/AppearanceSettings.astro";
 import Search from "@/components/Search.astro";
-import ThemeToggle from "@/components/ThemeToggle.astro";
 import { menuLinks, siteConfig } from "@/site.config";
 ---
 <svg aria-hidden="true" focusable="false" width="0" height="0" style="position: absolute">
@@ -44,27 +44,16 @@ import { menuLinks, siteConfig } from "@/site.config";
 					aria-current={(link.path === "/" ? Astro.url.pathname === "/" : Astro.url.pathname.startsWith(link.path)) ? "page" : undefined}
 					href={link.path}
 					draggable="false"
-				>{link.title}</a>
+					>
+						<Icon aria-hidden="true" class="glass-nav-icon" name={link.icon} />
+						<span>{link.title}</span>
+					</a>
 			))}
 		</glass-navigation>
 	</nav>
 	<div class="glass-actions">
 		<Search />
-		<ThemeToggle />
-		<GlassSettings />
-		<button
-			aria-expanded="false"
-			aria-controls="navigation-menu"
-			aria-label="打开导航菜单"
-			class="glass-menu-button"
-			id="toggle-navigation-menu"
-			type="button"
-		>
-			<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
-				<path class="menu-line" d="M5 8h14M5 16h14" />
-				<path class="menu-cross" d="m7 7 10 10M7 17 17 7" />
-			</svg>
-		</button>
+		<AppearanceSettings />
 	</div>
 </header>
 
@@ -162,11 +151,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 	}
 	@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) and (background-color: color-mix(in srgb, white calc(20% * 2), transparent)) {
 		.glass-tint {
-			background-color: var(--glass-tint);
-			background-image: radial-gradient(200px 24px at var(--glass-x, 30%) 0%, var(--glass-glow), transparent 75%);
-		}
-		.glass-header > .glass-tint {
-			background-color: transparent;
+			background-color: var(--glass-underlay, transparent);
 			background-image:
 				radial-gradient(200px 24px at var(--glass-x, 30%) 0%, var(--glass-glow), transparent 75%),
 				linear-gradient(90deg, var(--glass-edge-tint), var(--glass-tint) 18% 82%, var(--glass-edge-tint));
@@ -215,7 +200,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 		gap: 0.5rem;
 		min-height: 4rem;
 		margin-bottom: 4rem;
-		padding: 0.5rem 0.625rem 0.5rem 0.75rem;
+		padding: 0.5rem 0.625rem 0.5rem 0.875rem;
 		border-radius: 2.5rem;
 	}
 	.glass-brand {
@@ -224,7 +209,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 		gap: 0.625rem;
 		min-width: 0;
 		color: var(--color-accent-2);
-		font-size: 1rem;
+		font-size: 1.125rem;
 		font-weight: 650;
 		letter-spacing: -0.035em;
 		white-space: nowrap;
@@ -243,32 +228,25 @@ import { menuLinks, siteConfig } from "@/site.config";
 		text-overflow: ellipsis;
 	}
 	.glass-nav {
-		position: absolute;
-		inset: calc(100% + 0.625rem) 0 auto;
-		display: none;
-		padding: 0.5rem;
-		border-radius: 1.75rem;
+		position: relative;
 	}
-	.glass-header[data-menu-open] .glass-nav {
-		display: block;
-		animation: glass-menu-in 460ms cubic-bezier(0.3, 0.6, 0.35, 1);
-		transform-origin: 50% 0;
+	.glass-nav .glass-layers,
+	.glass-nav .glass-tint,
+	.glass-nav::after,
+	glass-navigation :global(.glass-nav-icon) {
+		display: none;
 	}
 	glass-navigation {
 		position: relative;
 		display: flex;
-		flex-direction: column;
 		gap: 0.125rem;
-		/* 横屏和放大文字时仍能滚动到最后一项，不让菜单伸出可视区域。 */
-		max-height: max(2.75rem, calc(100vh - 9rem));
-		max-height: max(2.75rem, calc(100dvh - 9rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
-		overflow-y: auto;
-		overscroll-behavior: contain;
-		scrollbar-width: thin;
+		user-select: none;
+		-webkit-user-select: none;
+		touch-action: pan-y pinch-zoom;
 	}
 	glass-navigation a {
 		position: relative;
-		padding: 0.625rem 1rem;
+		padding: 0.625rem 0.875rem;
 		border-radius: 999px;
 		color: var(--color-global-text);
 		font-size: 0.9375rem;
@@ -280,21 +258,25 @@ import { menuLinks, siteConfig } from "@/site.config";
 			transform 260ms cubic-bezier(0.16, 1.35, 0.32, 1),
 			text-shadow 180ms ease;
 		text-shadow: 0 1px 6px color-mix(in srgb, var(--color-global-bg) 80%, transparent);
+		cursor: grab;
 	}
 	glass-navigation a[aria-current="page"] {
 		font-weight: 650;
 		background: var(--chip-fill);
 		box-shadow: inset 0 0 0 1px var(--chip-ring);
 	}
+	glass-navigation[data-ready] a[aria-current="page"] {
+		background: transparent;
+		box-shadow: none;
+	}
 	.glass-indicator {
-		display: none;
 		position: absolute;
 		inset: 0 auto auto 0;
 		width: 0;
 		height: 0;
 		border-radius: 999px;
 		opacity: 0;
-		/* 桌面端胶囊：iOS 液态透光玻璃，多层微折射高光与立体环境光 */
+		pointer-events: none;
 		background:
 			linear-gradient(
 				168deg,
@@ -341,14 +323,11 @@ import { menuLinks, siteConfig } from "@/site.config";
 		flex-shrink: 0;
 		gap: 0.125rem;
 	}
-	.glass-actions :global(theme-toggle),
 	.glass-actions :global(pagefind-modal-trigger) {
 		display: block;
 	}
-	.glass-actions :global(theme-toggle button),
 	.glass-actions :global(.pf-trigger-btn),
-	.glass-actions :global(.glass-settings-button),
-	.glass-menu-button {
+	.glass-actions :global(.appearance-settings-button) {
 		display: grid;
 		place-items: center;
 		width: 2.625rem;
@@ -358,125 +337,101 @@ import { menuLinks, siteConfig } from "@/site.config";
 		transition: background-color 180ms ease, transform 180ms ease;
 	}
 	@media (hover: hover) {
-		.glass-actions :global(theme-toggle button:hover),
 		.glass-actions :global(.pf-trigger-btn:hover),
-		.glass-actions :global(.glass-settings-button:hover),
-		.glass-menu-button:hover {
+		.glass-actions :global(.appearance-settings-button:hover) {
 			background-color: color-mix(in srgb, var(--color-global-text) 6%, transparent);
 		}
-	}
-	@media (prefers-reduced-motion: no-preference) {
-		glass-navigation a:active { transform: scale(0.96); }
-		.glass-actions :global(theme-toggle button:active),
-		.glass-actions :global(.pf-trigger-btn:active),
-		.glass-actions :global(.glass-settings-button:active),
-		.glass-menu-button:active { transform: scale(0.94); }
 	}
 	.glass-header :global(a:focus-visible),
 	.glass-header :global(button:focus-visible) {
 		outline: 2px solid var(--color-accent);
 		outline-offset: 3px;
 	}
-	.glass-menu-button svg {
-		width: 1.5rem;
-		height: 1.5rem;
+	:global(body:has(glass-navigation[data-dragging])),
+	glass-navigation[data-dragging],
+	glass-navigation[data-dragging] a {
+		cursor: grabbing;
 	}
-	.menu-cross,
-	.glass-menu-button[aria-expanded="true"] .menu-line {
-		opacity: 0;
-	}
-	.glass-menu-button[aria-expanded="true"] .menu-cross {
-		opacity: 1;
-	}
-	@keyframes glass-menu-in {
-		/* 不能给玻璃的祖先做 opacity 动画：opacity < 1 会建立新的 backdrop root，
-		   子层采样不到页面，结束时才恢复模糊，形成透明→玻璃的闪烁。
-		   弹性过冲（先落下再回弹 2px）只靠 transform 实现，玻璃材质全程不变。 */
-		0% {
-			transform: translateY(-14px) scale(0.94);
+	glass-navigation[data-dragging] .glass-indicator { transition: none; }
+	@media (prefers-reduced-motion: no-preference) {
+		glass-navigation a:active { transform: scale(0.96); }
+		.glass-actions :global(.pf-trigger-btn:active),
+		.glass-actions :global(.appearance-settings-button:active) { transform: scale(0.94); }
+
+		glass-navigation[data-dragging] .glass-indicator {
+			filter: brightness(1.15) contrast(1.05);
+			-webkit-backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(210%);
+			backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(210%);
+			box-shadow:
+				inset 0 1.5px 1.2px rgb(255 255 255 / 80%),
+				inset 0 -1.5px 1.2px rgb(0 0 0 / 14%),
+				inset 0 0 0 1px var(--chip-ring),
+				0 16px 32px -6px var(--chip-lift-shadow),
+				0 6px 14px -3px var(--chip-shadow),
+				0 0 20px -2px var(--chip-drag-glow);
 		}
-		60% {
-			transform: translateY(2px) scale(1.012);
-		}
-		100% {
-			transform: translateY(0) scale(1);
-		}
 	}
-	@media (min-width: 48rem) {
-		.glass-header { padding-inline: 0.875rem 0.625rem; }
-		.glass-brand { font-size: 1.125rem; }
-		.glass-nav,
-		.glass-header[data-menu-open] .glass-nav {
-			position: relative;
-			inset: auto;
-			display: block;
-			padding: 0;
-			animation: none;
+	@media (width < 48rem), (hover: none) and (pointer: coarse) and (height < 30rem) {
+		.glass-header {
+			top: calc(0.5rem + env(safe-area-inset-top, 0px));
+			min-height: 3.25rem;
+			margin-bottom: 2.5rem;
+			padding: 0.25rem 0.5rem 0.25rem 0.75rem;
+		}
+		.glass-brand { font-size: 1rem; }
+		.glass-brand img { width: 2rem; height: 2rem; }
+
+		.glass-actions :global(.pf-trigger-btn),
+		.glass-actions :global(.appearance-settings-button) { width: 2.75rem; height: 2.75rem; }
+
+		.glass-nav {
+			--glass-underlay: color-mix(in srgb, var(--color-global-bg) 24%, transparent);
+			position: fixed;
+			inset-inline: max(0.625rem, env(safe-area-inset-left, 0px)) max(0.625rem, env(safe-area-inset-right, 0px));
+			inset-block-end: var(--mobile-nav-bottom);
+			max-width: 26rem;
+			margin-inline: auto;
+			padding: 0.3125rem;
+			border-radius: 2.25rem;
 		}
 		.glass-nav .glass-layers,
 		.glass-nav .glass-tint,
-		.glass-nav::after { display: none; }
-		glass-navigation {
-			flex-direction: row;
-			max-height: none;
-			overflow: visible;
-			user-select: none;
-			-webkit-user-select: none;
-			touch-action: pan-y pinch-zoom;
-		}
+		.glass-nav::after { display: block; }
 		glass-navigation a {
-			padding-inline: 0.875rem;
-			user-select: none;
-			-webkit-user-select: none;
-			-webkit-user-drag: none;
-			cursor: grab;
+			display: flex;
+			flex: 1 1 0;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 0.1875rem;
+			min-width: 0;
+			min-height: calc(var(--mobile-nav-height) - 0.625rem);
+			padding: 0.25rem 0.125rem;
+			font-size: 0.75rem;
+			line-height: 1.125;
+			-webkit-tap-highlight-color: transparent;
 		}
-		glass-navigation[data-ready] a[aria-current="page"] { background: transparent; box-shadow: none; }
-		.glass-indicator {
+		glass-navigation a > span {
+			max-width: 100%;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+		glass-navigation :global(.glass-nav-icon) {
 			display: block;
-			cursor: grab;
-			pointer-events: none;
+			flex: none;
+			width: 1.375rem;
+			height: 1.375rem;
 		}
-		.glass-menu-button { display: none; }
-		:global(body:has(glass-navigation[data-dragging])),
-		glass-navigation[data-dragging] {
-			cursor: grabbing;
+		glass-navigation a[aria-current="page"] :global(.glass-nav-icon) {
+			color: var(--color-accent);
 		}
-		glass-navigation[data-dragging] a {
-			cursor: grabbing !important;
-			user-select: none !important;
-		}
-		glass-navigation[data-dragging] .glass-indicator { transition: none; }
-		@media (prefers-reduced-motion: no-preference) {
-			glass-navigation[data-dragging] .glass-indicator {
-				filter: brightness(1.15) contrast(1.05);
-				-webkit-backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(210%);
-				backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(210%);
-				box-shadow:
-					inset 0 1.5px 1.2px rgb(255 255 255 / 80%),
-					inset 0 -1.5px 1.2px rgb(0 0 0 / 14%),
-					inset 0 0 0 1px var(--chip-ring),
-					0 16px 32px -6px var(--chip-lift-shadow),
-					0 6px 14px -3px var(--chip-shadow),
-					0 0 20px -2px var(--chip-drag-glow);
-			}
-		}
-	}
-	@media (max-width: 23rem) {
-		.glass-header { gap: 0.25rem; padding-inline: 0.625rem 0.5rem; }
-		.glass-brand { gap: 0.375rem; font-size: 0.875rem; }
-		.glass-brand img { width: 1.875rem; height: 1.875rem; }
-		.glass-actions { gap: 0; }
-		.glass-actions :global(theme-toggle button),
-		.glass-actions :global(.pf-trigger-btn),
-		.glass-actions :global(.glass-settings-button),
-		.glass-menu-button { width: 2.25rem; height: 2.25rem; }
+		glass-navigation a:focus-visible { outline-offset: -2px; }
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.glass-indicator,
 		glass-navigation a,
-		.glass-actions :global(button) { transition: none; }
-		.glass-header[data-menu-open] .glass-nav { animation: none; }
+		.glass-actions :global(.pf-trigger-btn),
+		.glass-actions :global(.appearance-settings-button) { transition: none; }
 	}
 	@media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
 		.glass-surface .glass-optical,
@@ -485,8 +440,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 		.glass-surface[data-warp] .glass-warp {
 			display: none;
 		}
-		.glass-tint,
-		.glass-header > .glass-tint {
+		.glass-tint {
 			background-color: var(--color-global-bg);
 			background-image: none;
 			box-shadow:
@@ -573,11 +527,10 @@ import { menuLinks, siteConfig } from "@/site.config";
 			const { signal } = this.#controller;
 			const header = this.closest<HTMLElement>("header");
 			const indicator = this.querySelector<HTMLElement>(".glass-indicator");
-			const button = header?.querySelector<HTMLButtonElement>(".glass-menu-button");
-			if (!header || !indicator || !button) return;
+			const navigation = this.closest<HTMLElement>("nav");
+			if (!header || !indicator || !navigation) return;
 			// SVG backdrop 位移在 Chromium 渲染，其他引擎用基础玻璃。
 			header.toggleAttribute("data-warp", /(?:Chrome|Chromium|Edg)\//.test(navigator.userAgent));
-			const desktop = window.matchMedia("(min-width: 48rem)");
 			const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 			const solidGlass = window.matchMedia("(prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active)");
 			const links = Array.from(this.querySelectorAll<HTMLAnchorElement>("a"));
@@ -596,8 +549,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 				lastChip = { x, y, width, height };
 			};
 			const moveTo = (link: HTMLAnchorElement | null, animate = true) => {
-				// 手机端只用 aria-current 标记所在页，不能把触摸/焦点当成选中态。
-				if (!desktop.matches || !link || !this.offsetWidth) {
+				if (!link || !this.offsetWidth) {
 					indicator.style.opacity = "0";
 					delete this.dataset.ready;
 					lastChip = null;
@@ -687,7 +639,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 				cancelDrag(false);
 				suppressPointerClick = false;
 				deferPreview = false;
-				if (!desktop.matches || event.button !== 0 || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || links.length === 0) return;
+				if (event.button !== 0 || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || links.length === 0) return;
 
 				this.#labelBounce?.cancel();
 				const navLeft = this.getBoundingClientRect().left;
@@ -802,21 +754,6 @@ import { menuLinks, siteConfig } from "@/site.config";
 				}
 				if (target !== current) target.click();
 			};
-			const setOpen = (open: boolean) => {
-				header.toggleAttribute("data-menu-open", open);
-				button.setAttribute("aria-expanded", String(open));
-				button.setAttribute("aria-label", open ? "关闭导航菜单" : "打开导航菜单");
-				if (desktop.matches) return;
-				if (open) {
-					const target = current ?? links[0];
-					if (target) {
-						target.focus({ preventScroll: true });
-						this.scrollTop = target.offsetTop - (this.clientHeight - target.offsetHeight) / 2;
-					}
-				}
-				else if (this.contains(document.activeElement)) button.focus({ preventScroll: true });
-			};
-			button.addEventListener("click", () => setOpen(!header.hasAttribute("data-menu-open")), { signal });
 			for (const link of links) {
 				link.addEventListener("pointerenter", (event) => {
 					if (gesture || deferPreview) return;
@@ -827,7 +764,6 @@ import { menuLinks, siteConfig } from "@/site.config";
 					deferPreview = false;
 					moveTo(link);
 				}, { signal });
-				link.addEventListener("click", () => setOpen(false), { signal });
 			}
 			this.addEventListener("pointerdown", onPointerDown, { signal });
 			window.addEventListener("pointermove", onPointerMove, { signal });
@@ -856,30 +792,6 @@ import { menuLinks, siteConfig } from "@/site.config";
 					if (!signal.aborted) reset();
 				});
 			}, { signal });
-			header.addEventListener("focusout", (event) => {
-				// Safari 点按按钮可能先把焦点交给 body（relatedTarget=null）。
-				// 这种情况交由 click 处理，否则会先关闭、再被同一次 click 重新打开。
-				const next = event.relatedTarget;
-				if (next instanceof Node && next !== document.body && !header.contains(next)) setOpen(false);
-			}, { signal });
-			header.addEventListener("click", (event) => {
-				if (event.target instanceof Element && event.target.closest("theme-toggle, pagefind-modal-trigger, .glass-settings-button")) setOpen(false);
-			}, { signal });
-			document.addEventListener("pointerdown", (event) => {
-				if (event.target instanceof Node && !header.contains(event.target)) setOpen(false);
-			}, { signal });
-			document.addEventListener("keydown", (event) => {
-				if (event.key === "Escape" && header.hasAttribute("data-menu-open")) {
-					setOpen(false);
-					button.focus();
-				}
-			}, { signal });
-			desktop.addEventListener("change", () => {
-				cancelDrag(false);
-				deferPreview = false;
-				setOpen(false);
-				reset(false);
-			}, { signal });
 			reducedMotion.addEventListener("change", () => {
 				if (!reducedMotion.matches) return;
 				this.#labelBounce?.cancel();
@@ -893,12 +805,14 @@ import { menuLinks, siteConfig } from "@/site.config";
 			let glowTarget = glowPosition;
 			let angleTarget = lightAngle;
 			let lastFrame = 0;
-			let lightPoint: { x: number; y: number } | null = null;
+			let lightPoint: { x: number; y: number; withinNavigation: boolean } | null = null;
 			const followLight = (now: number) => {
 				this.#frame = 0;
 				if (signal.aborted || reducedMotion.matches || solidGlass.matches) return;
 				if (lightPoint) {
-					const rect = header.getBoundingClientRect();
+					const headerRect = header.getBoundingClientRect();
+					const navRect = lightPoint.withinNavigation ? navigation.getBoundingClientRect() : headerRect;
+					const rect = navRect.top >= headerRect.bottom ? navRect : headerRect;
 					if (rect.width) {
 						glowTarget = Math.max(0, Math.min(100, ((lightPoint.x - rect.left) / rect.width) * 100));
 						const angle = Math.atan2(lightPoint.y - (rect.top + rect.height / 2), lightPoint.x - (rect.left + rect.width / 2));
@@ -924,7 +838,11 @@ import { menuLinks, siteConfig } from "@/site.config";
 			header.addEventListener("pointermove", (event) => {
 				const dragging = gesture?.dragging && gesture.pointerId === event.pointerId;
 				if (reducedMotion.matches || solidGlass.matches || (event.pointerType !== "mouse" && !dragging)) return;
-				lightPoint = { x: event.clientX, y: event.clientY };
+				lightPoint = {
+					x: event.clientX,
+					y: event.clientY,
+					withinNavigation: event.target instanceof Node && navigation.contains(event.target),
+				};
 				if (!this.#frame) {
 					lastFrame = 0;
 					this.#frame = requestAnimationFrame(followLight);
@@ -942,7 +860,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 			});
 			this.#resize.observe(this);
 			// 首次落位：客户端导航重建后从上一页的位置滑到新页当前项；首次访问直接就位。
-			if (desktop.matches && current && this.offsetWidth && lastChip && !reducedMotion.matches) {
+			if (current && this.offsetWidth && lastChip && !reducedMotion.matches) {
 				indicator.style.transition = "none";
 				indicator.style.width = `${lastChip.width}px`;
 				indicator.style.height = `${lastChip.height}px`;

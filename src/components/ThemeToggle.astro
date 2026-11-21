@@ -1,52 +1,7 @@
 <theme-toggle>
-	<button class="hover:text-accent relative h-9 w-9 cursor-pointer p-2" type="button">
-		<span class="sr-only">深色模式</span>
-		<svg
-			aria-hidden="true"
-			class="absolute inset-s-1/2 top-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 scale-100 opacity-100 transition-all dark:scale-0 dark:opacity-0"
-			fill="none"
-			focusable="false"
-			id="sun-svg"
-			stroke-width="1.5"
-			viewBox="0 0 24 24"
-			xmlns="http://www.w3.org/2000/svg"
-		>
-			<path
-				d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z"
-				stroke="currentColor"
-				stroke-linecap="round"
-				stroke-linejoin="round"></path>
-			<path d="M22 12L23 12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-			></path>
-			<path d="M12 2V1" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
-			<path d="M12 23V22" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-			></path>
-			<path d="M20 20L19 19" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-			></path>
-			<path d="M20 4L19 5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-			></path>
-			<path d="M4 20L5 19" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-			></path>
-			<path d="M4 4L5 5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-			></path>
-			<path d="M1 12L2 12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-			></path>
-		</svg>
-		<svg
-			aria-hidden="true"
-			class="absolute inset-s-1/2 top-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 scale-0 opacity-0 transition-all dark:scale-100 dark:opacity-100"
-			fill="none"
-			focusable="false"
-			id="moon-svg"
-			stroke="currentColor"
-			stroke-width="1.5"
-			viewBox="0 0 24 24"
-			xmlns="http://www.w3.org/2000/svg"
-		>
-			<path d="M0 0h24v24H0z" fill="none" stroke="none"></path>
-			<path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"
-				stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
-		</svg>
+	<button aria-checked="false" class="theme-switch" role="switch" type="button">
+		<span>深色模式</span>
+		<span aria-hidden="true" class="theme-switch-track"></span>
 	</button>
 </theme-toggle>
 
@@ -251,3 +206,57 @@
 
 	customElements.define("theme-toggle", ThemeToggle);
 </script>
+
+<style>
+	theme-toggle { display: block; }
+	.theme-switch {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		width: 100%;
+		min-height: 2.75rem;
+		border-radius: 0.5rem;
+		font-size: 0.9375rem;
+		font-weight: 650;
+		cursor: pointer;
+	}
+	.theme-switch-track {
+		flex: none;
+		width: 2.5rem;
+		height: 1.5rem;
+		padding: 0.1875rem;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--color-global-text) 26%, var(--color-global-bg));
+		box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-global-text) 18%, transparent);
+	}
+	.theme-switch-track::before {
+		content: "";
+		display: block;
+		width: 1.125rem;
+		height: 1.125rem;
+		border-radius: 50%;
+		background: #fff;
+		box-shadow: 0 1px 3px rgb(0 0 0 / 26%);
+	}
+	.theme-switch[aria-checked="true"] .theme-switch-track {
+		background: var(--color-accent);
+	}
+	.theme-switch[aria-checked="true"] .theme-switch-track::before {
+		transform: translateX(1rem);
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.theme-switch-track { transition: background-color 160ms ease; }
+		.theme-switch-track::before { transition: transform 180ms ease; }
+	}
+	@media (forced-colors: active) {
+		.theme-switch-track {
+			forced-color-adjust: none;
+			background: Canvas;
+			box-shadow: inset 0 0 0 1px ButtonText;
+		}
+		.theme-switch-track::before { background: ButtonText; }
+		.theme-switch[aria-checked="true"] .theme-switch-track { background: Highlight; }
+		.theme-switch[aria-checked="true"] .theme-switch-track::before { background: HighlightText; }
+	}
+</style>

@@ -74,7 +74,7 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 	>
 		<button
 			aria-label="关闭大图"
-			class="absolute end-4 top-4 cursor-pointer rounded-full bg-white/10 p-2 text-white hover:bg-white/25"
+			class="absolute end-[max(1rem,env(safe-area-inset-right,0px))] top-[max(1rem,env(safe-area-inset-top,0px))] cursor-pointer rounded-full bg-white/10 p-2 text-white hover:bg-white/25"
 			id="lightbox-close"
 			type="button"
 		>
@@ -93,7 +93,7 @@ const readingTime = `约 ${remarkPluginFrontmatter.readingTimeMinutes as number}
 		<img alt="" class="max-h-[90vh] max-w-full cursor-default object-contain" id="lightbox-img" />
 	</dialog>
 	<button
-		class="hover:border-link fixed end-4 bottom-8 z-90 flex h-10 w-10 translate-y-28 cursor-pointer items-center justify-center rounded-full border-2 border-transparent bg-zinc-200 text-3xl opacity-0 transition-all transition-discrete duration-300 data-[show=true]:translate-y-0 data-[show=true]:opacity-100 sm:end-8 sm:h-12 sm:w-12 dark:bg-zinc-700"
+		class="hover:border-link pointer-events-none fixed end-[max(var(--site-gutter),env(safe-area-inset-right,0px))] bottom-[var(--mobile-nav-clearance,2rem)] z-90 flex h-10 w-10 translate-y-28 cursor-pointer items-center justify-center rounded-full border-2 border-transparent bg-zinc-200 text-3xl opacity-0 transition-all transition-discrete duration-300 data-[show=true]:pointer-events-auto data-[show=true]:translate-y-0 data-[show=true]:opacity-100 sm:h-12 sm:w-12 dark:bg-zinc-700"
 		data-show="false"
 		id="to-top-btn"
 	>
