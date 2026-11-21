@@ -96,7 +96,7 @@ import { navGlassBlur } from "@/site.config";
 
 <script is:inline define:vars={{ navGlassBlur }}>
 	const blurKey = "nav-glass-blur";
-	let blur = navGlassBlur.initial;
+	let blur = navGlassBlur.min;
 
 	const isBlurValue = (value) =>
 		Number.isInteger(value) && value >= navGlassBlur.min && value <= navGlassBlur.max;
@@ -106,7 +106,7 @@ import { navGlassBlur } from "@/site.config";
 	function restoreBlur() {
 		try {
 			const stored = Number(localStorage.getItem(blurKey));
-			blur = isBlurValue(stored) ? stored : navGlassBlur.initial;
+			blur = isBlurValue(stored) ? stored : navGlassBlur.min;
 		} catch {
 			// 存储被禁用时，继续在当前会话中使用已选强度。
 		}

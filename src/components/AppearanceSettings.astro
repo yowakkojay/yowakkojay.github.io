@@ -20,14 +20,14 @@ import { navGlassBlur } from "@/site.config";
 		<div class="appearance-blur" hidden>
 			<div class="appearance-blur-label">
 				<label for="glass-blur">玻璃模糊</label>
-				<output aria-hidden="true" for="glass-blur">{navGlassBlur.initial} px</output>
+				<output aria-hidden="true" for="glass-blur">{navGlassBlur.min} px</output>
 			</div>
 			<input
 				id="glass-blur"
 				type="range"
 				min={navGlassBlur.min}
 				max={navGlassBlur.max}
-				value={navGlassBlur.initial}
+				value={navGlassBlur.min}
 			/>
 			<div class="appearance-blur-ends" aria-hidden="true">
 				<span>通透</span>

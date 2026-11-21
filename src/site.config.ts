@@ -60,7 +60,7 @@ export const menuLinks: { path: string; title: string; icon: string }[] = [
 	},
 ];
 
-export const navGlassBlur = { min: 2, max: 14, initial: 8 };
+export const navGlassBlur = { min: 2, max: 14 };
 
 // https://expressive-code.com/reference/configuration/
 export const expressiveCodeOptions: AstroExpressiveCodeOptions = {
