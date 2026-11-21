@@ -1,3 +1,7 @@
+---
+import { navGlassBlur } from "@/site.config";
+---
+
 {/* Inlined to avoid FOUC. This is a parser blocking script. */}
 <script is:inline>
 	const lightModePref = window.matchMedia("(prefers-color-scheme: light)");
@@ -87,5 +91,48 @@
 		if (e.key !== "theme" && e.key !== null) return;
 		cleanupThemeTransitionArtifacts();
 		setTheme(getUserPref());
+	});
+</script>
+
+<script is:inline define:vars={{ navGlassBlur }}>
+	const blurKey = "nav-glass-blur";
+	let blur = navGlassBlur.initial;
+
+	const isBlurValue = (value) =>
+		Number.isInteger(value) && value >= navGlassBlur.min && value <= navGlassBlur.max;
+
+	const applyBlur = (root) => root.style.setProperty("--nav-glass-blur", String(blur));
+
+	function restoreBlur() {
+		try {
+			const stored = Number(localStorage.getItem(blurKey));
+			blur = isBlurValue(stored) ? stored : navGlassBlur.initial;
+		} catch {
+			// 存储被禁用时，继续在当前会话中使用已选强度。
+		}
+		applyBlur(document.documentElement);
+		document.dispatchEvent(new Event("glass-blur-restored"));
+	}
+
+	restoreBlur();
+	// 在交换文档前带上玻璃强度，新页面首帧就能使用当前设置。
+	document.addEventListener("astro:before-swap", (event) => {
+		applyBlur(event.newDocument.documentElement);
+	});
+	document.addEventListener("glass-blur-change", ({ detail }) => {
+		if (!isBlurValue(detail?.value)) return;
+		blur = detail.value;
+		applyBlur(document.documentElement);
+		if (detail.persist) {
+			try {
+				localStorage.setItem(blurKey, String(blur));
+			} catch {}
+		}
+	});
+	window.addEventListener("storage", (event) => {
+		if (event.key === blurKey || event.key === null) restoreBlur();
+	});
+	window.addEventListener("pageshow", (event) => {
+		if (event.persisted) restoreBlur();
 	});
 </script>

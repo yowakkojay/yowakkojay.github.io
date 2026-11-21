@@ -1,0 +1,154 @@
+---
+import { Icon } from "astro-icon/components";
+import { navGlassBlur } from "@/site.config";
+---
+
+<glass-settings hidden>
+	<button
+		aria-controls="glass-settings-panel"
+		aria-expanded="false"
+		aria-label="玻璃设置"
+		class="glass-settings-button"
+		title="玻璃设置"
+		type="button"
+	>
+		<Icon aria-hidden="true" name="mdi:tune-variant" />
+	</button>
+	<div class="glass-settings-panel" id="glass-settings-panel" hidden>
+		<div class="glass-settings-label">
+			<label for="glass-blur">玻璃模糊</label>
+			<output aria-hidden="true" for="glass-blur">{navGlassBlur.initial} px</output>
+		</div>
+		<input
+			id="glass-blur"
+			type="range"
+			min={navGlassBlur.min}
+			max={navGlassBlur.max}
+			value={navGlassBlur.initial}
+		/>
+		<div class="glass-settings-ends" aria-hidden="true">
+			<span>通透</span>
+			<span>磨砂</span>
+		</div>
+	</div>
+</glass-settings>
+
+<script>
+	class GlassSettings extends HTMLElement {
+		#controller?: AbortController;
+
+		connectedCallback() {
+			this.#controller?.abort();
+			this.#controller = new AbortController();
+			const { signal } = this.#controller;
+			const button = this.querySelector("button");
+			const panel = this.querySelector<HTMLElement>(".glass-settings-panel");
+			const slider = this.querySelector("input");
+			const value = this.querySelector("output");
+			if (!button || !panel || !slider || !value) return;
+
+			const solidGlass = matchMedia("(prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active)");
+			const canBlur = CSS.supports("backdrop-filter", "blur(1px)") || CSS.supports("-webkit-backdrop-filter", "blur(1px)");
+			const canMixTint = CSS.supports("background-color", "color-mix(in srgb, white calc(20% * 2), transparent)");
+
+			const setOpen = (open: boolean) => {
+				panel.hidden = !open;
+				button.setAttribute("aria-expanded", String(open));
+				if (open) slider.focus({ preventScroll: true });
+			};
+			const syncAvailability = () => {
+				this.hidden = !canBlur || !canMixTint || solidGlass.matches;
+				if (this.hidden) setOpen(false);
+			};
+			const renderValue = () => {
+				value.value = `${slider.value} px`;
+				slider.setAttribute("aria-valuetext", `${slider.value} 像素`);
+			};
+			const syncValue = () => {
+				slider.value = document.documentElement.style.getPropertyValue("--nav-glass-blur").trim() || slider.defaultValue;
+				renderValue();
+			};
+			const applyValue = (persist: boolean) => {
+				renderValue();
+				document.dispatchEvent(new CustomEvent("glass-blur-change", { detail: { value: slider.valueAsNumber, persist } }));
+			};
+
+			syncValue();
+			syncAvailability();
+			button.addEventListener("click", () => setOpen(panel.hasAttribute("hidden")), { signal });
+			slider.addEventListener("input", () => applyValue(false), { signal });
+			slider.addEventListener("change", () => applyValue(true), { signal });
+			solidGlass.addEventListener("change", syncAvailability, { signal });
+			document.addEventListener("glass-blur-restored", syncValue, { signal });
+			this.addEventListener("focusout", (event) => {
+				if (event.relatedTarget instanceof Node && !this.contains(event.relatedTarget)) setOpen(false);
+			}, { signal });
+			document.addEventListener("pointerdown", (event) => {
+				if (!panel.hidden && event.target instanceof Node && !this.contains(event.target)) setOpen(false);
+			}, { signal });
+			document.addEventListener("keydown", (event) => {
+				if (event.key !== "Escape" || panel.hidden) return;
+				setOpen(false);
+				button.focus({ preventScroll: true });
+			}, { signal });
+		}
+
+		disconnectedCallback() {
+			this.#controller?.abort();
+		}
+	}
+
+	customElements.define("glass-settings", GlassSettings);
+</script>
+
+<style>
+	.glass-settings-button :global(svg) {
+		width: 1.375rem;
+		height: 1.375rem;
+	}
+	.glass-settings-button[aria-expanded="true"] {
+		background-color: color-mix(in srgb, var(--color-global-text) 8%, transparent);
+	}
+	.glass-settings-panel {
+		position: absolute;
+		z-index: 2;
+		inset-block-start: calc(100% + 0.625rem);
+		inset-inline-end: 0;
+		width: min(17rem, 100%);
+		max-height: max(3rem, calc(100dvh - 8rem - env(safe-area-inset-bottom)));
+		overflow-y: auto;
+		padding: 0.75rem 1rem;
+		border: 1px solid color-mix(in srgb, var(--color-global-text) 14%, transparent);
+		border-radius: 1.25rem;
+		background: var(--color-global-bg);
+		box-shadow: 0 12px 32px rgb(0 0 0 / 14%);
+	}
+	.glass-settings-label,
+	.glass-settings-ends {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+	.glass-settings-label label {
+		font-size: 0.9375rem;
+		font-weight: 650;
+	}
+	.glass-settings-label output,
+	.glass-settings-ends {
+		color: var(--color-muted);
+		font-size: 0.8125rem;
+		font-variant-numeric: tabular-nums;
+	}
+	input {
+		display: block;
+		width: 100%;
+		min-height: 2rem;
+		cursor: pointer;
+	}
+	input:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
+		border-radius: 999px;
+	}
+</style>

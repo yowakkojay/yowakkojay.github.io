@@ -1,4 +1,5 @@
 ---
+import GlassSettings from "@/components/GlassSettings.astro";
 import Search from "@/components/Search.astro";
 import ThemeToggle from "@/components/ThemeToggle.astro";
 import { menuLinks, siteConfig } from "@/site.config";
@@ -50,6 +51,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 	<div class="glass-actions">
 		<Search />
 		<ThemeToggle />
+		<GlassSettings />
 		<button
 			aria-expanded="false"
 			aria-controls="navigation-menu"
@@ -69,8 +71,11 @@ import { menuLinks, siteConfig } from "@/site.config";
 <style>
 	/* 玻璃放在伪元素/子元素上，避免 header 自身成为 backdrop root，影响移动端浮层。 */
 	.glass-surface {
-		/* iOS 液态玻璃：底色近乎全透明，质感全部来自饱和提亮与边缘光学。 */
-		--glass-tint: color-mix(in srgb, var(--color-global-bg) 3%, transparent);
+		/* 模糊和底色同步增加，正文滚到导航下面时文字仍能读清。 */
+		--glass-strength: var(--nav-glass-blur, 8);
+		--glass-blur: calc(var(--glass-strength) * 1px);
+		--glass-tint: color-mix(in srgb, var(--color-global-bg) calc(28% + var(--glass-strength) * 4.5%), transparent);
+		--glass-edge-tint: color-mix(in srgb, var(--color-global-bg) calc(25% + var(--glass-strength) * 2.5%), transparent);
 		--glass-brightness: 1.06;
 		--glass-lens: url(#liquid-glass-lens);
 		--rim-peak: rgb(255 255 255 / 58%);
@@ -81,7 +86,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 		--glass-shadow: rgb(26 36 48 / 9%);
 		/* 亮色下滑块胶囊：白底上要靠描边和投影才够明显。 */
 		--chip-fill: color-mix(in srgb, var(--color-global-text) 9%, transparent);
-		--chip-ring: color-mix(in srgb, var(--color-global-text) 12%, transparent);
+		--chip-ring: color-mix(in srgb, var(--color-accent) 32%, transparent);
 		--chip-shadow: rgb(0 0 0 / 9%);
 		--chip-highlight: rgb(255 255 255 / 75%);
 		--chip-drag-glow: rgb(255 255 255 / 45%);
@@ -89,7 +94,8 @@ import { menuLinks, siteConfig } from "@/site.config";
 		isolation: isolate;
 	}
 	:global([data-theme="dark"]) .glass-surface {
-		--glass-tint: color-mix(in srgb, var(--color-global-bg) 5%, transparent);
+		--glass-tint: color-mix(in srgb, var(--color-global-bg) calc(50% + var(--glass-strength) * 3.5%), transparent);
+		--glass-edge-tint: color-mix(in srgb, var(--color-global-bg) calc(35% + var(--glass-strength) * 3.75%), transparent);
 		--glass-brightness: 1.38;
 		--rim-peak: rgb(255 255 255 / 30%);
 		--rim-faint: rgb(255 255 255 / 9%);
@@ -98,7 +104,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 		--glass-glow: rgb(255 255 255 / 15%);
 		--glass-shadow: rgb(0 0 0 / 30%);
 		--chip-fill: color-mix(in srgb, var(--color-global-text) 7%, transparent);
-		--chip-ring: rgb(255 255 255 / 14%);
+		--chip-ring: color-mix(in srgb, var(--color-accent) 28%, transparent);
 		--chip-shadow: rgb(0 0 0 / 28%);
 		--chip-highlight: rgb(255 255 255 / 35%);
 		--chip-drag-glow: rgb(255 255 255 / 22%);
@@ -127,10 +133,10 @@ import { menuLinks, siteConfig } from "@/site.config";
 		inset: -2rem;
 		pointer-events: none;
 	}
-	/* 默认（WebKit/Geko）：基础光学层承担模糊/饱和/提亮。 */
+	/* 默认（WebKit/Gecko）：基础光学层承担模糊、饱和与提亮。 */
 	.glass-optical {
-		-webkit-backdrop-filter: blur(2px) saturate(180%) brightness(var(--glass-brightness));
-		backdrop-filter: blur(2px) saturate(180%) brightness(var(--glass-brightness));
+		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%) brightness(var(--glass-brightness));
+		backdrop-filter: blur(var(--glass-blur)) saturate(135%) brightness(var(--glass-brightness));
 	}
 	.glass-warp {
 		display: none;
@@ -142,8 +148,8 @@ import { menuLinks, siteConfig } from "@/site.config";
 	}
 	.glass-surface[data-warp] .glass-warp {
 		display: block;
-		-webkit-backdrop-filter: var(--glass-lens) blur(2px) saturate(180%) brightness(var(--glass-brightness));
-		backdrop-filter: var(--glass-lens) blur(2px) saturate(180%) brightness(var(--glass-brightness));
+		-webkit-backdrop-filter: var(--glass-lens) blur(var(--glass-blur)) saturate(135%) brightness(var(--glass-brightness));
+		backdrop-filter: var(--glass-lens) blur(var(--glass-blur)) saturate(135%) brightness(var(--glass-brightness));
 	}
 	.glass-tint {
 		/* 不支持 backdrop-filter 时使用实色，保证文字可读。 */
@@ -154,12 +160,16 @@ import { menuLinks, siteConfig } from "@/site.config";
 			inset 0 1px 0.5px rgb(255 255 255 / 24%),
 			inset 0 -10px 14px -12px rgb(255 255 255 / 9%);
 	}
-	@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+	@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) and (background-color: color-mix(in srgb, white calc(20% * 2), transparent)) {
 		.glass-tint {
 			background-color: var(--glass-tint);
+			background-image: radial-gradient(200px 24px at var(--glass-x, 30%) 0%, var(--glass-glow), transparent 75%);
+		}
+		.glass-header > .glass-tint {
+			background-color: transparent;
 			background-image:
 				radial-gradient(200px 24px at var(--glass-x, 30%) 0%, var(--glass-glow), transparent 75%),
-				linear-gradient(160deg, rgb(255 255 255 / 3%), transparent 45%, rgb(255 255 255 / 1%));
+				linear-gradient(90deg, var(--glass-edge-tint), var(--glass-tint) 18% 82%, var(--glass-edge-tint));
 		}
 	}
 	.glass-surface::after {
@@ -167,13 +177,13 @@ import { menuLinks, siteConfig } from "@/site.config";
 		padding: 1.1px;
 		background:
 			conic-gradient(
-				from calc(var(--light-angle, 310deg) + 11deg),
+				from calc(var(--light-angle, 310deg) - 69deg),
 				transparent 0deg 48deg,
 				var(--rim-blue) 80deg,
 				transparent 116deg 360deg
 			),
 			conic-gradient(
-				from calc(var(--light-angle, 310deg) - 11deg),
+				from calc(var(--light-angle, 310deg) - 91deg),
 				transparent 0deg 48deg,
 				var(--rim-pink) 80deg,
 				transparent 116deg 360deg
@@ -228,6 +238,10 @@ import { menuLinks, siteConfig } from "@/site.config";
 		object-fit: cover;
 		box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-global-text) 10%, transparent);
 	}
+	.glass-brand span {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
 	.glass-nav {
 		position: absolute;
 		inset: calc(100% + 0.625rem) 0 auto;
@@ -266,15 +280,11 @@ import { menuLinks, siteConfig } from "@/site.config";
 			transform 260ms cubic-bezier(0.16, 1.35, 0.32, 1),
 			text-shadow 180ms ease;
 		text-shadow: 0 1px 6px color-mix(in srgb, var(--color-global-bg) 80%, transparent);
-		will-change: transform, color;
-	}
-	glass-navigation a:active {
-		transform: scale(0.96);
 	}
 	glass-navigation a[aria-current="page"] {
-		color: var(--color-accent);
 		font-weight: 650;
-		background: color-mix(in srgb, var(--color-global-text) 5%, transparent);
+		background: var(--chip-fill);
+		box-shadow: inset 0 0 0 1px var(--chip-ring);
 	}
 	.glass-indicator {
 		display: none;
@@ -293,8 +303,8 @@ import { menuLinks, siteConfig } from "@/site.config";
 				transparent 68%
 			),
 			var(--chip-fill);
-		-webkit-backdrop-filter: blur(8px) saturate(180%);
-		backdrop-filter: blur(8px) saturate(180%);
+		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+		backdrop-filter: blur(var(--glass-blur)) saturate(180%);
 		box-shadow:
 			inset 0 1.2px 0.8px var(--chip-highlight),
 			inset 0 -1px 0.6px rgb(0 0 0 / 7%),
@@ -308,7 +318,6 @@ import { menuLinks, siteConfig } from "@/site.config";
 			box-shadow 260ms ease,
 			opacity 180ms ease,
 			filter 260ms ease;
-		will-change: transform, width, height;
 	}
 	:global([data-theme="dark"]) .glass-indicator {
 		background:
@@ -338,6 +347,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 	}
 	.glass-actions :global(theme-toggle button),
 	.glass-actions :global(.pf-trigger-btn),
+	.glass-actions :global(.glass-settings-button),
 	.glass-menu-button {
 		display: grid;
 		place-items: center;
@@ -350,14 +360,17 @@ import { menuLinks, siteConfig } from "@/site.config";
 	@media (hover: hover) {
 		.glass-actions :global(theme-toggle button:hover),
 		.glass-actions :global(.pf-trigger-btn:hover),
+		.glass-actions :global(.glass-settings-button:hover),
 		.glass-menu-button:hover {
 			background-color: color-mix(in srgb, var(--color-global-text) 6%, transparent);
 		}
 	}
-	.glass-actions :global(theme-toggle button:active),
-	.glass-actions :global(.pf-trigger-btn:active),
-	.glass-menu-button:active {
-		transform: scale(0.94);
+	@media (prefers-reduced-motion: no-preference) {
+		glass-navigation a:active { transform: scale(0.96); }
+		.glass-actions :global(theme-toggle button:active),
+		.glass-actions :global(.pf-trigger-btn:active),
+		.glass-actions :global(.glass-settings-button:active),
+		.glass-menu-button:active { transform: scale(0.94); }
 	}
 	.glass-header :global(a:focus-visible),
 	.glass-header :global(button:focus-visible) {
@@ -409,7 +422,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 			overflow: visible;
 			user-select: none;
 			-webkit-user-select: none;
-			touch-action: pan-y;
+			touch-action: pan-y pinch-zoom;
 		}
 		glass-navigation a {
 			padding-inline: 0.875rem;
@@ -418,40 +431,45 @@ import { menuLinks, siteConfig } from "@/site.config";
 			-webkit-user-drag: none;
 			cursor: grab;
 		}
-		glass-navigation[data-ready] a[aria-current="page"] { background: transparent; }
+		glass-navigation[data-ready] a[aria-current="page"] { background: transparent; box-shadow: none; }
 		.glass-indicator {
 			display: block;
 			cursor: grab;
 			pointer-events: none;
 		}
 		.glass-menu-button { display: none; }
+		:global(body:has(glass-navigation[data-dragging])),
 		glass-navigation[data-dragging] {
-			cursor: grabbing !important;
+			cursor: grabbing;
 		}
 		glass-navigation[data-dragging] a {
 			cursor: grabbing !important;
 			user-select: none !important;
 		}
-		glass-navigation[data-dragging] .glass-indicator {
-			transition: none !important;
-			cursor: grabbing !important;
-			filter: brightness(1.15) contrast(1.05);
-			-webkit-backdrop-filter: blur(14px) saturate(210%);
-			backdrop-filter: blur(14px) saturate(210%);
-			box-shadow:
-				inset 0 1.5px 1.2px rgb(255 255 255 / 80%),
-				inset 0 -1.5px 1.2px rgb(0 0 0 / 14%),
-				inset 0 0 0 1px var(--chip-ring),
-				0 16px 32px -6px var(--chip-lift-shadow),
-				0 6px 14px -3px var(--chip-shadow),
-				0 0 20px -2px var(--chip-drag-glow) !important;
+		glass-navigation[data-dragging] .glass-indicator { transition: none; }
+		@media (prefers-reduced-motion: no-preference) {
+			glass-navigation[data-dragging] .glass-indicator {
+				filter: brightness(1.15) contrast(1.05);
+				-webkit-backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(210%);
+				backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(210%);
+				box-shadow:
+					inset 0 1.5px 1.2px rgb(255 255 255 / 80%),
+					inset 0 -1.5px 1.2px rgb(0 0 0 / 14%),
+					inset 0 0 0 1px var(--chip-ring),
+					0 16px 32px -6px var(--chip-lift-shadow),
+					0 6px 14px -3px var(--chip-shadow),
+					0 0 20px -2px var(--chip-drag-glow);
+			}
 		}
 	}
 	@media (max-width: 23rem) {
+		.glass-header { gap: 0.25rem; padding-inline: 0.625rem 0.5rem; }
 		.glass-brand { gap: 0.375rem; font-size: 0.875rem; }
 		.glass-brand img { width: 1.875rem; height: 1.875rem; }
+		.glass-actions { gap: 0; }
 		.glass-actions :global(theme-toggle button),
 		.glass-actions :global(.pf-trigger-btn),
+		.glass-actions :global(.glass-settings-button),
 		.glass-menu-button { width: 2.25rem; height: 2.25rem; }
 	}
 	@media (prefers-reduced-motion: reduce) {
@@ -460,14 +478,15 @@ import { menuLinks, siteConfig } from "@/site.config";
 		.glass-actions :global(button) { transition: none; }
 		.glass-header[data-menu-open] .glass-nav { animation: none; }
 	}
-	@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+	@media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
 		.glass-surface .glass-optical,
 		.glass-surface .glass-warp,
 		.glass-surface[data-warp] .glass-optical,
 		.glass-surface[data-warp] .glass-warp {
 			display: none;
 		}
-		.glass-tint {
+		.glass-tint,
+		.glass-header > .glass-tint {
 			background-color: var(--color-global-bg);
 			background-image: none;
 			box-shadow:
@@ -478,19 +497,70 @@ import { menuLinks, siteConfig } from "@/site.config";
 		.glass-surface::after {
 			display: none;
 		}
+		.glass-indicator,
+		glass-navigation[data-dragging] .glass-indicator {
+			-webkit-backdrop-filter: none;
+			backdrop-filter: none;
+		}
 	}
 </style>
 
 <script>
+	type ChipBox = { x: number; y: number; width: number; height: number };
+	type LinkGeometry = ReturnType<typeof measureLink>;
+	type Gesture = {
+		pointerId: number;
+		startX: number;
+		startY: number;
+		navLeft: number;
+		links: LinkGeometry[];
+		grabRatio: number;
+		clientX: number;
+		lastMoveTime: number;
+		velocity: number;
+		dragging: boolean;
+	};
+
+	function measureLink(link: HTMLAnchorElement) {
+		const x = link.offsetLeft;
+		const width = link.offsetWidth;
+		return { link, x, y: link.offsetTop, width, height: link.offsetHeight, center: x + width / 2 };
+	}
+
+	function getDragBox(gesture: Gesture, clientX: number) {
+		const { links, navLeft, grabRatio } = gesture;
+		const first = links[0];
+		const last = links.at(-1);
+		if (!first || !last) return null;
+
+		const pointer = clientX - navLeft;
+		let before = first;
+		let after = first;
+		for (const item of links) {
+			after = item;
+			if (pointer <= item.center) break;
+			before = item;
+		}
+
+		const span = after.center - before.center;
+		const mix = span > 0 ? (pointer - before.center) / span : 0;
+		const width = before.width + (after.width - before.width) * mix;
+		const height = before.height + (after.height - before.height) * mix;
+		const left = pointer - grabRatio * width;
+		const x = Math.max(first.x, Math.min(left, last.x + last.width - width));
+		return { x, y: first.y, width, height, overshoot: left - x };
+	}
+
 	// 上一次滑块的几何（模块级变量，ClientRouter 换页时存活）：
 	// 导航重建后滑块从上一页的位置滑到新页的当前项，而不是从 0 尺寸缩放弹出。
-	let lastChip: { x: number; y: number; width: number; height: number } | null = null;
+	let lastChip: ChipBox | null = null;
 
 	class GlassNavigation extends HTMLElement {
 		#controller: AbortController | undefined;
 		#resize: ResizeObserver | undefined;
 		#frame = 0;
 		#dragFrame = 0;
+		#labelBounce: Animation | undefined;
 
 		connectedCallback() {
 			this.#controller?.abort();
@@ -505,43 +575,35 @@ import { menuLinks, siteConfig } from "@/site.config";
 			const indicator = this.querySelector<HTMLElement>(".glass-indicator");
 			const button = header?.querySelector<HTMLButtonElement>(".glass-menu-button");
 			if (!header || !indicator || !button) return;
-			// 引擎嗅探：仅 Chromium 的 backdrop-filter 能渲染 SVG 位移（Safari 声明合法但直接
-			// 不渲染、Firefox 完全不支持），给 header 打标记后 CSS 才启用位移层。
-			// iOS 上所有浏览器都是 WebKit，误判成 Chromium 也只会得到无位移的基础玻璃，无害。
-			const ua = navigator.userAgent;
-			const safariLike = /Safari/i.test(ua) && !/Chrom(e|ium)|Edg\//.test(ua);
-			const firefoxLike = /Firefox|FxiOS/i.test(ua);
-			if (!safariLike && !firefoxLike) header.dataset.warp = "";
+			// SVG backdrop 位移在 Chromium 渲染，其他引擎用基础玻璃。
+			header.toggleAttribute("data-warp", /(?:Chrome|Chromium|Edg)\//.test(navigator.userAgent));
 			const desktop = window.matchMedia("(min-width: 48rem)");
 			const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+			const solidGlass = window.matchMedia("(prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active)");
+			const links = Array.from(this.querySelectorAll<HTMLAnchorElement>("a"));
 			let current = this.querySelector<HTMLAnchorElement>('[aria-current="page"]');
-			let isPointerDown = false;
-			let isDragging = false;
-			let dragMoved = false;
-			let activePointerId = -1;
-			let startPointerX = 0;
-			let startPointerY = 0;
-			let grabRatio = 0.5;
-			let pendingClientX = 0;
-			let ignoreNextClick = false;
-			let lastMoveX = 0;
-			let lastMoveTime = 0;
-			let currentVelocity = 0;
+			let gesture: Gesture | null = null;
+			let suppressPointerClick = false;
+			// 释放捕获后浏览器可能补发边界事件。下一次实际移动或聚焦再恢复预览。
+			let deferPreview = false;
 
 			const placeChip = (link: HTMLAnchorElement) => {
-				indicator.style.width = `${link.offsetWidth}px`;
-				indicator.style.height = `${link.offsetHeight}px`;
-				indicator.style.transform = `translate(${link.offsetLeft}px, ${link.offsetTop}px)`;
+				const { x, y, width, height } = measureLink(link);
+				indicator.style.width = `${width}px`;
+				indicator.style.height = `${height}px`;
+				indicator.style.transform = `translate(${x}px, ${y}px)`;
 				indicator.style.opacity = "1";
-				lastChip = { x: link.offsetLeft, y: link.offsetTop, width: link.offsetWidth, height: link.offsetHeight };
+				lastChip = { x, y, width, height };
 			};
 			const moveTo = (link: HTMLAnchorElement | null, animate = true) => {
 				// 手机端只用 aria-current 标记所在页，不能把触摸/焦点当成选中态。
 				if (!desktop.matches || !link || !this.offsetWidth) {
 					indicator.style.opacity = "0";
+					delete this.dataset.ready;
+					lastChip = null;
 					return;
 				}
-				if (animate) {
+				if (animate && !reducedMotion.matches) {
 					placeChip(link);
 				}
 				else {
@@ -555,311 +617,245 @@ import { menuLinks, siteConfig } from "@/site.config";
 				this.dataset.ready = "";
 			};
 			const reset = (animate = true) => {
+				if (gesture?.dragging || deferPreview) return;
 				const focused = this.contains(document.activeElement) && document.activeElement instanceof HTMLAnchorElement ? document.activeElement : current;
 				moveTo(focused, animate);
 			};
-			const updateDragPosition = (clientX: number) => {
-				const links = Array.from(this.querySelectorAll<HTMLAnchorElement>("a"));
-				if (!links.length) return;
-				const navRect = this.getBoundingClientRect();
-				const mouseNavX = clientX - navRect.left;
+			const updateDragPosition = (active: Gesture) => {
+				const box = getDragBox(active, active.clientX);
+				if (!box) return;
 
-				const geoms = links.map((link) => {
-					const left = link.offsetLeft;
-					const width = link.offsetWidth;
-					return {
-						link,
-						left,
-						width,
-						center: left + width / 2,
-						top: link.offsetTop,
-						height: link.offsetHeight,
-					};
-				});
+				const { x, y, width, height, overshoot } = box;
+				const still = reducedMotion.matches;
+				const left = still ? x : x + overshoot * 0.22;
+				const scaleX = overshoot
+					? 1 - Math.min(0.22, Math.abs(overshoot) * 0.005)
+					: 1 + Math.min(0.2, Math.abs(active.velocity) * 0.08);
+				const tilt = Math.max(-2.5, Math.min(2.5, active.velocity * 1.2));
 
-				const first = geoms[0];
-				const last = geoms[geoms.length - 1];
-				if (!first || !last) return;
+				indicator.style.width = `${width}px`;
+				indicator.style.height = `${height}px`;
+				indicator.style.transform = still
+					? `translate(${left}px, ${y}px)`
+					: `translate(${left}px, ${y}px) scale(${scaleX * 1.02}, ${1.02 / Math.sqrt(scaleX)}) skewX(${tilt}deg)`;
 
-				let targetWidth = first.width;
-				let targetHeight = first.height;
-
-				if (mouseNavX <= first.center) {
-					targetWidth = first.width;
-					targetHeight = first.height;
-				}
-				else if (mouseNavX >= last.center) {
-					targetWidth = last.width;
-					targetHeight = last.height;
-				}
-				else {
-					for (let i = 0; i < geoms.length - 1; i++) {
-						const g1 = geoms[i];
-						const g2 = geoms[i + 1];
-						if (g1 && g2 && mouseNavX >= g1.center && mouseNavX <= g2.center) {
-							const span = g2.center - g1.center;
-							const t = span > 0 ? (mouseNavX - g1.center) / span : 0;
-							targetWidth = g1.width + (g2.width - g1.width) * t;
-							targetHeight = g1.height + (g2.height - g1.height) * t;
-							break;
-						}
+				const center = left + width / 2;
+				for (const { link, center: linkCenter, width: linkWidth } of active.links) {
+					const reach = linkWidth * 0.8;
+					const distance = Math.abs(center - linkCenter);
+					if (still || distance >= reach) {
+						link.style.transform = "";
+						link.style.color = "";
+						continue;
 					}
-				}
-
-				let targetLeft = mouseNavX - grabRatio * targetWidth;
-				const minLeft = first.left;
-				const maxLeft = last.left + last.width - targetWidth;
-
-				// 速度拉伸（Squash & Stretch）与动态倾角
-				const stretchFactor = Math.min(0.2, Math.abs(currentVelocity) * 0.08);
-				let scaleX = 1 + stretchFactor;
-				let scaleY = 1 / Math.sqrt(scaleX);
-				const tilt = Math.max(-2.5, Math.min(2.5, currentVelocity * 1.2));
-
-				// 边缘橡皮筋与边界撞击挤压
-				if (targetLeft < minLeft) {
-					const over = minLeft - targetLeft;
-					targetLeft = minLeft - over * 0.22;
-					const squash = Math.min(0.22, over * 0.005);
-					scaleX = Math.max(0.78, 1 - squash);
-					scaleY = 1 / Math.sqrt(scaleX);
-				}
-				else if (targetLeft > maxLeft) {
-					const over = targetLeft - maxLeft;
-					targetLeft = maxLeft + over * 0.22;
-					const squash = Math.min(0.22, over * 0.005);
-					scaleX = Math.max(0.78, 1 - squash);
-					scaleY = 1 / Math.sqrt(scaleX);
-				}
-
-				indicator.style.width = `${targetWidth}px`;
-				indicator.style.height = `${targetHeight}px`;
-				indicator.style.transform = `translate(${targetLeft}px, ${first.top}px) scale(${scaleX * 1.02}, ${scaleY * 1.02}) skewX(${tilt}deg)`;
-				lastChip = { x: targetLeft, y: first.top, width: targetWidth, height: targetHeight };
-
-				// 文字邻近激活透镜反馈（Proximity Glow & Lift）
-				const chipCenter = targetLeft + targetWidth / 2;
-				for (const g of geoms) {
-					const dist = Math.abs(chipCenter - g.center);
-					const reach = g.width * 0.8;
-					if (dist < reach) {
-						const factor = 1 - dist / reach;
-						const curve = factor * factor * (3 - 2 * factor); // smoothstep
-						g.link.style.transform = `scale(${1 + 0.08 * curve}) translateY(${-2 * curve}px)`;
-						g.link.style.color = "var(--color-accent)";
-					}
-					else {
-						g.link.style.transform = "";
-						g.link.style.color = "";
-					}
-				}
-
-				// 全局光斑联动：顶部液态玻璃光斑随滑块同步流动
-				const headerRect = header.getBoundingClientRect();
-				if (headerRect.width > 0) {
-					const lightPercent = Math.max(0, Math.min(100, ((clientX - headerRect.left) / headerRect.width) * 100));
-					header.style.setProperty("--glass-x", `${lightPercent}%`);
+					const proximity = 1 - distance / reach;
+					const curve = proximity * proximity * (3 - 2 * proximity);
+					link.style.transform = `scale(${1 + 0.08 * curve}) translateY(${-2 * curve}px)`;
+					link.style.color = `color-mix(in srgb, var(--color-accent) ${50 * curve}%, var(--color-global-text))`;
 				}
 			};
+
+			const releaseGesture = () => {
+				const active = gesture;
+				gesture = null;
+				if (!active?.dragging) return;
+
+				deferPreview = true;
+				suppressPointerClick = true;
+				cancelAnimationFrame(this.#dragFrame);
+				this.#dragFrame = 0;
+				this.removeAttribute("data-dragging");
+				for (const { link } of active.links) {
+					link.style.transform = "";
+					link.style.color = "";
+				}
+				if (this.hasPointerCapture(active.pointerId)) {
+					try {
+						this.releasePointerCapture(active.pointerId);
+					} catch {}
+				}
+			};
+
+			const cancelDrag = (animate = true) => {
+				const wasDragging = gesture?.dragging;
+				releaseGesture();
+				if (wasDragging) moveTo(current, animate);
+			};
+
 			const onPointerDown = (event: PointerEvent) => {
-				if (!desktop.matches || event.button !== 0) return;
-				const links = Array.from(this.querySelectorAll<HTMLAnchorElement>("a"));
-				if (!links.length) return;
+				if (!event.isPrimary || (gesture && gesture.pointerId !== event.pointerId)) return;
+				cancelDrag(false);
+				suppressPointerClick = false;
+				deferPreview = false;
+				if (!desktop.matches || event.button !== 0 || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || links.length === 0) return;
 
-				isPointerDown = true;
-				isDragging = false;
-				dragMoved = false;
-				activePointerId = event.pointerId;
-				startPointerX = event.clientX;
-				startPointerY = event.clientY;
-				lastMoveX = event.clientX;
-				lastMoveTime = performance.now();
-				currentVelocity = 0;
-
-				const navRect = this.getBoundingClientRect();
-				const mouseNavX = event.clientX - navRect.left;
-
-				let hoveredLink: HTMLAnchorElement | null = null;
-				for (const link of links) {
-					if (mouseNavX >= link.offsetLeft && mouseNavX <= link.offsetLeft + link.offsetWidth) {
-						hoveredLink = link;
-						break;
-					}
-				}
-				if (hoveredLink && hoveredLink.offsetWidth > 0) {
-					grabRatio = (mouseNavX - hoveredLink.offsetLeft) / hoveredLink.offsetWidth;
-					grabRatio = Math.max(0.1, Math.min(0.9, grabRatio));
-				}
-				else {
-					grabRatio = 0.5;
-				}
+				this.#labelBounce?.cancel();
+				const navLeft = this.getBoundingClientRect().left;
+				const geometry = links.map(measureLink);
+				const pointer = event.clientX - navLeft;
+				const grabbed = geometry.find(({ x, width }) => width > 0 && pointer >= x && pointer <= x + width);
+				const grabRatio = grabbed ? Math.max(0.1, Math.min(0.9, (pointer - grabbed.x) / grabbed.width)) : 0.5;
+				gesture = {
+					pointerId: event.pointerId,
+					startX: event.clientX,
+					startY: event.clientY,
+					navLeft,
+					links: geometry,
+					grabRatio,
+					clientX: event.clientX,
+					lastMoveTime: performance.now(),
+					velocity: 0,
+					dragging: false,
+				};
 			};
+
 			const onPointerMove = (event: PointerEvent) => {
-				if (!isPointerDown || event.pointerId !== activePointerId) return;
-				if (event.buttons === 0) {
-					onPointerUp(event);
+				const active = gesture;
+				if (!active) {
+					if (deferPreview && event.pointerType === "mouse") {
+						deferPreview = false;
+						const hovered = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a") : null;
+						if (hovered && links.includes(hovered)) moveTo(hovered);
+						else reset();
+					}
+					return;
+				}
+				if (event.pointerId !== active.pointerId) return;
+				if ((event.buttons & 1) === 0) {
+					cancelDrag();
 					return;
 				}
 
-				const deltaX = event.clientX - startPointerX;
-				const deltaY = event.clientY - startPointerY;
-				const dist = Math.hypot(deltaX, deltaY);
-
-				if (!isDragging) {
-					if (dist < 4) return;
-					isDragging = true;
-					dragMoved = true;
-					this.setAttribute("data-dragging", "");
-					document.body.style.cursor = "grabbing";
-					indicator.style.transition = "none";
-					try {
-						this.setPointerCapture(activePointerId);
+				if (!active.dragging) {
+					const horizontal = Math.abs(event.clientX - active.startX);
+					const vertical = Math.abs(event.clientY - active.startY);
+					if (vertical >= 6 && vertical >= horizontal) {
+						releaseGesture();
+						return;
 					}
-					catch {}
+					if (horizontal < 6 || horizontal <= vertical) return;
+
+					active.dragging = true;
+					this.setAttribute("data-dragging", "");
+					indicator.style.opacity = "1";
+					this.dataset.ready = "";
+					try {
+						this.setPointerCapture(active.pointerId);
+					} catch {
+						// 窗口监听器继续接收结束事件。
+					}
 				}
 
 				event.preventDefault();
 				const now = performance.now();
-				const dt = Math.max(8, Math.min(now - lastMoveTime, 50));
-				const vx = (event.clientX - lastMoveX) / dt; // px/ms
-				lastMoveX = event.clientX;
-				lastMoveTime = now;
-				currentVelocity += (vx - currentVelocity) * 0.45;
+				const elapsed = Math.max(8, Math.min(now - active.lastMoveTime, 50));
+				const speed = (event.clientX - active.clientX) / elapsed;
+				active.velocity += (speed - active.velocity) * 0.45;
+				active.clientX = event.clientX;
+				active.lastMoveTime = now;
 
-				pendingClientX = event.clientX;
 				if (!this.#dragFrame) {
 					this.#dragFrame = requestAnimationFrame(() => {
 						this.#dragFrame = 0;
-						if (isDragging) updateDragPosition(pendingClientX);
+						if (gesture?.dragging) updateDragPosition(gesture);
 					});
 				}
 			};
+
 			const onPointerUp = (event: PointerEvent) => {
-				if (!isPointerDown || (activePointerId !== -1 && event.pointerId !== activePointerId)) return;
-				cancelAnimationFrame(this.#dragFrame);
-				this.#dragFrame = 0;
-
-				const wasDragging = isDragging;
-				const didMove = dragMoved;
-
-				isPointerDown = false;
-				// isDragging 延后清除：releasePointerCapture() 会同步派发
-				// pointerleave，若此时 isDragging 已为 false，pointerleave
-				// 处理器的守卫放行 → reset() 把滑块瞬移回 current，松手后
-				// 出现"先闪回再滑过去"的视觉跳变。保持 isDragging=true 直到
-				// 捕获释放完成，确保该 pointerleave 被正确拦截。
-				dragMoved = false;
-
-				if (activePointerId !== -1 && this.hasPointerCapture(activePointerId)) {
-					try {
-						this.releasePointerCapture(activePointerId);
-					}
-					catch {}
-				}
-				isDragging = false;
-				activePointerId = -1;
-				this.removeAttribute("data-dragging");
-				document.body.style.cursor = "";
-
-				// 清空所有链接的行内样式，平滑交还给 CSS
-				this.querySelectorAll<HTMLAnchorElement>("a").forEach((link) => {
-					link.style.transform = "";
-					link.style.color = "";
-				});
-
-				if (!wasDragging && !didMove) {
+				const active = gesture;
+				if (!active || active.pointerId !== event.pointerId) return;
+				if (!active.dragging || event.button !== 0) {
+					cancelDrag();
 					return;
 				}
 
-				ignoreNextClick = true;
-				indicator.style.transition = "";
-
-				const links = Array.from(this.querySelectorAll<HTMLAnchorElement>("a"));
-				const firstLink = links[0];
-				if (!firstLink) return;
-
-				const currentCenter = (lastChip?.x ?? 0) + (lastChip?.width ?? 0) / 2;
-				let bestLink = firstLink;
-				let minDiff = Infinity;
-				for (const link of links) {
-					const center = link.offsetLeft + link.offsetWidth / 2;
-					const diff = Math.abs(currentCenter - center);
-					if (diff < minDiff) {
-						minDiff = diff;
-						bestLink = link;
-					}
+				// 同一帧内松手时，最终坐标也参与定位。
+				const box = getDragBox(active, event.clientX);
+				releaseGesture();
+				if (!box) {
+					moveTo(current);
+					return;
 				}
 
-				moveTo(bestLink, true);
-
-				// 目标文字触发 iOS 标志性的果冻 Pop 弹性回弹
-				bestLink.animate([
-					{ transform: "scale(1.14) translateY(-2px)" },
-					{ transform: "scale(0.95) translateY(1px)" },
-					{ transform: "scale(1) translateY(0)" }
-				], {
-					duration: 360,
-					easing: "cubic-bezier(0.16, 1.4, 0.32, 1)"
-				});
-
-				if (bestLink !== current) {
-					current = bestLink;
-					setTimeout(() => {
-						ignoreNextClick = false;
-						bestLink.click();
-					}, 20);
+				const center = box.x + box.width / 2;
+				let target: HTMLAnchorElement | undefined;
+				let minDistance = Infinity;
+				for (const item of active.links) {
+					const distance = Math.abs(center - item.center);
+					if (distance >= minDistance) continue;
+					minDistance = distance;
+					target = item.link;
 				}
-				else {
-					setTimeout(() => {
-						ignoreNextClick = false;
-					}, 120);
+				if (!target) return;
+
+				moveTo(target);
+				if (!reducedMotion.matches) {
+					this.#labelBounce = target.animate(
+						[
+							{ transform: "scale(1.14) translateY(-2px)" },
+							{ transform: "scale(0.95) translateY(1px)" },
+							{ transform: "scale(1) translateY(0)" },
+						],
+						{ duration: 360, easing: "cubic-bezier(0.16, 1.4, 0.32, 1)" },
+					);
 				}
+				if (target !== current) target.click();
 			};
 			const setOpen = (open: boolean) => {
 				header.toggleAttribute("data-menu-open", open);
 				button.setAttribute("aria-expanded", String(open));
 				button.setAttribute("aria-label", open ? "关闭导航菜单" : "打开导航菜单");
-				if (!desktop.matches) {
-					if (open) {
-						const target = current ?? this.querySelector("a");
-						if (target) {
-							target.focus({ preventScroll: true });
-							this.scrollTop = target.offsetTop - (this.clientHeight - target.offsetHeight) / 2;
-						}
+				if (desktop.matches) return;
+				if (open) {
+					const target = current ?? links[0];
+					if (target) {
+						target.focus({ preventScroll: true });
+						this.scrollTop = target.offsetTop - (this.clientHeight - target.offsetHeight) / 2;
 					}
-					else if (this.contains(document.activeElement)) button.focus({ preventScroll: true });
 				}
-				reset();
+				else if (this.contains(document.activeElement)) button.focus({ preventScroll: true });
 			};
 			button.addEventListener("click", () => setOpen(!header.hasAttribute("data-menu-open")), { signal });
-			this.querySelectorAll<HTMLAnchorElement>("a").forEach((link) => {
+			for (const link of links) {
 				link.addEventListener("pointerenter", (event) => {
-					if (isDragging || isPointerDown) return;
+					if (gesture || deferPreview) return;
 					if (event.pointerType === "mouse") moveTo(link);
 				}, { signal });
 				link.addEventListener("focus", () => {
-					if (isDragging) return;
+					if (gesture?.dragging) return;
+					deferPreview = false;
 					moveTo(link);
 				}, { signal });
 				link.addEventListener("click", () => setOpen(false), { signal });
-			});
+			}
 			this.addEventListener("pointerdown", onPointerDown, { signal });
-			this.addEventListener("pointermove", onPointerMove, { signal });
-			this.addEventListener("pointerup", onPointerUp, { signal });
-			this.addEventListener("pointercancel", onPointerUp, { signal });
+			window.addEventListener("pointermove", onPointerMove, { signal });
+			window.addEventListener("pointerup", onPointerUp, { signal });
+			window.addEventListener("pointercancel", (event) => {
+				if (event.pointerId === gesture?.pointerId) cancelDrag();
+			}, { signal });
+			this.addEventListener("lostpointercapture", (event) => {
+				if (event.target === this && event.pointerId === gesture?.pointerId) cancelDrag();
+			}, { signal });
+			window.addEventListener("blur", () => cancelDrag(false), { signal });
+			signal.addEventListener("abort", releaseGesture, { once: true });
 			this.addEventListener("dragstart", (e) => e.preventDefault(), { signal });
 			this.addEventListener("click", (event) => {
-				if (ignoreNextClick) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					ignoreNextClick = false;
-				}
+				// 只拦截松手附带的鼠标或触摸点击，键盘和主动触发的链接点击照常执行。
+				if (!suppressPointerClick || !event.isTrusted || !event.detail) return;
+				suppressPointerClick = false;
+				event.preventDefault();
+				event.stopImmediatePropagation();
 			}, { capture: true, signal });
 			this.addEventListener("pointerleave", () => {
-				if (isDragging || isPointerDown) return;
-				reset();
+				if (!gesture) reset();
 			}, { signal });
-			this.addEventListener("focusout", () => queueMicrotask(() => reset()), { signal });
+			this.addEventListener("focusout", () => {
+				queueMicrotask(() => {
+					if (!signal.aborted) reset();
+				});
+			}, { signal });
 			header.addEventListener("focusout", (event) => {
 				// Safari 点按按钮可能先把焦点交给 body（relatedTarget=null）。
 				// 这种情况交由 click 处理，否则会先关闭、再被同一次 click 重新打开。
@@ -867,7 +863,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 				if (next instanceof Node && next !== document.body && !header.contains(next)) setOpen(false);
 			}, { signal });
 			header.addEventListener("click", (event) => {
-				if (event.target instanceof Element && event.target.closest("theme-toggle, pagefind-modal-trigger")) setOpen(false);
+				if (event.target instanceof Element && event.target.closest("theme-toggle, pagefind-modal-trigger, .glass-settings-button")) setOpen(false);
 			}, { signal });
 			document.addEventListener("pointerdown", (event) => {
 				if (event.target instanceof Node && !header.contains(event.target)) setOpen(false);
@@ -879,15 +875,15 @@ import { menuLinks, siteConfig } from "@/site.config";
 				}
 			}, { signal });
 			desktop.addEventListener("change", () => {
-				if (isDragging || isPointerDown) {
-					isPointerDown = false;
-					isDragging = false;
-					dragMoved = false;
-					this.removeAttribute("data-dragging");
-					document.body.style.cursor = "";
-					indicator.style.transition = "";
-				}
+				cancelDrag(false);
+				deferPreview = false;
 				setOpen(false);
+				reset(false);
+			}, { signal });
+			reducedMotion.addEventListener("change", () => {
+				if (!reducedMotion.matches) return;
+				this.#labelBounce?.cancel();
+				if (gesture?.dragging) updateDragPosition(gesture);
 			}, { signal });
 			// 高光位置与光源角度都用百分比/角度保留，离开后停在最后状态，不再复位到固定坐标。
 			const startGlow = Number.parseFloat(header.style.getPropertyValue("--glass-x"));
@@ -897,9 +893,19 @@ import { menuLinks, siteConfig } from "@/site.config";
 			let glowTarget = glowPosition;
 			let angleTarget = lightAngle;
 			let lastFrame = 0;
+			let lightPoint: { x: number; y: number } | null = null;
 			const followLight = (now: number) => {
 				this.#frame = 0;
-				if (signal.aborted || reducedMotion.matches) return;
+				if (signal.aborted || reducedMotion.matches || solidGlass.matches) return;
+				if (lightPoint) {
+					const rect = header.getBoundingClientRect();
+					if (rect.width) {
+						glowTarget = Math.max(0, Math.min(100, ((lightPoint.x - rect.left) / rect.width) * 100));
+						const angle = Math.atan2(lightPoint.y - (rect.top + rect.height / 2), lightPoint.x - (rect.left + rect.width / 2));
+						angleTarget = ((angle * (180 / Math.PI) + 450) % 360);
+					}
+					lightPoint = null;
+				}
 				const elapsed = lastFrame ? Math.min(now - lastFrame, 64) : 16;
 				lastFrame = now;
 				const ease = 1 - Math.exp(-elapsed / 65);
@@ -916,13 +922,9 @@ import { menuLinks, siteConfig } from "@/site.config";
 				if (!glowSettled || !angleSettled) this.#frame = requestAnimationFrame(followLight);
 			};
 			header.addEventListener("pointermove", (event) => {
-				if (event.pointerType !== "mouse" || reducedMotion.matches) return;
-				const rect = header.getBoundingClientRect();
-				if (!rect.width) return;
-				glowTarget = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
-				// 镜边高光朝向指针：conic 0° 朝上，atan2 的 0° 朝右，换算后指针在右时高光在右。
-				const lightSource = Math.atan2(event.clientY - (rect.top + rect.height / 2), event.clientX - (rect.left + rect.width / 2)) * (180 / Math.PI) + 90;
-				angleTarget = ((lightSource % 360) + 360) % 360;
+				const dragging = gesture?.dragging && gesture.pointerId === event.pointerId;
+				if (reducedMotion.matches || solidGlass.matches || (event.pointerType !== "mouse" && !dragging)) return;
+				lightPoint = { x: event.clientX, y: event.clientY };
 				if (!this.#frame) {
 					lastFrame = 0;
 					this.#frame = requestAnimationFrame(followLight);
@@ -935,12 +937,12 @@ import { menuLinks, siteConfig } from "@/site.config";
 					resizePrimed = true;
 					return;
 				}
-				reset(false);
+				if (gesture) cancelDrag(false);
+				else reset(false);
 			});
 			this.#resize.observe(this);
 			// 首次落位：客户端导航重建后从上一页的位置滑到新页当前项；首次访问直接就位。
-			const initial = current ?? this.querySelector<HTMLAnchorElement>("a");
-			if (desktop.matches && initial && this.offsetWidth && lastChip) {
+			if (desktop.matches && current && this.offsetWidth && lastChip && !reducedMotion.matches) {
 				indicator.style.transition = "none";
 				indicator.style.width = `${lastChip.width}px`;
 				indicator.style.height = `${lastChip.height}px`;
@@ -948,7 +950,7 @@ import { menuLinks, siteConfig } from "@/site.config";
 				indicator.style.opacity = "1";
 				void indicator.offsetWidth;
 				indicator.style.transition = "";
-				placeChip(initial);
+				placeChip(current);
 				this.dataset.ready = "";
 			}
 			else {
@@ -957,8 +959,9 @@ import { menuLinks, siteConfig } from "@/site.config";
 			document.addEventListener("astro:page-load", () => {
 				// 保险：若组件在客户端导航中被保留（未重建），aria-current 已更新但引用过期，滑到新的当前项。
 				const latest = this.querySelector<HTMLAnchorElement>('[aria-current="page"]');
-				if (latest && latest !== current) {
+				if (latest !== current) {
 					current = latest;
+					deferPreview = false;
 					reset();
 				}
 			}, { signal });
@@ -969,9 +972,9 @@ import { menuLinks, siteConfig } from "@/site.config";
 			this.#resize?.disconnect();
 			cancelAnimationFrame(this.#frame);
 			cancelAnimationFrame(this.#dragFrame);
+			this.#labelBounce?.cancel();
 			this.#frame = 0;
 			this.#dragFrame = 0;
-			document.body.style.cursor = "";
 		}
 	}
 	customElements.define("glass-navigation", GlassNavigation);
